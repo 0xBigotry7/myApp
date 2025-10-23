@@ -60,16 +60,16 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                Username
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="input-field"
-                placeholder="you@example.com"
+                placeholder="Enter your username"
               />
             </div>
 
@@ -98,11 +98,18 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-3">Demo Accounts</p>
+            <p className="text-sm text-gray-600 text-center mb-3">Your Accounts</p>
             <div className="space-y-2 text-xs text-gray-500 bg-gray-50 rounded-xl p-4">
-              <p><span className="font-semibold">Account 1:</span> you@example.com</p>
-              <p><span className="font-semibold">Account 2:</span> wife@example.com</p>
-              <p className="text-gray-400 mt-2">Password: password123</p>
+              <div>
+                <p><span className="font-semibold">Account 1 (BABER):</span></p>
+                <p className="text-gray-400">Username: BABER</p>
+                <p className="text-gray-400">Password: baberhusband</p>
+              </div>
+              <div className="mt-3">
+                <p><span className="font-semibold">Account 2 (baber):</span></p>
+                <p className="text-gray-400">Username: baber</p>
+                <p className="text-gray-400">Password: baberwife</p>
+              </div>
             </div>
           </div>
         </div>
