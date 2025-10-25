@@ -30,6 +30,7 @@ export default async function TripDetailPage({
     where: { id },
     include: {
       budgetCategories: true,
+      members: true,
       expenses: {
         include: {
           user: true,
@@ -42,7 +43,13 @@ export default async function TripDetailPage({
     },
   });
 
-  if (!trip || trip.userId !== session.user.id) {
+  // Check if user has access (is owner OR is a member)
+  const hasAccess = trip && (
+    trip.ownerId === session.user.id ||
+    trip.members.some(m => m.userId === session.user.id)
+  );
+
+  if (!trip || !hasAccess) {
     notFound();
   }
 

@@ -21,6 +21,9 @@ export async function POST(request: Request) {
       budgetCategories,
     } = body;
 
+    // Get all users to automatically add them as members
+    const allUsers = await prisma.user.findMany({ select: { id: true } });
+
     const trip = await prisma.trip.create({
       data: {
         name,
@@ -29,13 +32,21 @@ export async function POST(request: Request) {
         endDate: new Date(endDate),
         totalBudget,
         currency,
-        userId: session.user.id,
+        ownerId: session.user.id,
         budgetCategories: {
           create: budgetCategories,
         },
+        // Automatically add all users as members (shared trips for couples)
+        members: {
+          create: allUsers.map(user => ({
+            userId: user.id,
+            role: user.id === session.user.id ? "owner" : "member"
+          }))
+        }
       },
       include: {
         budgetCategories: true,
+        members: true,
       },
     });
 

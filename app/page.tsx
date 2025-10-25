@@ -17,8 +17,14 @@ export default async function Dashboard() {
   const locale = await getServerLocale();
   const t = getTranslations(locale);
 
+  // Get all trips where user is owner OR member
   const trips = await prisma.trip.findMany({
-    where: { userId: session.user.id },
+    where: {
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
+    },
     include: {
       expenses: true,
       budgetCategories: true,

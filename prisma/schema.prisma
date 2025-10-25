@@ -16,7 +16,8 @@ model User {
   password    String
   name        String
   createdAt   DateTime         @default(now())
-  trips       Trip[]
+  ownedTrips  Trip[]           @relation("TripOwner")
+  sharedTrips TripMember[]
   expenses    Expense[]
   preferences UserPreference[]
 }
@@ -37,8 +38,9 @@ model Trip {
   expensesImageUrl     String?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
-  userId               String
-  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownerId              String
+  owner                User              @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members              TripMember[]
   budgetCategories     BudgetCategory[]
   expenses             Expense[]
   activities           Activity[]
@@ -120,4 +122,16 @@ model UserPreference {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, key])
+}
+
+model TripMember {
+  id        String   @id @default(cuid())
+  tripId    String
+  userId    String
+  role      String   @default("member") // "owner" or "member"
+  joinedAt  DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
 }
