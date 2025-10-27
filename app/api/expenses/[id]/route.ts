@@ -33,7 +33,7 @@ export async function DELETE(
     // Check if user has access (is owner of trip OR is a member OR created the expense)
     const hasAccess =
       expense.trip.ownerId === session.user.id ||
-      expense.trip.members.some((m) => m.userId === session.user.id) ||
+      expense.trip.members.some((m: { userId: string }) => m.userId === session.user.id) ||
       expense.userId === session.user.id;
 
     if (!hasAccess) {
@@ -89,7 +89,7 @@ export async function PATCH(
     // Check if user has access
     const hasAccess =
       expense.trip.ownerId === session.user.id ||
-      expense.trip.members.some((m) => m.userId === session.user.id) ||
+      expense.trip.members.some((m: { userId: string }) => m.userId === session.user.id) ||
       expense.userId === session.user.id;
 
     if (!hasAccess) {

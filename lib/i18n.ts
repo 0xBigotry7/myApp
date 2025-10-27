@@ -7,6 +7,9 @@ export const translations = {
     planTrip: "Plan Trip",
     signOut: "Sign Out",
     you: "You",
+    finance: "Finance",
+    transactions: "Transactions",
+    accounts: "Accounts",
 
     // Trip Creation
     newTrip: "New Trip",
@@ -148,6 +151,9 @@ export const translations = {
     planTrip: "计划旅行",
     signOut: "退出登录",
     you: "您",
+    finance: "财务",
+    transactions: "交易记录",
+    accounts: "账户",
 
     // Trip Creation
     newTrip: "新建旅行",
