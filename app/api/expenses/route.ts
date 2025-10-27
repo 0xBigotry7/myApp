@@ -11,17 +11,37 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { tripId, amount, category, currency, date, note } = body;
+    const { tripId, amount, category, currency, date, note, accountId } = body;
 
-    // Verify the trip belongs to the user
-    const trip = await prisma.trip.findUnique({
-      where: { id: tripId },
+    // Verify the trip belongs to the user or they are a member
+    const trip = await prisma.trip.findFirst({
+      where: {
+        id: tripId,
+        OR: [
+          { ownerId: session.user.id },
+          { members: { some: { userId: session.user.id } } }
+        ]
+      },
+      include: {
+        members: true,
+      },
     });
 
-    if (!trip || trip.userId !== session.user.id) {
+    if (!trip) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user's default account or first active account if accountId not provided
+    let userAccountId = accountId;
+    if (!userAccountId) {
+      const defaultAccount = await prisma.account.findFirst({
+        where: { userId: session.user.id, isActive: true },
+        orderBy: { createdAt: "asc" },
+      });
+      userAccountId = defaultAccount?.id;
+    }
+
+    // Create expense and transaction together in a transaction
     const expense = await prisma.expense.create({
       data: {
         tripId,
@@ -36,6 +56,36 @@ export async function POST(request: Request) {
         user: true,
       },
     });
+
+    // Create corresponding transaction if account exists
+    if (userAccountId) {
+      const account = await prisma.account.findUnique({
+        where: { id: userAccountId },
+      });
+
+      if (account) {
+        // Create transaction (negative amount for expense)
+        await prisma.transaction.create({
+          data: {
+            userId: session.user.id,
+            accountId: userAccountId,
+            amount: -Math.abs(amount), // Always negative for expenses
+            category: category || "Travel",
+            description: note || `Trip expense: ${trip.name}`,
+            date: new Date(date),
+            isTripRelated: true,
+            tripId: tripId,
+            location: trip.destination,
+          },
+        });
+
+        // Update account balance
+        await prisma.account.update({
+          where: { id: userAccountId },
+          data: { balance: account.balance - Math.abs(amount) },
+        });
+      }
+    }
 
     return NextResponse.json(expense);
   } catch (error) {

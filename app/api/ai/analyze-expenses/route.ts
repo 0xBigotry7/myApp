@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!trip || trip.userId !== session.user.id) {
+    if (!trip || trip.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: "Trip not found or unauthorized" },
         { status: 404 }

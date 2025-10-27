@@ -17,10 +17,13 @@ export default async function AddActivityPage({
 
   const { id } = await params;
 
-  const trip = await prisma.trip.findUnique({
+  const trip = await prisma.trip.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
     },
     select: {
       id: true,

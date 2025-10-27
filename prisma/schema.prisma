@@ -11,15 +11,22 @@ datasource db {
 }
 
 model User {
-  id          String           @id @default(cuid())
-  email       String           @unique
-  password    String
-  name        String
-  createdAt   DateTime         @default(now())
-  ownedTrips  Trip[]           @relation("TripOwner")
-  sharedTrips TripMember[]
-  expenses    Expense[]
-  preferences UserPreference[]
+  id                    String                  @id @default(cuid())
+  email                 String                  @unique
+  password              String
+  name                  String
+  createdAt             DateTime                @default(now())
+  ownedTrips            Trip[]                  @relation("TripOwner")
+  sharedTrips           TripMember[]
+  expenses              Expense[]
+  preferences           UserPreference[]
+  accounts              Account[]
+  transactions          Transaction[]
+  budgets               Budget[]
+  savingsGoals          SavingsGoal[]
+  recurringTransactions RecurringTransaction[]
+  netWorthSnapshots     NetWorthSnapshot[]
+  categoryRules         CategoryRule[]
 }
 
 model Trip {
@@ -134,4 +141,142 @@ model TripMember {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, userId])
+}
+
+// ===== GENERAL FINANCE MODELS =====
+
+model Account {
+  id               String        @id @default(cuid())
+  userId           String
+  name             String
+  type             String        // "checking", "savings", "credit_card", "cash", "investment"
+  balance          Float         @default(0)
+  currency         String        @default("USD")
+  isActive         Boolean       @default(true)
+  icon             String?       // emoji or icon name
+  color            String?       // hex color for UI
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+  savingsGoals     SavingsGoal[]
+}
+
+model Budget {
+  id              String           @id @default(cuid())
+  userId          String
+  month           Int              // 1-12
+  year            Int
+  totalIncome     Float            @default(0)
+  totalAllocated  Float            @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  envelopes       BudgetEnvelope[]
+
+  @@unique([userId, month, year])
+}
+
+model BudgetEnvelope {
+  id          String   @id @default(cuid())
+  budgetId    String
+  category    String   // "Groceries", "Rent", "Entertainment", etc.
+  allocated   Float    // amount allocated this month
+  spent       Float    @default(0)
+  rollover    Float    @default(0) // unused from last month
+  icon        String?  // emoji
+  color       String?  // hex color
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, category])
+}
+
+model Transaction {
+  id                    String                 @id @default(cuid())
+  userId                String
+  accountId             String
+  amount                Float
+  category              String
+  merchantName          String?
+  description           String?
+  date                  DateTime
+  tags                  String[]               @default([])
+  isTripRelated         Boolean                @default(false)
+  tripId                String?
+  isRecurring           Boolean                @default(false)
+  recurringTransactionId String?
+  receiptUrl            String?
+  location              String?
+  latitude              Float?
+  longitude             Float?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account               Account                @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  recurringTransaction  RecurringTransaction?  @relation(fields: [recurringTransactionId], references: [id])
+}
+
+model RecurringTransaction {
+  id            String        @id @default(cuid())
+  userId        String
+  name          String        // "Netflix Subscription", "Rent", etc.
+  amount        Float
+  category      String
+  frequency     String        // "monthly", "weekly", "yearly", "biweekly"
+  startDate     DateTime
+  endDate       DateTime?     // null for ongoing
+  nextDate      DateTime      // next expected date
+  merchantName  String?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+}
+
+model SavingsGoal {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String   // "Emergency Fund", "Vacation to Japan", etc.
+  targetAmount   Float
+  currentAmount  Float    @default(0)
+  targetDate     DateTime?
+  linkedAccountId String?
+  icon           String?  // emoji
+  color          String?  // hex color
+  isCompleted    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedAccount  Account? @relation(fields: [linkedAccountId], references: [id])
+}
+
+model NetWorthSnapshot {
+  id          String   @id @default(cuid())
+  userId      String
+  date        DateTime
+  assets      Float    // total value of all assets
+  liabilities Float    // total value of all debts
+  netWorth    Float    // assets - liabilities
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model CategoryRule {
+  id         String   @id @default(cuid())
+  userId     String
+  merchant   String   // merchant name pattern
+  category   String   // auto-assign this category
+  confidence Float    @default(1.0) // 0-1, how sure we are
+  timesUsed  Int      @default(0) // how many times this rule has been applied
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchant])
 }

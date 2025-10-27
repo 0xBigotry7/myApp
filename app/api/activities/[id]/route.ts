@@ -19,10 +19,21 @@ export async function PATCH(
     // Verify activity ownership through trip
     const activity = await prisma.activity.findUnique({
       where: { id },
-      include: { trip: true },
+      include: {
+        trip: {
+          include: {
+            members: true,
+          }
+        }
+      },
     });
 
-    if (!activity || activity.trip.userId !== session.user.id) {
+    const hasAccess = activity && (
+      activity.trip.ownerId === session.user.id ||
+      activity.trip.members.some(m => m.userId === session.user.id)
+    );
+
+    if (!activity || !hasAccess) {
       return NextResponse.json(
         { error: "Activity not found or unauthorized" },
         { status: 404 }
@@ -64,10 +75,21 @@ export async function DELETE(
     // Verify activity ownership through trip
     const activity = await prisma.activity.findUnique({
       where: { id },
-      include: { trip: true },
+      include: {
+        trip: {
+          include: {
+            members: true,
+          }
+        }
+      },
     });
 
-    if (!activity || activity.trip.userId !== session.user.id) {
+    const hasAccess = activity && (
+      activity.trip.ownerId === session.user.id ||
+      activity.trip.members.some(m => m.userId === session.user.id)
+    );
+
+    if (!activity || !hasAccess) {
       return NextResponse.json(
         { error: "Activity not found or unauthorized" },
         { status: 404 }

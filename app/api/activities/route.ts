@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       where: { id: tripId },
     });
 
-    if (!trip || trip.userId !== session.user.id) {
+    if (!trip || trip.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: "Trip not found or unauthorized" },
         { status: 404 }
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       where: { id: tripId },
     });
 
-    if (!trip || trip.userId !== session.user.id) {
+    if (!trip || trip.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: "Trip not found or unauthorized" },
         { status: 404 }

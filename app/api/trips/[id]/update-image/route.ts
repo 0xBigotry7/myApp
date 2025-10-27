@@ -32,12 +32,27 @@ export async function POST(
         updateData.destinationImageUrl = imageUrl;
     }
 
-    // Update trip with image URL
-    const trip = await prisma.trip.update({
+    // Verify access first
+    const existingTrip = await prisma.trip.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        OR: [
+          { ownerId: session.user.id },
+          { members: { some: { userId: session.user.id } } }
+        ]
       },
+    });
+
+    if (!existingTrip) {
+      return NextResponse.json(
+        { error: "Trip not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
+    // Update trip with image URL
+    const trip = await prisma.trip.update({
+      where: { id },
       data: updateData,
     });
 
