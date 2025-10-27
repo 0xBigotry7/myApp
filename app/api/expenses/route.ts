@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { tripId, amount, category, currency, date, note, accountId } = body;
+    const { tripId, amount, category, subcategory, currency, date, note, accountId } = body;
 
     // Verify the trip belongs to the user or they are a member
     const trip = await prisma.trip.findFirst({
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         amount,
         category,
+        subcategory: subcategory || null,
         currency,
         date: new Date(date),
         note: note || null,

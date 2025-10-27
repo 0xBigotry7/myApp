@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
+import { getSubcategoriesForCategory } from "@/lib/subcategories";
 
 interface ExpenseInputFormProps {
   tripId: string;
@@ -31,6 +32,7 @@ export default function ExpenseInputForm({
   const [formData, setFormData] = useState({
     amount: "",
     category: categories[0] || "",
+    subcategory: "",
     date: new Date().toISOString().split("T")[0],
     time: "",
     currency: "USD",
@@ -40,6 +42,9 @@ export default function ExpenseInputForm({
 
   // Determine date input type based on category
   const needsTime = ["Transportation", "Activities"].includes(formData.category);
+
+  // Get subcategories for selected category
+  const availableSubcategories = getSubcategoriesForCategory(formData.category);
 
   const handleFileSelect = async (file: File) => {
     setReceiptFile(file);
@@ -111,6 +116,7 @@ export default function ExpenseInputForm({
           tripId,
           amount: parseFloat(formData.amount),
           category: formData.category,
+          subcategory: formData.subcategory || undefined,
           date: formData.time
             ? new Date(`${formData.date}T${formData.time}:00`)
             : new Date(formData.date),
@@ -329,6 +335,35 @@ export default function ExpenseInputForm({
               ))}
             </div>
           </div>
+
+          {/* Subcategory */}
+          {availableSubcategories.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                🔖 Subcategory <span className="text-gray-400 font-normal">({t.optional})</span>
+              </label>
+              <select
+                value={formData.subcategory}
+                onChange={(e) =>
+                  setFormData({ ...formData, subcategory: e.target.value })
+                }
+                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all appearance-none bg-white"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 0.75rem center",
+                  backgroundSize: "1.25rem",
+                }}
+              >
+                <option value="">Select subcategory...</option>
+                {availableSubcategories.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date and Time - Adaptive based on category */}
           <div className="space-y-3">

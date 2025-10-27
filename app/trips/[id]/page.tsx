@@ -101,30 +101,20 @@ export default async function TripDetailPage({
 
           {/* Trip Header */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{trip.name || trip.destination}</h1>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-gray-600">
-                  <span className="flex items-center gap-2">
-                    <span className="text-xl">📍</span>
-                    <span className="text-base md:text-lg">{trip.destination}</span>
+            <div className="mb-6">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{trip.name || trip.destination}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-gray-600">
+                <span className="flex items-center gap-2">
+                  <span className="text-xl">📍</span>
+                  <span className="text-base md:text-lg">{trip.destination}</span>
+                </span>
+                <span className="hidden sm:inline text-gray-400">•</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-xl">📅</span>
+                  <span className="text-sm md:text-base">
+                    {format(new Date(trip.startDate), "MMM d")} - {format(new Date(trip.endDate), "MMM d, yyyy")}
                   </span>
-                  <span className="hidden sm:inline text-gray-400">•</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-xl">📅</span>
-                    <span className="text-sm md:text-base">
-                      {format(new Date(trip.startDate), "MMM d")} - {format(new Date(trip.endDate), "MMM d, yyyy")}
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <button className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all font-medium text-sm">
-                  📤 {t.share}
-                </button>
-                <button className="flex-1 md:flex-none px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all font-medium text-sm">
-                  ⚙️ {t.settings}
-                </button>
+                </span>
               </div>
             </div>
 
@@ -277,7 +267,7 @@ export default async function TripDetailPage({
               </div>
 
               {/* Expense List - View Only */}
-              <ExpenseList expenses={trip.expenses} currentUserEmail={session.user.email || undefined} />
+              <ExpenseList expenses={trip.expenses} currentUserEmail={session.user.email || undefined} tripId={trip.id} />
             </>
           }
           itineraryTab={
