@@ -68,7 +68,6 @@ model Expense {
   userId      String
   amount      Float
   category    String
-  subcategory String?
   currency    String   @default("USD")
   date        DateTime
   note        String?

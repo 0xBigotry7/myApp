@@ -10,7 +10,6 @@ interface Expense {
   id: string;
   amount: number;
   category: string;
-  subcategory: string | null;
   currency: string;
   date: Date;
   note: string | null;
@@ -101,11 +100,6 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
                   <span className={`text-sm px-3 py-1 rounded-lg font-medium ${colors.badge}`}>
                     {translateCategory(expense.category, locale)}
                   </span>
-                  {expense.subcategory && (
-                    <span className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-700 font-medium">
-                      {expense.subcategory}
-                    </span>
-                  )}
                 </div>
                 {expense.note && (
                   <p className="text-sm text-gray-600 mt-1 break-words">{expense.note}</p>
