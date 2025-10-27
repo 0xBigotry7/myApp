@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useLocale } from "./LanguageSwitcher";
-import { getTranslations } from "@/lib/i18n";
+import { getTranslations, translateCategory } from "@/lib/i18n";
 
 interface ExpenseInputFormProps {
   tripId: string;
@@ -32,10 +32,16 @@ export default function ExpenseInputForm({
     amount: "",
     category: categories[0] || "",
     date: new Date().toISOString().split("T")[0],
+    endDate: "",
+    time: "",
     currency: "USD",
     location: "",
     note: "",
   });
+
+  // Determine date input type based on category
+  const needsDateRange = ["Accommodation", "Flights"].includes(formData.category);
+  const needsTime = ["Transportation", "Activities"].includes(formData.category);
 
   const handleFileSelect = async (file: File) => {
     setReceiptFile(file);
@@ -107,7 +113,10 @@ export default function ExpenseInputForm({
           tripId,
           amount: parseFloat(formData.amount),
           category: formData.category,
-          date: new Date(formData.date),
+          date: formData.time
+            ? new Date(`${formData.date}T${formData.time}:00`)
+            : new Date(formData.date),
+          endDate: formData.endDate ? new Date(formData.endDate) : undefined,
           currency: formData.currency,
           location: formData.location || undefined,
           note: formData.note || undefined,
@@ -259,6 +268,8 @@ export default function ExpenseInputForm({
                     amount: "",
                     category: categories[0] || "",
                     date: new Date().toISOString().split("T")[0],
+                    endDate: "",
+                    time: "",
                     currency: "USD",
                     location: "",
                     note: "",
@@ -287,6 +298,7 @@ export default function ExpenseInputForm({
               </span>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 required
                 value={formData.amount}
@@ -304,40 +316,107 @@ export default function ExpenseInputForm({
             <label className="block text-sm font-semibold text-gray-900 mb-3">
               🏷️ {t.category}
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setFormData({ ...formData, category: cat })}
-                  className={`px-4 py-4 rounded-xl font-semibold text-base transition-all ${
+                  className={`px-5 py-5 rounded-2xl font-semibold text-base transition-all touch-manipulation min-h-[60px] ${
                     formData.category === cat
                       ? "bg-gradient-sunset-pink text-white shadow-lg scale-105"
-                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-sunset-400 hover:bg-sunset-50"
+                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-sunset-400 hover:bg-sunset-50 active:scale-95"
                   }`}
                 >
-                  {cat}
+                  {translateCategory(cat, locale)}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Date and Currency */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                📅 {t.date}
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
-              />
-            </div>
+          {/* Date and Time - Adaptive based on category */}
+          <div className="space-y-3">
+            {needsDateRange ? (
+              // Date Range for Accommodation & Flights
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    📅 {t.startDate}
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    📅 {t.endDate}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
+                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+            ) : needsTime ? (
+              // Date + Time for Transportation & Activities
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    📅 {t.date}
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    🕐 {t.time} <span className="text-gray-400 font-normal">({t.optional})</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) =>
+                      setFormData({ ...formData, time: e.target.value })
+                    }
+                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+            ) : (
+              // Single Date for other categories
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  📅 {t.date}
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+            )}
+
+            {/* Currency */}
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
                 💱 {t.currency}
