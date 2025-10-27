@@ -270,6 +270,7 @@ export default function ExpenseInputForm({
                   setFormData({
                     amount: "",
                     category: categories[0] || "",
+                    subcategory: "",
                     date: new Date().toISOString().split("T")[0],
                     time: "",
                     currency: "USD",
