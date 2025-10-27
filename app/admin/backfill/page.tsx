@@ -54,10 +54,10 @@ export default function BackfillPage() {
           {result && (
             <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-xl">
               <h3 className="text-lg font-semibold text-green-800 mb-3">
-                Success!
+                {result.summary.errors > 0 ? "Completed with Warnings" : "Success!"}
               </h3>
               <p className="text-green-700 mb-4">{result.message}</p>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className={`grid ${result.summary.errors > 0 ? 'grid-cols-4' : 'grid-cols-3'} gap-4 text-center`}>
                 <div className="bg-white rounded-lg p-3">
                   <p className="text-sm text-gray-600">Total Expenses</p>
                   <p className="text-2xl font-bold text-gray-900">
@@ -76,7 +76,25 @@ export default function BackfillPage() {
                     {result.summary.skipped}
                   </p>
                 </div>
+                {result.summary.errors > 0 && (
+                  <div className="bg-white rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Errors</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {result.summary.errors}
+                    </p>
+                  </div>
+                )}
               </div>
+              {result.errorDetails && result.errorDetails.length > 0 && (
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm font-semibold text-yellow-800 mb-2">Error Details:</p>
+                  <ul className="text-xs text-yellow-700 space-y-1">
+                    {result.errorDetails.map((error: string, idx: number) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="mt-6 flex gap-4">
                 <button
                   onClick={() => router.push("/finance")}

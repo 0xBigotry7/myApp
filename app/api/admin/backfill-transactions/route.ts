@@ -46,62 +46,79 @@ export async function POST() {
 
     let created = 0;
     let skipped = 0;
+    let errors = 0;
+    const errorDetails: string[] = [];
 
-    for (const expense of expenses) {
-      // Check if a transaction already exists for this expense
-      const expenseKey = `${expense.tripId}-${new Date(expense.date).toISOString()}-${expense.amount}`;
+    // Ensure user has an account first
+    let account = await prisma.account.findFirst({
+      where: { userId: session.user.id, isActive: true },
+      orderBy: { createdAt: "asc" },
+    });
 
-      if (transactionMap.has(expenseKey)) {
-        console.log(`⏭️  Skipping expense ${expense.id} - transaction already exists`);
-        skipped++;
-        continue;
-      }
-
-      // Get user's account or create one if it doesn't exist
-      let account = await prisma.account.findFirst({
-        where: { userId: session.user.id, isActive: true },
-        orderBy: { createdAt: "asc" },
-      });
-
-      if (!account) {
-        console.log(`⚠️  No account found - creating default account`);
-        account = await prisma.account.create({
-          data: {
-            userId: session.user.id,
-            name: "Main Account",
-            type: "checking",
-            balance: 0,
-            currency: expense.currency || "USD",
-            icon: "💳",
-            color: "#3b82f6",
-          },
-        });
-      }
-
-      // Create the transaction
-      console.log(`✅ Creating transaction for expense ${expense.id} (${expense.trip.name} - ${expense.category} - $${expense.amount})`);
-
-      await prisma.transaction.create({
+    if (!account) {
+      console.log(`⚠️  No account found - creating default account`);
+      account = await prisma.account.create({
         data: {
           userId: session.user.id,
-          accountId: account.id,
-          amount: -Math.abs(expense.amount),
-          category: expense.category || "Travel",
-          description: expense.note || `Trip expense: ${expense.trip.name}`,
-          date: expense.date,
-          isTripRelated: true,
-          tripId: expense.tripId,
-          location: expense.trip.destination,
+          name: "Main Account",
+          type: "checking",
+          balance: 0,
+          currency: "USD",
+          icon: "💳",
+          color: "#3b82f6",
         },
       });
+    }
 
-      // Update account balance
-      await prisma.account.update({
-        where: { id: account.id },
-        data: { balance: account.balance - Math.abs(expense.amount) },
-      });
+    const accountId = account.id;
 
-      created++;
+    for (const expense of expenses) {
+      try {
+        // Check if a transaction already exists for this expense
+        const expenseKey = `${expense.tripId}-${new Date(expense.date).toISOString()}-${expense.amount}`;
+
+        if (transactionMap.has(expenseKey)) {
+          console.log(`⏭️  Skipping expense ${expense.id} - transaction already exists`);
+          skipped++;
+          continue;
+        }
+
+        // Create the transaction and update balance in a single transaction
+        console.log(`✅ Creating transaction for expense ${expense.id} (${expense.trip.name} - ${expense.category} - $${expense.amount})`);
+
+        await prisma.$transaction([
+          // Create transaction
+          prisma.transaction.create({
+            data: {
+              userId: session.user.id,
+              accountId: accountId,
+              amount: -Math.abs(expense.amount),
+              category: expense.category || "Travel",
+              description: expense.note || `Trip expense: ${expense.trip.name}`,
+              date: expense.date,
+              isTripRelated: true,
+              tripId: expense.tripId,
+              location: expense.trip.destination,
+            },
+          }),
+          // Update account balance using decrement
+          prisma.account.update({
+            where: { id: accountId },
+            data: {
+              balance: {
+                decrement: Math.abs(expense.amount)
+              }
+            },
+          }),
+        ]);
+
+        created++;
+      } catch (innerError: any) {
+        console.error(`❌ Error processing expense ${expense.id}:`, innerError);
+        errors++;
+        errorDetails.push(`Expense ${expense.id}: ${innerError.message}`);
+        // Continue with next expense instead of stopping
+      }
     }
 
     return NextResponse.json({
@@ -110,8 +127,10 @@ export async function POST() {
         totalExpenses: expenses.length,
         created,
         skipped,
+        errors,
       },
-      message: `Successfully backfilled ${created} transactions. Skipped ${skipped} existing transactions.`,
+      errorDetails: errors > 0 ? errorDetails : undefined,
+      message: `Successfully backfilled ${created} transactions. Skipped ${skipped} existing transactions.${errors > 0 ? ` ${errors} errors occurred.` : ''}`,
     });
   } catch (error) {
     console.error("Error backfilling transactions:", error);
