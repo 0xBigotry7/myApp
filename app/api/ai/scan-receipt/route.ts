@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize Groq client (FREE - no payment required!)
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY || "",
 });
 
 export async function POST(req: NextRequest) {
@@ -14,15 +15,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Check if Groq API key is configured
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json(
+        {
+          error: "Groq API key not configured",
+          hint: "Get your FREE API key at https://console.groq.com/keys"
+        },
+        { status: 500 }
+      );
+    }
+
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Image = buffer.toString("base64");
     const mimeType = file.type;
 
-    // Call OpenAI Vision API to scan receipt
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    // Call Groq Vision API with Llama 3.2 Vision (FREE & FAST!)
+    const response = await groq.chat.completions.create({
+      model: "llama-3.2-90b-vision-preview",
       messages: [
         {
           role: "user",
@@ -77,7 +89,7 @@ IMPORTANT:
       const jsonString = content.replace(/```json\n?|\n?```/g, "").trim();
       receiptData = JSON.parse(jsonString);
     } catch (parseError) {
-      console.error("Failed to parse OpenAI response:", content);
+      console.error("Failed to parse Groq response:", content);
       return NextResponse.json(
         { error: "Failed to parse receipt data", rawResponse: content },
         { status: 500 }
@@ -85,10 +97,13 @@ IMPORTANT:
     }
 
     return NextResponse.json(receiptData);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error scanning receipt:", error);
     return NextResponse.json(
-      { error: "Failed to scan receipt" },
+      {
+        error: "Failed to scan receipt",
+        details: error?.message || "Unknown error"
+      },
       { status: 500 }
     );
   }

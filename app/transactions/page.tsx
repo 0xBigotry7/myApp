@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import QuickAddTransaction from "@/components/QuickAddTransaction";
+import { getHouseholdUserIds, getUserBadge } from "@/lib/household";
 
 export default async function TransactionsPage() {
   const session = await auth();
@@ -10,9 +11,17 @@ export default async function TransactionsPage() {
     redirect("/login");
   }
 
-  // Fetch all transactions with account details
+  // Get all household user IDs for shared financial view
+  const householdUserIds = await getHouseholdUserIds();
+
+  // Get all users for color coding
+  const allUsers = await prisma.user.findMany({
+    select: { id: true, name: true },
+  });
+
+  // Fetch all household transactions with account details
   const transactions = await prisma.transaction.findMany({
-    where: { userId: session.user.id },
+    where: { userId: { in: householdUserIds } },
     include: {
       account: {
         select: {
@@ -21,6 +30,12 @@ export default async function TransactionsPage() {
           type: true,
           icon: true,
           color: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
         },
       },
     },
@@ -61,8 +76,23 @@ export default async function TransactionsPage() {
               Transactions
             </h1>
             <p className="text-gray-600 mt-1">
-              Track all your income and expenses
+              Shared household income and expenses
             </p>
+            <div className="flex gap-2 mt-2">
+              {allUsers.map((user) => {
+                const badge = getUserBadge(user.id, allUsers);
+                return (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium text-white"
+                    style={{ backgroundColor: badge.color }}
+                  >
+                    <span className="font-bold">{badge.initial}</span>
+                    <span>{badge.name}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <a
             href="/"
@@ -137,59 +167,76 @@ export default async function TransactionsPage() {
                     {date}
                   </h3>
                   <div className="space-y-2">
-                    {txns.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border"
-                      >
-                        <div className="flex items-center gap-4 flex-1">
-                          {/* Category Icon */}
-                          <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-                            style={{
-                              backgroundColor: transaction.account.color || "#e5e7eb",
-                            }}
-                          >
-                            {transaction.account.icon || "💳"}
+                    {txns.map((transaction) => {
+                      const userBadge = getUserBadge(transaction.userId, allUsers);
+                      return (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border-l-4"
+                          style={{ borderLeftColor: userBadge.color }}
+                        >
+                          <div className="flex items-center gap-4 flex-1">
+                            {/* Category Icon */}
+                            <div
+                              className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                              style={{
+                                backgroundColor: transaction.account.color || "#e5e7eb",
+                              }}
+                            >
+                              {transaction.account.icon || "💳"}
+                            </div>
+
+                            {/* Transaction Details */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold">
+                                  {transaction.merchantName || transaction.category}
+                                </p>
+                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                                  {transaction.category}
+                                </span>
+                                {transaction.isTripRelated && (
+                                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                                    ✈️ Trip
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <span
+                                  className="font-semibold px-1.5 py-0.5 rounded text-white text-xs"
+                                  style={{ backgroundColor: userBadge.color }}
+                                >
+                                  {userBadge.initial}
+                                </span>
+                                <span>{userBadge.name}</span>
+                                <span>•</span>
+                                <span>{transaction.account.name}</span>
+                                {transaction.description && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{transaction.description}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Transaction Details */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold">
-                                {transaction.merchantName || transaction.category}
-                              </p>
-                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                                {transaction.category}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <span>{transaction.account.name}</span>
-                              {transaction.description && (
-                                <>
-                                  <span>•</span>
-                                  <span>{transaction.description}</span>
-                                </>
-                              )}
-                            </div>
+                          {/* Amount */}
+                          <div className="text-right">
+                            <p
+                              className={`text-lg font-bold ${
+                                transaction.amount >= 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {transaction.amount >= 0 ? "+" : "-"}$
+                              {Math.abs(transaction.amount).toFixed(2)}
+                            </p>
                           </div>
                         </div>
-
-                        {/* Amount */}
-                        <div className="text-right">
-                          <p
-                            className={`text-lg font-bold ${
-                              transaction.amount >= 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {transaction.amount >= 0 ? "+" : "-"}$
-                            {Math.abs(transaction.amount).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}

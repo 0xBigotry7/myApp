@@ -64,26 +64,32 @@ export async function POST(request: Request) {
       });
 
       if (account) {
-        // Create transaction (negative amount for expense)
-        await prisma.transaction.create({
-          data: {
-            userId: session.user.id,
-            accountId: userAccountId,
-            amount: -Math.abs(amount), // Always negative for expenses
-            category: category || "Travel",
-            description: note || `Trip expense: ${trip.name}`,
-            date: new Date(date),
-            isTripRelated: true,
-            tripId: tripId,
-            location: trip.destination,
-          },
-        });
-
-        // Update account balance
-        await prisma.account.update({
-          where: { id: userAccountId },
-          data: { balance: account.balance - Math.abs(amount) },
-        });
+        // Create transaction and update balance atomically
+        await prisma.$transaction([
+          // Create transaction (negative amount for expense)
+          prisma.transaction.create({
+            data: {
+              userId: session.user.id,
+              accountId: userAccountId,
+              amount: -Math.abs(amount), // Always negative for expenses
+              category: category || "Travel",
+              description: note || `Trip expense: ${trip.name}`,
+              date: new Date(date),
+              isTripRelated: true,
+              tripId: tripId,
+              location: trip.destination,
+            },
+          }),
+          // Update account balance using decrement
+          prisma.account.update({
+            where: { id: userAccountId },
+            data: {
+              balance: {
+                decrement: Math.abs(amount)
+              }
+            },
+          }),
+        ]);
       }
     }
 
