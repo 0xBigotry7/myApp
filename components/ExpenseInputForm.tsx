@@ -341,7 +341,7 @@ export default function ExpenseInputForm({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    📅 {t.startDate}
+                    📅 {t.expenseStartDate}
                   </label>
                   <input
                     type="date"
@@ -355,7 +355,7 @@ export default function ExpenseInputForm({
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    📅 {t.endDate}
+                    📅 {t.expenseEndDate}
                   </label>
                   <input
                     type="date"
