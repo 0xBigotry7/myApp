@@ -6,21 +6,25 @@ import CalendarPicker from "@/components/CalendarPicker";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const CATEGORIES = [
-  { name: "Accommodation", icon: "🏨", color: "#3b82f6", defaultPercent: 35 },
-  { name: "Food & Dining", icon: "🍽️", color: "#10b981", defaultPercent: 25 },
-  { name: "Transportation", icon: "🚗", color: "#f59e0b", defaultPercent: 20 },
-  { name: "Activities", icon: "🎭", color: "#8b5cf6", defaultPercent: 15 },
-  { name: "Shopping", icon: "🛍️", color: "#ec4899", defaultPercent: 3 },
-  { name: "Other", icon: "📌", color: "#6b7280", defaultPercent: 2 },
+  { name: "Accommodation", icon: "🏨", color: "#3b82f6", defaultPercent: 30 },
+  { name: "Food & Dining", icon: "🍽️", color: "#10b981", defaultPercent: 20 },
+  { name: "Flights", icon: "✈️", color: "#06b6d4", defaultPercent: 25 },
+  { name: "Transportation", icon: "🚗", color: "#f59e0b", defaultPercent: 10 },
+  { name: "Activities", icon: "🎭", color: "#8b5cf6", defaultPercent: 10 },
+  { name: "Shopping", icon: "🛍️", color: "#ec4899", defaultPercent: 2 },
+  { name: "Insurance & Health", icon: "🏥", color: "#ef4444", defaultPercent: 1 },
+  { name: "Communication", icon: "📱", color: "#14b8a6", defaultPercent: 1 },
+  { name: "Fees & Tips", icon: "💳", color: "#a855f7", defaultPercent: 1 },
+  { name: "Other", icon: "📌", color: "#6b7280", defaultPercent: 0 },
 ];
 
 const TRIP_PRESETS = {
-  foodie: { Accommodation: 25, "Food & Dining": 45, Transportation: 12, Activities: 12, Shopping: 4, Other: 2 },
-  fineDining: { Accommodation: 30, "Food & Dining": 50, Transportation: 8, Activities: 8, Shopping: 2, Other: 2 },
-  resort: { Accommodation: 50, "Food & Dining": 25, Transportation: 5, Activities: 15, Shopping: 3, Other: 2 },
-  workTrip: { Accommodation: 40, "Food & Dining": 30, Transportation: 20, Activities: 5, Shopping: 3, Other: 2 },
-  adventure: { Accommodation: 18, "Food & Dining": 22, Transportation: 20, Activities: 35, Shopping: 2, Other: 3 },
-  sightseeing: { Accommodation: 28, "Food & Dining": 25, Transportation: 20, Activities: 22, Shopping: 3, Other: 2 },
+  foodie: { Accommodation: 20, "Food & Dining": 40, Flights: 20, Transportation: 8, Activities: 8, Shopping: 2, "Insurance & Health": 1, Communication: 0.5, "Fees & Tips": 0.5, Other: 0 },
+  fineDining: { Accommodation: 25, "Food & Dining": 45, Flights: 15, Transportation: 5, Activities: 5, Shopping: 2, "Insurance & Health": 1, Communication: 1, "Fees & Tips": 1, Other: 0 },
+  resort: { Accommodation: 40, "Food & Dining": 20, Flights: 20, Transportation: 3, Activities: 12, Shopping: 2, "Insurance & Health": 1, Communication: 1, "Fees & Tips": 1, Other: 0 },
+  workTrip: { Accommodation: 30, "Food & Dining": 25, Flights: 25, Transportation: 10, Activities: 3, Shopping: 2, "Insurance & Health": 2, Communication: 2, "Fees & Tips": 1, Other: 0 },
+  adventure: { Accommodation: 15, "Food & Dining": 18, Flights: 22, Transportation: 12, Activities: 28, Shopping: 1, "Insurance & Health": 2, Communication: 1, "Fees & Tips": 1, Other: 0 },
+  sightseeing: { Accommodation: 25, "Food & Dining": 20, Flights: 20, Transportation: 12, Activities: 18, Shopping: 2, "Insurance & Health": 1, Communication: 1, "Fees & Tips": 1, Other: 0 },
 };
 
 const POPULAR_DESTINATIONS = [

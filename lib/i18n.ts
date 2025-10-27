@@ -42,6 +42,9 @@ export const translations = {
     amount: "Amount",
     category: "Category",
     date: "Date",
+    expenseStartDate: "Start Date",
+    expenseEndDate: "End Date",
+    time: "Time",
     currency: "Currency",
     location: "Location",
     note: "Note",
@@ -63,9 +66,13 @@ export const translations = {
     // Categories
     accommodation: "Accommodation",
     foodDining: "Food & Dining",
+    flights: "Flights",
     transportation: "Transportation",
     activities: "Activities",
     shopping: "Shopping",
+    insuranceHealth: "Insurance & Health",
+    communication: "Communication",
+    feesTips: "Fees & Tips",
     other: "Other",
 
     // AI Insights
@@ -176,6 +183,9 @@ export const translations = {
     amount: "金额",
     category: "类别",
     date: "日期",
+    expenseStartDate: "开始日期",
+    expenseEndDate: "结束日期",
+    time: "时间",
     currency: "货币",
     location: "地点",
     note: "备注",
@@ -197,9 +207,13 @@ export const translations = {
     // Categories
     accommodation: "住宿",
     foodDining: "餐饮",
+    flights: "机票",
     transportation: "交通",
     activities: "活动",
     shopping: "购物",
+    insuranceHealth: "保险与医疗",
+    communication: "通讯",
+    feesTips: "费用与小费",
     other: "其他",
 
     // AI Insights
@@ -281,9 +295,13 @@ export function translateCategory(category: string, locale: Locale): string {
   const categoryMap: Record<string, string> = {
     "Accommodation": t.accommodation,
     "Food & Dining": t.foodDining,
+    "Flights": t.flights,
     "Transportation": t.transportation,
     "Activities": t.activities,
     "Shopping": t.shopping,
+    "Insurance & Health": t.insuranceHealth,
+    "Communication": t.communication,
+    "Fees & Tips": t.feesTips,
     "Other": t.other,
   };
   return categoryMap[category] || category;
