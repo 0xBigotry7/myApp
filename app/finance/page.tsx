@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import QuickAddTransaction from "@/components/QuickAddTransaction";
+import { getHouseholdUserIds, getUserBadge } from "@/lib/household";
 
 export default async function FinancePage() {
   const session = await auth();
@@ -12,16 +13,28 @@ export default async function FinancePage() {
     redirect("/login");
   }
 
-  // Get financial data
+  // Get all household user IDs for shared financial view
+  const householdUserIds = await getHouseholdUserIds();
+
+  // Get all users for color coding
+  const allUsers = await prisma.user.findMany({
+    select: { id: true, name: true },
+  });
+
+  // Get financial data for entire household
   const accounts = await prisma.account.findMany({
-    where: { userId: session.user.id, isActive: true },
+    where: { userId: { in: householdUserIds }, isActive: true },
     orderBy: { createdAt: "asc" },
+    include: {
+      user: { select: { id: true, name: true } },
+    },
   });
 
   const allTransactions = await prisma.transaction.findMany({
-    where: { userId: session.user.id },
+    where: { userId: { in: householdUserIds } },
     include: {
       account: { select: { name: true, icon: true, color: true } },
+      user: { select: { id: true, name: true } },
     },
     orderBy: { date: "desc" },
   });
@@ -83,8 +96,23 @@ export default async function FinancePage() {
               💰 Finance Dashboard
             </h1>
             <p className="text-gray-600">
-              Your complete financial overview and budget tracking
+              Shared household financial overview and budget tracking
             </p>
+            <div className="flex gap-2 mt-3">
+              {allUsers.map((user) => {
+                const badge = getUserBadge(user.id, allUsers);
+                return (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white"
+                    style={{ backgroundColor: badge.color }}
+                  >
+                    <span className="font-bold">{badge.initial}</span>
+                    <span>{badge.name}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Top Metrics Row */}
@@ -262,51 +290,61 @@ export default async function FinancePage() {
                       </p>
                     </div>
                   ) : (
-                    recentTransactions.map((txn) => (
-                      <div
-                        key={txn.id}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
-                            style={{
-                              backgroundColor: txn.account.color || "#e5e7eb",
-                            }}
-                          >
-                            <span className="text-lg">
-                              {txn.account.icon || "💳"}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {txn.merchantName || txn.category}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              <span>{txn.account.name}</span>
-                              <span>•</span>
-                              <span>
-                                {new Date(txn.date).toLocaleDateString()}
+                    recentTransactions.map((txn) => {
+                      const userBadge = getUserBadge(txn.userId, allUsers);
+                      return (
+                        <div
+                          key={txn.id}
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border-l-4"
+                          style={{ borderLeftColor: userBadge.color }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                backgroundColor: txn.account.color || "#e5e7eb",
+                              }}
+                            >
+                              <span className="text-lg">
+                                {txn.account.icon || "💳"}
                               </span>
-                              {txn.isTripRelated && (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-purple-600">✈️ Trip</span>
-                                </>
-                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {txn.merchantName || txn.category}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span
+                                  className="font-semibold px-1.5 py-0.5 rounded text-white"
+                                  style={{ backgroundColor: userBadge.color }}
+                                >
+                                  {userBadge.initial}
+                                </span>
+                                <span>{txn.account.name}</span>
+                                <span>•</span>
+                                <span>
+                                  {new Date(txn.date).toLocaleDateString()}
+                                </span>
+                                {txn.isTripRelated && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-purple-600">✈️ Trip</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
+                          <span
+                            className={`text-lg font-bold ${
+                              txn.amount >= 0 ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {txn.amount >= 0 ? "+" : "-"}$
+                            {Math.abs(txn.amount).toFixed(2)}
+                          </span>
                         </div>
-                        <span
-                          className={`text-lg font-bold ${
-                            txn.amount >= 0 ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
-                          {txn.amount >= 0 ? "+" : "-"}$
-                          {Math.abs(txn.amount).toFixed(2)}
-                        </span>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -341,35 +379,46 @@ export default async function FinancePage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {accounts.map((acc) => (
-                      <div
-                        key={acc.id}
-                        className="p-3 rounded-lg border hover:border-blue-300 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: acc.color || "#e5e7eb" }}
-                          >
-                            <span className="text-lg">{acc.icon || "💳"}</span>
+                    {accounts.map((acc) => {
+                      const userBadge = getUserBadge(acc.userId, allUsers);
+                      return (
+                        <div
+                          key={acc.id}
+                          className="p-3 rounded-lg border hover:border-blue-300 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{ backgroundColor: acc.color || "#e5e7eb" }}
+                            >
+                              <span className="text-lg">{acc.icon || "💳"}</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-gray-900">
+                                  {acc.name}
+                                </p>
+                                <span
+                                  className="text-xs font-bold px-1.5 py-0.5 rounded text-white"
+                                  style={{ backgroundColor: userBadge.color }}
+                                >
+                                  {userBadge.initial}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                {acc.type.replace("_", " ")}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">
-                              {acc.name}
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-gray-900">
+                              ${acc.balance.toFixed(2)}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              {acc.type.replace("_", " ")}
-                            </p>
+                            <p className="text-xs text-gray-500">{acc.currency}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-gray-900">
-                            ${acc.balance.toFixed(2)}
-                          </p>
-                          <p className="text-xs text-gray-500">{acc.currency}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
