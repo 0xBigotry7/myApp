@@ -32,7 +32,6 @@ export default function ExpenseInputForm({
     amount: "",
     category: categories[0] || "",
     date: new Date().toISOString().split("T")[0],
-    endDate: "",
     time: "",
     currency: "USD",
     location: "",
@@ -40,7 +39,6 @@ export default function ExpenseInputForm({
   });
 
   // Determine date input type based on category
-  const needsDateRange = ["Accommodation", "Flights"].includes(formData.category);
   const needsTime = ["Transportation", "Activities"].includes(formData.category);
 
   const handleFileSelect = async (file: File) => {
@@ -116,7 +114,6 @@ export default function ExpenseInputForm({
           date: formData.time
             ? new Date(`${formData.date}T${formData.time}:00`)
             : new Date(formData.date),
-          endDate: formData.endDate ? new Date(formData.endDate) : undefined,
           currency: formData.currency,
           location: formData.location || undefined,
           note: formData.note || undefined,
@@ -268,7 +265,6 @@ export default function ExpenseInputForm({
                     amount: "",
                     category: categories[0] || "",
                     date: new Date().toISOString().split("T")[0],
-                    endDate: "",
                     time: "",
                     currency: "USD",
                     location: "",
@@ -336,38 +332,7 @@ export default function ExpenseInputForm({
 
           {/* Date and Time - Adaptive based on category */}
           <div className="space-y-3">
-            {needsDateRange ? (
-              // Date Range for Accommodation & Flights
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    📅 {t.expenseStartDate}
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    📅 {t.expenseEndDate}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                    className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-            ) : needsTime ? (
+            {needsTime ? (
               // Date + Time for Transportation & Activities
               <div className="grid grid-cols-2 gap-3">
                 <div>

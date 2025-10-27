@@ -70,7 +70,6 @@ model Expense {
   category   String
   currency   String   @default("USD")
   date       DateTime
-  endDate    DateTime? // For date ranges (hotels, flights)
   note       String?
   receiptUrl String?
   location   String?
