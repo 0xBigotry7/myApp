@@ -3,6 +3,8 @@
 import { format } from "date-fns";
 import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Expense {
   id: string;
@@ -20,11 +22,38 @@ interface Expense {
 interface ExpenseListProps {
   expenses: Expense[];
   currentUserEmail?: string;
+  tripId: string;
 }
 
-export default function ExpenseList({ expenses, currentUserEmail }: ExpenseListProps) {
+export default function ExpenseList({ expenses, currentUserEmail, tripId }: ExpenseListProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
+  const router = useRouter();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (expenseId: string) => {
+    if (!confirm("Are you sure you want to delete this expense?")) {
+      return;
+    }
+
+    setDeletingId(expenseId);
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        router.refresh();
+      } else {
+        alert("Failed to delete expense");
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      alert("Error deleting expense");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   // Helper function to get user color
   const getUserColor = (userEmail: string) => {
@@ -61,10 +90,10 @@ export default function ExpenseList({ expenses, currentUserEmail }: ExpenseListP
           return (
             <div
               key={expense.id}
-              className={`flex justify-between items-center p-4 rounded-xl transition-all ${colors.bg}`}
+              className={`flex justify-between items-center p-4 rounded-xl transition-all ${colors.bg} group`}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="font-semibold text-lg">
                     ${expense.amount.toFixed(2)}
                   </span>
@@ -73,15 +102,32 @@ export default function ExpenseList({ expenses, currentUserEmail }: ExpenseListP
                   </span>
                 </div>
                 {expense.note && (
-                  <p className="text-sm text-gray-600 mt-1">{expense.note}</p>
+                  <p className="text-sm text-gray-600 mt-1 break-words">{expense.note}</p>
                 )}
-                <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                <div className="flex gap-4 text-xs text-gray-500 mt-1 flex-wrap">
                   <span>{format(new Date(expense.date), "MMM d, yyyy")}</span>
                   <span className="flex items-center gap-1">
                     {colors.icon && <span>{colors.icon}</span>}
                     <span>{t.addedBy} {expense.user.name}</span>
                   </span>
                 </div>
+              </div>
+              <div className="flex gap-2 ml-3 flex-shrink-0">
+                <button
+                  onClick={() => router.push(`/trips/${tripId}/edit-expense/${expense.id}`)}
+                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all touch-manipulation md:opacity-0 md:group-hover:opacity-100"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => handleDelete(expense.id)}
+                  disabled={deletingId === expense.id}
+                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-lg transition-all disabled:opacity-50 touch-manipulation md:opacity-0 md:group-hover:opacity-100"
+                  title="Delete"
+                >
+                  {deletingId === expense.id ? "⏳" : "🗑️"}
+                </button>
               </div>
             </div>
           );
