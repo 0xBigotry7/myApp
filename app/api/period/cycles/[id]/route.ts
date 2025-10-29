@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
+  const { id } = await params;
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +19,7 @@ export async function PATCH(
 
     // Verify cycle belongs to user
     const cycle = await prisma.periodCycle.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
     });
 
     if (!cycle) {
@@ -35,7 +36,7 @@ export async function PATCH(
     }
 
     const updatedCycle = await prisma.periodCycle.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(endDate && { endDate: new Date(endDate) }),
         ...(periodLength && { periodLength }),
@@ -56,9 +57,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
+  const { id } = await params;
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -67,7 +69,7 @@ export async function DELETE(
   try {
     // Verify cycle belongs to user
     const cycle = await prisma.periodCycle.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
     });
 
     if (!cycle) {
@@ -75,7 +77,7 @@ export async function DELETE(
     }
 
     await prisma.periodCycle.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
