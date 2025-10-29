@@ -19,6 +19,13 @@ const notoSansSC = Noto_Sans_SC({
 export const metadata: Metadata = {
   title: "TravelAI - 旅行计划",
   description: "Plan and track your travel expenses | 计划和跟踪您的旅行费用",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({

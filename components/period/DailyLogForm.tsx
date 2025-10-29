@@ -33,6 +33,8 @@ const MOODS = [
 
 const FLOW_LEVELS = ["spotting", "light", "medium", "heavy"];
 
+// Minimum touch target size for iPhone (44x44pt)
+
 export default function DailyLogForm({ todayLog, locale }: Props) {
   const router = useRouter();
   const t = getTranslations(locale);
@@ -100,7 +102,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-3">
             {t.flowIntensity}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {FLOW_LEVELS.map((level) => (
               <button
                 key={level}
@@ -108,10 +110,10 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                 onClick={() =>
                   setFormData((prev) => ({ ...prev, flowIntensity: level }))
                 }
-                className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                className={`px-4 py-3 min-h-[44px] rounded-xl border-2 transition-all active:scale-95 ${
                   formData.flowIntensity === level
                     ? "border-pink-500 bg-pink-50 text-pink-700 font-semibold"
-                    : "border-gray-200 hover:border-pink-300"
+                    : "border-gray-300 active:border-pink-400"
                 }`}
               >
                 {t[level as keyof typeof t]}
@@ -125,16 +127,16 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-3">
             {t.symptoms}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {SYMPTOMS.map((symptom) => (
               <button
                 key={symptom}
                 type="button"
                 onClick={() => toggleSymptom(symptom)}
-                className={`px-3 py-2 rounded-lg border-2 text-sm transition-all ${
+                className={`px-3 py-3 min-h-[44px] rounded-xl border-2 text-sm transition-all active:scale-95 ${
                   formData.symptoms.includes(symptom)
                     ? "border-purple-500 bg-purple-50 text-purple-700 font-semibold"
-                    : "border-gray-200 hover:border-purple-300"
+                    : "border-gray-300 active:border-purple-400"
                 }`}
               >
                 {t[symptom as keyof typeof t]}
@@ -148,16 +150,16 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-3">
             {t.mood}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {MOODS.map((mood) => (
               <button
                 key={mood}
                 type="button"
                 onClick={() => toggleMood(mood)}
-                className={`px-3 py-2 rounded-lg border-2 text-sm transition-all ${
+                className={`px-3 py-3 min-h-[44px] rounded-xl border-2 text-sm transition-all active:scale-95 ${
                   formData.mood.includes(mood)
                     ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
-                    : "border-gray-200 hover:border-blue-300"
+                    : "border-gray-300 active:border-blue-400"
                 }`}
               >
                 {t[mood as keyof typeof t]}
