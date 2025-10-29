@@ -19,13 +19,6 @@ const notoSansSC = Noto_Sans_SC({
 export const metadata: Metadata = {
   title: "TravelAI - 旅行计划",
   description: "Plan and track your travel expenses | 计划和跟踪您的旅行费用",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
-  },
 };
 
 export default function RootLayout({
@@ -35,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${notoSansSC.variable}`}>
-      <body className="font-sans pb-24 md:pb-0">
+      <body className="font-sans pb-20 md:pb-0">
         {children}
         <MobileNav />
       </body>
