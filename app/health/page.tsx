@@ -17,39 +17,49 @@ export default async function HealthPage() {
   const t = getTranslations(locale);
 
   // Fetch current cycle and recent cycles
-  const cycles = await prisma.periodCycle.findMany({
-    where: { userId: session.user.id },
-    include: {
-      dailyLogs: {
-        orderBy: { date: "desc" },
+  // Wrap in try-catch in case tables don't exist yet
+  let cycles: any[] = [];
+  let todayLog: any = null;
+  let insights: any[] = [];
+
+  try {
+    cycles = await prisma.periodCycle.findMany({
+      where: { userId: session.user.id },
+      include: {
+        dailyLogs: {
+          orderBy: { date: "desc" },
+        },
       },
-    },
-    orderBy: { startDate: "desc" },
-    take: 12,
-  });
+      orderBy: { startDate: "desc" },
+      take: 12,
+    });
 
-  // Fetch today's log
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+    // Fetch today's log
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const todayLog = await prisma.dailyLog.findFirst({
-    where: {
-      userId: session.user.id,
-      date: {
-        gte: today,
-        lt: tomorrow,
+    todayLog = await prisma.dailyLog.findFirst({
+      where: {
+        userId: session.user.id,
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
       },
-    },
-  });
+    });
 
-  // Fetch recent insights
-  const insights = await prisma.healthInsight.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
+    // Fetch recent insights
+    insights = await prisma.healthInsight.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+  } catch (error) {
+    console.error("Error fetching period data:", error);
+    // Tables might not exist yet, show empty state
+  }
 
   // Calculate statistics
   const completedCycles = cycles.filter((c) => c.isComplete);
