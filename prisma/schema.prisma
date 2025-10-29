@@ -27,6 +27,9 @@ model User {
   recurringTransactions RecurringTransaction[]
   netWorthSnapshots     NetWorthSnapshot[]
   categoryRules         CategoryRule[]
+  periodCycles          PeriodCycle[]
+  dailyLogs             DailyLog[]
+  healthInsights        HealthInsight[]
 }
 
 model Trip {
@@ -279,4 +282,67 @@ model CategoryRule {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, merchant])
+}
+
+// ===== PERIOD TRACKING MODELS =====
+
+model PeriodCycle {
+  id                  String     @id @default(cuid())
+  userId              String
+  startDate           DateTime   // First day of period
+  endDate             DateTime?  // Last day of period (null if ongoing)
+  cycleLength         Int?       // Days from start of this period to start of next
+  periodLength        Int?       // Duration of the period in days
+  flowIntensity       String?    // "light", "medium", "heavy"
+  predictedStartDate  DateTime?  // AI predicted start for next cycle
+  predictedEndDate    DateTime?  // AI predicted end for this cycle
+  ovulationDate       DateTime?  // Predicted/tracked ovulation date
+  fertileWindowStart  DateTime?  // Predicted fertile window start
+  fertileWindowEnd    DateTime?  // Predicted fertile window end
+  notes               String?
+  isComplete          Boolean    @default(false) // True when cycle ends (next period starts)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyLogs           DailyLog[]
+}
+
+model DailyLog {
+  id                String       @id @default(cuid())
+  userId            String
+  cycleId           String?
+  date              DateTime
+  flowIntensity     String?      // "spotting", "light", "medium", "heavy"
+  symptoms          String[]     @default([]) // ["cramps", "headache", "bloating", "breast_tenderness", "acne", "back_pain"]
+  mood              String[]     @default([]) // ["happy", "sad", "anxious", "irritable", "energetic", "tired"]
+  energyLevel       Int?         // 1-5 scale
+  sleepQuality      Int?         // 1-5 scale
+  sexualActivity    Boolean      @default(false)
+  notes             String?
+  weight            Float?       // Optional weight tracking
+  temperature       Float?       // Basal body temperature
+  cervicalMucus     String?      // "dry", "sticky", "creamy", "watery", "egg_white"
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cycle             PeriodCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model HealthInsight {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // "cycle_prediction", "symptom_pattern", "health_tip", "ovulation_prediction"
+  title         String
+  content       String   // AI-generated insight
+  severity      String?  // "info", "warning", "urgent" - for health concerns
+  isRead        Boolean  @default(false)
+  relevantDate  DateTime? // Date this insight is relevant to
+  cycleIds      String[] @default([]) // Related cycle IDs
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

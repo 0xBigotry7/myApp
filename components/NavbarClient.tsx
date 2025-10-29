@@ -45,6 +45,12 @@ export default function NavbarClient({ user }: NavbarClientProps) {
                   💰 Finance
                 </Link>
                 <Link
+                  href="/health"
+                  className="text-white/90 hover:text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all font-medium text-sm backdrop-blur-sm"
+                >
+                  🌸 {t.health}
+                </Link>
+                <Link
                   href="/transactions"
                   className="text-white/90 hover:text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all font-medium text-sm backdrop-blur-sm"
                 >

@@ -29,6 +29,11 @@ export default function MobileNav() {
       label: t.finance || "Finance",
     },
     {
+      path: "/health",
+      icon: "🌸",
+      label: t.health || "Health",
+    },
+    {
       path: "/transactions",
       icon: "📊",
       label: t.transactions || "History",
