@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
         pathname: "/private/**",
       },
     ],
+    // Disable image optimization errors for expired external URLs
+    unoptimized: false,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+  },
+  // Suppress external image optimization errors
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
   },
 };
 

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import Navbar from "@/components/Navbar";
 import TravelMapClient from "@/components/TravelMapClient";
 
 export default async function TravelMapPage() {
@@ -29,10 +30,13 @@ export default async function TravelMapPage() {
   });
 
   return (
-    <TravelMapClient
-      initialDestinations={destinations}
-      currentUserId={session.user.id}
-      users={users}
-    />
+    <>
+      <Navbar />
+      <TravelMapClient
+        initialDestinations={destinations}
+        currentUserId={session.user.id}
+        users={users}
+      />
+    </>
   );
 }
