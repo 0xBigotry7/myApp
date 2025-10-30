@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations } from "@/lib/i18n";
+import WorldMap from "./WorldMap";
 
 interface Destination {
   id: string;
@@ -41,6 +42,7 @@ export default function TravelMapClient({
   const router = useRouter();
   const locale = useLocale();
   const t = getTranslations(locale);
+  // Default to map view to show beautiful animated world map
   const [view, setView] = useState<"map" | "list">("map");
   const [filter, setFilter] = useState<"all" | "visited" | "future">("all");
 
@@ -171,21 +173,7 @@ export default function TravelMapClient({
 
         {/* Content */}
         {view === "map" ? (
-          <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 shadow-xl">
-            <div className="text-center py-20">
-              <div className="text-8xl mb-6">🗺️</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Interactive World Map</h3>
-              <p className="text-gray-600 mb-6">
-                Map visualization coming soon! For now, explore your destinations in list view.
-              </p>
-              <button
-                onClick={() => setView("list")}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold hover:shadow-xl transition-all"
-              >
-                View Destination List
-              </button>
-            </div>
-          </div>
+          <WorldMap destinations={filteredDestinations} />
         ) : (
           <div className="space-y-4">
             {countries.length === 0 ? (
