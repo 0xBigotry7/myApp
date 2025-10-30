@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLocale } from "./LanguageSwitcher";
+import { getTranslations } from "@/lib/i18n";
 
 interface Destination {
   id: string;
@@ -37,6 +39,8 @@ export default function TravelMapClient({
   users,
 }: TravelMapClientProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = getTranslations(locale);
   const [view, setView] = useState<"map" | "list">("map");
   const [filter, setFilter] = useState<"all" | "visited" | "future">("all");
 
@@ -67,7 +71,7 @@ export default function TravelMapClient({
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-black text-gray-900 mb-2">🗺️ Our Travel Map</h1>
+              <h1 className="text-4xl font-black text-gray-900 mb-2">🗺️ {t.ourTravelMap}</h1>
               <p className="text-gray-600">Exploring the world, one destination at a time</p>
             </div>
             <Link
@@ -75,7 +79,7 @@ export default function TravelMapClient({
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl font-bold hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
             >
               <span className="text-xl">✈️</span>
-              <span>Add Destination</span>
+              <span>{t.addDestination}</span>
             </Link>
           </div>
 
@@ -84,24 +88,24 @@ export default function TravelMapClient({
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
               <div className="text-4xl mb-2">🌍</div>
               <div className="text-3xl font-black text-gray-900">{totalCountries}</div>
-              <div className="text-sm text-gray-600 font-semibold">Countries</div>
+              <div className="text-sm text-gray-600 font-semibold">{t.countries}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
               <div className="text-4xl mb-2">📍</div>
               <div className="text-3xl font-black text-gray-900">{totalVisited}</div>
-              <div className="text-sm text-gray-600 font-semibold">Places Visited</div>
+              <div className="text-sm text-gray-600 font-semibold">{t.placesVisited}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
               <div className="text-4xl mb-2">✈️</div>
               <div className="text-3xl font-black text-gray-900">{totalFuture}</div>
-              <div className="text-sm text-gray-600 font-semibold">Future Trips</div>
+              <div className="text-sm text-gray-600 font-semibold">{t.futureTrips}</div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
               <div className="text-4xl mb-2">⭐</div>
               <div className="text-3xl font-black text-gray-900">
                 {initialDestinations.filter((d) => d.rating).length}
               </div>
-              <div className="text-sm text-gray-600 font-semibold">Rated Places</div>
+              <div className="text-sm text-gray-600 font-semibold">{t.ratedPlaces}</div>
             </div>
           </div>
 
@@ -116,7 +120,7 @@ export default function TravelMapClient({
                     : "bg-white text-gray-700 border-2 border-gray-200"
                 }`}
               >
-                🗺️ Map View
+                🗺️ {t.mapView}
               </button>
               <button
                 onClick={() => setView("list")}
@@ -126,7 +130,7 @@ export default function TravelMapClient({
                     : "bg-white text-gray-700 border-2 border-gray-200"
                 }`}
               >
-                📋 List View
+                📋 {t.listView}
               </button>
             </div>
 
@@ -139,7 +143,7 @@ export default function TravelMapClient({
                     : "bg-white text-gray-700 border-2 border-gray-200"
                 }`}
               >
-                All
+                {t.allDestinations}
               </button>
               <button
                 onClick={() => setFilter("visited")}
@@ -149,7 +153,7 @@ export default function TravelMapClient({
                     : "bg-white text-gray-700 border-2 border-gray-200"
                 }`}
               >
-                ✓ Visited
+                ✓ {t.visited}
               </button>
               <button
                 onClick={() => setFilter("future")}
@@ -159,7 +163,7 @@ export default function TravelMapClient({
                     : "bg-white text-gray-700 border-2 border-gray-200"
                 }`}
               >
-                ⏰ Future
+                ⏰ {t.future}
               </button>
             </div>
           </div>
@@ -187,15 +191,15 @@ export default function TravelMapClient({
             {countries.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border-2 border-gray-200">
                 <div className="text-7xl mb-4">✈️</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No destinations yet!</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.noDestinationsYet}</h3>
                 <p className="text-gray-600 mb-6">
-                  Start adding the places you've visited or plan to visit
+                  {t.startAddingDestinations}
                 </p>
                 <Link
                   href="/map/add"
                   className="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold hover:shadow-xl transition-all"
                 >
-                  Add Your First Destination
+                  {t.addFirstDestination}
                 </Link>
               </div>
             ) : (
@@ -235,7 +239,7 @@ export default function TravelMapClient({
                               ? "bg-orange-200 text-orange-800"
                               : "bg-green-200 text-green-800"
                           }`}>
-                            {dest.isFuture ? "Future" : "Visited"}
+                            {dest.isFuture ? t.future : t.visited}
                           </div>
                         </div>
 

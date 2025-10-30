@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "./LanguageSwitcher";
+import { getTranslations } from "@/lib/i18n";
 
 const POPULAR_DESTINATIONS = [
   { city: "Tokyo", country: "Japan", code: "JP", lat: 35.6762, lng: 139.6503, flag: "🇯🇵" },
@@ -18,6 +20,8 @@ const POPULAR_DESTINATIONS = [
 
 export default function AddDestinationForm() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = getTranslations(locale);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [useQuickSelect, setUseQuickSelect] = useState(true);
@@ -85,7 +89,7 @@ export default function AddDestinationForm() {
       {/* Quick Select Popular Destinations */}
       {useQuickSelect && (
         <div className="bg-white rounded-3xl p-6 border-2 border-gray-200 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">🌟 Quick Select</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">🌟 {t.quickSelect}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
             {POPULAR_DESTINATIONS.map((dest) => (
               <button
@@ -106,7 +110,7 @@ export default function AddDestinationForm() {
             onClick={() => setUseQuickSelect(false)}
             className="w-full text-sm text-gray-600 hover:text-gray-900 font-semibold"
           >
-            Or enter custom destination →
+            {t.customDestination} →
           </button>
         </div>
       )}
@@ -123,7 +127,7 @@ export default function AddDestinationForm() {
         <div className="bg-white rounded-3xl p-6 border-2 border-gray-200 shadow-sm space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">🏙️ City</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2">🏙️ {t.city}</label>
               <input
                 type="text"
                 required
@@ -134,7 +138,7 @@ export default function AddDestinationForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">🌍 Country</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2">🌍 {t.country}</label>
               <input
                 type="text"
                 required
@@ -148,7 +152,7 @@ export default function AddDestinationForm() {
 
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">
-              🏳️ Country Code <span className="text-gray-400 font-normal">(2 letters)</span>
+              🏳️ {t.countryCode} <span className="text-gray-400 font-normal">(2 letters)</span>
             </label>
             <input
               type="text"
@@ -163,7 +167,7 @@ export default function AddDestinationForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">📍 Latitude</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2">📍 {t.latitude}</label>
               <input
                 type="number"
                 step="any"
@@ -175,7 +179,7 @@ export default function AddDestinationForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">📍 Longitude</label>
+              <label className="block text-sm font-bold text-gray-900 mb-2">📍 {t.longitude}</label>
               <input
                 type="number"
                 step="any"
@@ -192,7 +196,7 @@ export default function AddDestinationForm() {
 
       {/* Visit Details */}
       <div className="bg-white rounded-3xl p-6 border-2 border-gray-200 shadow-sm space-y-5">
-        <h3 className="text-lg font-bold text-gray-900">Visit Details</h3>
+        <h3 className="text-lg font-bold text-gray-900">{t.visitDetails}</h3>
 
         <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-2xl border-2 border-orange-200">
           <input
@@ -203,14 +207,14 @@ export default function AddDestinationForm() {
             className="w-5 h-5 text-orange-600 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
           />
           <label htmlFor="future" className="flex-1">
-            <div className="font-bold text-sm text-gray-900">⏰ Future Trip</div>
-            <div className="text-xs text-gray-600">This is a planned future destination</div>
+            <div className="font-bold text-sm text-gray-900">⏰ {t.futureTrip}</div>
+            <div className="text-xs text-gray-600">{t.markAsFuture}</div>
           </label>
         </div>
 
         {!formData.isFuture && (
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">📅 Visit Date</label>
+            <label className="block text-sm font-bold text-gray-900 mb-2">📅 {t.visitDate}</label>
             <input
               type="date"
               value={formData.visitDate}
@@ -221,7 +225,7 @@ export default function AddDestinationForm() {
         )}
 
         <div>
-          <label className="block text-sm font-bold text-gray-900 mb-3">⭐ Rating</label>
+          <label className="block text-sm font-bold text-gray-900 mb-3">⭐ {t.rating}</label>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -238,7 +242,7 @@ export default function AddDestinationForm() {
 
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            ✨ Highlights <span className="text-gray-400 font-normal">(comma separated)</span>
+            ✨ {t.highlights} <span className="text-gray-400 font-normal">(comma separated)</span>
           </label>
           <input
             type="text"
@@ -250,7 +254,7 @@ export default function AddDestinationForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-900 mb-2">📝 Notes</label>
+          <label className="block text-sm font-bold text-gray-900 mb-2">📝 {t.notes}</label>
           <textarea
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -268,14 +272,14 @@ export default function AddDestinationForm() {
           onClick={() => router.back()}
           className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all"
         >
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
           className="flex-2 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg hover:shadow-xl active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-indigo-600 to-purple-600 text-white min-w-[60%]"
         >
-          {isSubmitting ? "💾 Saving..." : "✓ Add Destination"}
+          {isSubmitting ? `💾 ${t.saving}` : `✓ ${t.addDestination}`}
         </button>
       </div>
     </form>
