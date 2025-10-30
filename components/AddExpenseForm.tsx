@@ -3,8 +3,6 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useLocale } from "@/components/LanguageSwitcher";
-import { getTranslations } from "@/lib/i18n";
 
 interface Account {
   id: string;
@@ -20,38 +18,34 @@ const EXPENSE_CATEGORIES = [
   { name: "Groceries", icon: "🛒" },
   { name: "Dining", icon: "🍽️" },
   { name: "Transportation", icon: "🚗" },
-  { name: "Utilities", icon: "💡" },
+  { name: "Utilities", icon: "⚡" },
   { name: "Rent/Mortgage", icon: "🏠" },
   { name: "Entertainment", icon: "🎬" },
   { name: "Shopping", icon: "🛍️" },
   { name: "Healthcare", icon: "⚕️" },
   { name: "Subscriptions", icon: "📱" },
-  { name: "Other", icon: "📦" },
+  { name: "Other", icon: "💳" },
 ];
 
 export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
-  const locale = useLocale();
-  const t = getTranslations(locale);
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("ai");
+  const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     amount: "",
-    category: "",
+    category: EXPENSE_CATEGORIES[0].name,
+    date: new Date().toISOString().split("T")[0],
     merchantName: "",
     description: "",
-    date: new Date().toISOString().split("T")[0],
-    accountId: accounts.length > 0 ? accounts[0].id : "",
+    accountId: accounts[0]?.id || "",
     isRecurring: false,
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   const handleFileSelect = async (file: File) => {
     setReceiptFile(file);
@@ -62,8 +56,6 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
 
     // Scan with AI
     setScanning(true);
-    setError("");
-
     try {
       const scanFormData = new FormData();
       scanFormData.append("file", file);
@@ -79,16 +71,13 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
           ...prev,
           amount: data.amount?.toString() || prev.amount,
           category: data.category || prev.category,
+          date: data.date || prev.date,
           merchantName: data.location || prev.merchantName,
           description: data.note || prev.description,
-          date: data.date || prev.date,
         }));
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to scan receipt");
       }
-    } catch (err) {
-      setError("Failed to scan receipt. Please try again.");
+    } catch (error) {
+      console.error("Error scanning receipt:", error);
     } finally {
       setScanning(false);
     }
@@ -96,16 +85,43 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
+    setLoading(true);
 
     try {
+      let receiptUrl = null;
+
+      // Upload receipt if provided
+      if (receiptFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", receiptFile);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          receiptUrl = uploadData.url;
+        }
+      }
+
+      // Create transaction
       const response = await fetch("/api/transactions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          ...formData,
-          amount: -Math.abs(parseFloat(formData.amount)), // Negative for expenses
+          accountId: formData.accountId,
+          amount: -Math.abs(parseFloat(formData.amount)), // Expenses are negative
+          description: formData.description || formData.merchantName,
+          category: formData.category,
+          date: new Date(formData.date),
+          merchantName: formData.merchantName || undefined,
+          receiptUrl,
+          isTripRelated: false,
+          isRecurring: formData.isRecurring,
         }),
       });
 
@@ -113,13 +129,13 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
         router.push("/expenses");
         router.refresh();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to add expense");
+        alert("Failed to add expense");
       }
-    } catch (err) {
-      setError("Failed to add expense. Please try again.");
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      alert("Error adding expense");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -132,7 +148,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
           onClick={() => setMode("ai")}
           className={`py-4 rounded-xl font-bold text-lg transition-all ${
             mode === "ai"
-              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
+              ? "bg-gradient-sunset-pink text-white shadow-lg"
               : "bg-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -144,7 +160,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
           onClick={() => setMode("manual")}
           className={`py-4 rounded-xl font-bold text-lg transition-all ${
             mode === "manual"
-              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+              ? "bg-gradient-blue-pink text-white shadow-lg"
               : "bg-transparent text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -164,7 +180,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-8 rounded-3xl font-bold text-2xl hover:shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3"
+                  className="w-full bg-gradient-sunset-pink text-white py-8 rounded-3xl font-bold text-2xl hover:shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3"
                 >
                   <span className="text-6xl">📸</span>
                   <span>Take Photo</span>
@@ -185,7 +201,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8 rounded-3xl font-bold text-2xl hover:shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3"
+                  className="w-full bg-gradient-blue-pink text-white py-8 rounded-3xl font-bold text-2xl hover:shadow-2xl transition-all transform active:scale-95 flex flex-col items-center justify-center gap-3"
                 >
                   <span className="text-6xl">🖼️</span>
                   <span>Choose Photo</span>
@@ -202,13 +218,13 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                 />
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 border-dashed rounded-2xl p-8 text-center">
+              <div className="bg-gradient-to-br from-sunset-50 to-ocean-50 border-2 border-sunset-200 border-dashed rounded-2xl p-8 text-center">
                 <div className="text-5xl mb-3">💡</div>
                 <p className="text-gray-700 font-medium mb-2">
                   AI will read your receipt
                 </p>
                 <p className="text-sm text-gray-600">
-                  Amount, category, and merchant will be auto-filled
+                  Automatically extract amount, category, and merchant
                 </p>
               </div>
             </>
@@ -238,7 +254,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                   <div className="flex items-center justify-center gap-3 py-4 bg-green-100 rounded-xl">
                     <span className="text-3xl">✓</span>
                     <p className="text-lg font-semibold text-green-700">
-                      Scanned successfully!
+                      Scanned successfully
                     </p>
                   </div>
                 )}
@@ -251,11 +267,11 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                   setPreviewUrl(null);
                   setFormData({
                     amount: "",
-                    category: "",
+                    category: EXPENSE_CATEGORIES[0].name,
+                    date: new Date().toISOString().split("T")[0],
                     merchantName: "",
                     description: "",
-                    date: new Date().toISOString().split("T")[0],
-                    accountId: accounts.length > 0 ? accounts[0].id : "",
+                    accountId: accounts[0]?.id || "",
                     isRecurring: false,
                   });
                 }}
@@ -265,13 +281,6 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
               </button>
             </>
           )}
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
         </div>
       )}
 
@@ -296,7 +305,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                 onChange={(e) =>
                   setFormData({ ...formData, amount: e.target.value })
                 }
-                className="w-full pl-12 pr-6 py-5 text-3xl font-bold border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-transparent transition-all placeholder:text-gray-300"
+                className="w-full pl-12 pr-6 py-5 text-3xl font-bold border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-sunset-400 focus:border-transparent transition-all placeholder:text-gray-300"
                 placeholder="0.00"
               />
             </div>
@@ -313,49 +322,17 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
                   key={cat.name}
                   type="button"
                   onClick={() => setFormData({ ...formData, category: cat.name })}
-                  className={`px-5 py-5 rounded-2xl font-semibold text-base transition-all touch-manipulation min-h-[60px] ${
+                  className={`px-5 py-5 rounded-2xl font-semibold text-base transition-all touch-manipulation min-h-[60px] flex items-center justify-center gap-2 ${
                     formData.category === cat.name
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105"
-                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-purple-400 hover:bg-purple-50 active:scale-95"
+                      ? "bg-gradient-sunset-pink text-white shadow-lg scale-105"
+                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-sunset-400 hover:bg-sunset-50 active:scale-95"
                   }`}
                 >
-                  <div className="text-2xl mb-1">{cat.icon}</div>
-                  <div className="text-xs">{cat.name}</div>
+                  <span className="text-xl">{cat.icon}</span>
+                  <span>{cat.name}</span>
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Merchant Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              🏪 Merchant/Store
-            </label>
-            <input
-              type="text"
-              value={formData.merchantName}
-              onChange={(e) =>
-                setFormData({ ...formData, merchantName: e.target.value })
-              }
-              className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-transparent transition-all placeholder:text-gray-400"
-              placeholder="e.g., Starbucks, Amazon, Walmart"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              📝 Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={3}
-              className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-transparent transition-all placeholder:text-gray-400 resize-none"
-              placeholder="Add notes about this expense..."
-            />
           </div>
 
           {/* Date */}
@@ -370,7 +347,39 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
               }
-              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-transparent transition-all"
+              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          {/* Merchant Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              🏪 Merchant <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={formData.merchantName}
+              onChange={(e) =>
+                setFormData({ ...formData, merchantName: e.target.value })
+              }
+              className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400"
+              placeholder="e.g., Starbucks, Target"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              📝 Description <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              rows={3}
+              className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400 resize-none"
+              placeholder="e.g., Weekly groceries"
             />
           </div>
 
@@ -379,39 +388,29 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               🏦 Account
             </label>
-            {accounts.length === 0 ? (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-                <p className="font-medium mb-2">No accounts found</p>
-                <p className="text-xs">
-                  Please add an account in the Finance page first.
-                </p>
-              </div>
-            ) : (
-              <select
-                required
-                value={formData.accountId}
-                onChange={(e) =>
-                  setFormData({ ...formData, accountId: e.target.value })
-                }
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-transparent transition-all appearance-none bg-white"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 0.75rem center",
-                  backgroundSize: "1.25rem",
-                }}
-              >
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.icon} {account.name} (${account.balance.toFixed(2)})
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={formData.accountId}
+              onChange={(e) =>
+                setFormData({ ...formData, accountId: e.target.value })
+              }
+              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all appearance-none bg-white"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 0.75rem center",
+                backgroundSize: "1.25rem",
+              }}
+            >
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name} ({account.type})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Recurring */}
-          <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               id="recurring"
@@ -419,13 +418,10 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
               onChange={(e) =>
                 setFormData({ ...formData, isRecurring: e.target.checked })
               }
-              className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              className="w-6 h-6 rounded border-2 border-gray-300 text-sunset-500 focus:ring-4 focus:ring-sunset-400"
             />
-            <label htmlFor="recurring" className="flex-1">
-              <div className="font-semibold text-gray-900">Recurring Expense</div>
-              <div className="text-xs text-gray-600">
-                This expense repeats monthly (e.g., subscriptions, rent)
-              </div>
+            <label htmlFor="recurring" className="text-base font-semibold text-gray-900">
+              🔄 Recurring expense
             </label>
           </div>
 
@@ -433,10 +429,10 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
           <div className="pt-4 space-y-3">
             <button
               type="submit"
-              disabled={isSubmitting || accounts.length === 0}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-5 rounded-2xl font-bold text-xl hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
+              disabled={loading}
+              className="w-full bg-gradient-sunset-pink text-white py-5 rounded-2xl font-bold text-xl hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
             >
-              {isSubmitting ? "💾 Saving..." : "✓ Save Expense"}
+              {loading ? "💾 Saving..." : "✓ Save Expense"}
             </button>
 
             <button
