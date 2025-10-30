@@ -31,6 +31,7 @@ model User {
   periodCycles          PeriodCycle[]
   dailyLogs             DailyLog[]
   healthInsights        HealthInsight[]
+  travelDestinations    TravelDestination[]
 }
 
 model Trip {
@@ -374,4 +375,29 @@ model HealthInsight {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// ===== TRAVEL MAP MODELS =====
+
+model TravelDestination {
+  id            String   @id @default(cuid())
+  userId        String
+  city          String   // "Tokyo", "Paris", "New York"
+  country       String   // "Japan", "France", "USA"
+  countryCode   String   // ISO 3166-1 alpha-2 code: "JP", "FR", "US"
+  latitude      Float
+  longitude     Float
+  visitDate     DateTime? // When visited (null for future trips)
+  isFuture      Boolean  @default(false) // true for planned future trips
+  tripId        String?  // Optional link to Trip model
+  notes         String?
+  photos        String[] @default([]) // Array of photo URLs
+  rating        Int?     // 1-5 stars
+  highlights    String[] @default([]) // ["Eiffel Tower", "Louvre Museum"]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, visitDate])
+  @@index([userId, countryCode])
 }

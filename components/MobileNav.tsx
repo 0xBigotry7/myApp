@@ -24,6 +24,11 @@ export default function MobileNav() {
       label: t.myTrips || "Trips",
     },
     {
+      path: "/map",
+      icon: "🗺️",
+      label: "Map",
+    },
+    {
       path: "/expenses",
       icon: "💸",
       label: "Expenses",
@@ -34,11 +39,6 @@ export default function MobileNav() {
       label: t.finance || "Finance",
     },
     {
-      path: "/converter",
-      icon: "💱",
-      label: t.converter || "Converter",
-    },
-    {
       path: "/health",
       icon: "🌸",
       label: t.health || "Health",
@@ -46,7 +46,7 @@ export default function MobileNav() {
     {
       path: "/transactions",
       icon: "📊",
-      label: t.transactions || "History",
+      label: "History",
     },
   ];
 
