@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
-// Initialize Groq client (FREE - no payment required!)
+// Initialize Groq client (FREE & FAST!)
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "",
 });

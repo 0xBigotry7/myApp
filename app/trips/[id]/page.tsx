@@ -6,8 +6,6 @@ import { format } from "date-fns";
 import Link from "next/link";
 import ExpenseList from "@/components/ExpenseList";
 import BudgetChart from "@/components/BudgetChart";
-import TripTabs from "@/components/TripTabs";
-import ItineraryView from "@/components/ItineraryView";
 import ExpenseInsights from "@/components/ExpenseInsights";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import { getServerLocale } from "@/lib/locale-server";
@@ -82,20 +80,13 @@ export default async function TripDetailPage({
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Quick Action Buttons - Mobile First */}
-          <div className="grid grid-cols-2 gap-3 mb-6 md:flex md:justify-end">
+          <div className="mb-6 md:flex md:justify-end">
             <Link
               href={`/trips/${trip.id}/add-expense`}
-              className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-blue-pink text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg md:text-base transform active:scale-95"
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-blue-pink text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg md:text-base transform active:scale-95 w-full md:w-auto"
             >
               <span className="text-2xl md:text-xl">💰</span>
               <span>{t.addExpense}</span>
-            </Link>
-            <Link
-              href={`/trips/${trip.id}/add-activity`}
-              className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-sunset-pink text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg md:text-base transform active:scale-95"
-            >
-              <span className="text-2xl md:text-xl">📅</span>
-              <span>{t.addActivity}</span>
             </Link>
           </div>
 
@@ -196,91 +187,75 @@ export default async function TripDetailPage({
             </div>
           </div>
 
-          {/* Tabs for Budget and Itinerary */}
-          <TripTabs
-            budgetTab={
-              <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                  {/* Category Budget Breakdown */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                      <span>📊</span>
-                      <span>{t.budgetByCategory}</span>
-                    </h2>
-                    <div className="space-y-5">
-                      {categorySpending.map((cat) => (
-                        <div key={cat.category} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="font-semibold text-gray-900 text-lg">{translateCategory(cat.category, locale)}</span>
-                            <div className="text-right">
-                              <div className="font-bold text-gray-900">
-                                ${cat.spent.toLocaleString()} <span className="text-gray-400">/</span> ${cat.budget.toLocaleString()}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {cat.percentUsed.toFixed(1)}% {t.used}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="relative bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div
-                              className={`h-3 rounded-full transition-all ${
-                                cat.percentUsed > 100
-                                  ? "bg-gradient-to-r from-red-500 to-red-600"
-                                  : cat.percentUsed > 80
-                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                  : "bg-gradient-to-r from-blue-500 to-indigo-600"
-                              }`}
-                              style={{ width: `${Math.min(cat.percentUsed, 100)}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center text-sm mt-2">
-                            <span
-                              className={`font-medium ${
-                                cat.remaining < 0 ? "text-red-600" : "text-green-600"
-                              }`}
-                            >
-                              {cat.remaining < 0 ? "⚠️" : "✓"} ${Math.abs(cat.remaining).toLocaleString()} {cat.remaining < 0 ? t.over : t.remaining}
-                            </span>
-                            {cat.percentUsed > 90 && (
-                              <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
-                                {t.nearLimit}
-                              </span>
-                            )}
-                          </div>
+          {/* Budget & Expenses */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Category Budget Breakdown */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>📊</span>
+                <span>{t.budgetByCategory}</span>
+              </h2>
+              <div className="space-y-5">
+                {categorySpending.map((cat) => (
+                  <div key={cat.category} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-semibold text-gray-900 text-lg">{translateCategory(cat.category, locale)}</span>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900">
+                          ${cat.spent.toLocaleString()} <span className="text-gray-400">/</span> ${cat.budget.toLocaleString()}
                         </div>
-                      ))}
+                        <div className="text-xs text-gray-500">
+                          {cat.percentUsed.toFixed(1)}% {t.used}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`h-3 rounded-full transition-all ${
+                          cat.percentUsed > 100
+                            ? "bg-gradient-to-r from-red-500 to-red-600"
+                            : cat.percentUsed > 80
+                            ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-600"
+                        }`}
+                        style={{ width: `${Math.min(cat.percentUsed, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-sm mt-2">
+                      <span
+                        className={`font-medium ${
+                          cat.remaining < 0 ? "text-red-600" : "text-green-600"
+                        }`}
+                      >
+                        {cat.remaining < 0 ? "⚠️" : "✓"} ${Math.abs(cat.remaining).toLocaleString()} {cat.remaining < 0 ? t.over : t.remaining}
+                      </span>
+                      {cat.percentUsed > 90 && (
+                        <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
+                          {t.nearLimit}
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  {/* Budget Chart */}
-                  <BudgetChart
-                    categorySpending={categorySpending}
-                    tripId={trip.id}
-                    destination={trip.destination}
-                    budgetImageUrl={trip.budgetImageUrl}
-                  />
-                </div>
-
-              {/* AI Expense Insights */}
-              <div className="mb-6">
-                <ExpenseInsights tripId={trip.id} />
+                ))}
               </div>
+            </div>
 
-              {/* Expense List - View Only */}
-              <ExpenseList expenses={trip.expenses} currentUserEmail={session.user.email || undefined} tripId={trip.id} />
-            </>
-          }
-          itineraryTab={
-            <ItineraryView
+            {/* Budget Chart */}
+            <BudgetChart
+              categorySpending={categorySpending}
               tripId={trip.id}
               destination={trip.destination}
-              initialActivities={trip.activities}
-              startDate={trip.startDate}
-              endDate={trip.endDate}
-              itineraryImageUrl={trip.itineraryImageUrl}
+              budgetImageUrl={trip.budgetImageUrl}
             />
-          }
-          />
+          </div>
+
+          {/* AI Expense Insights */}
+          <div className="mb-6">
+            <ExpenseInsights tripId={trip.id} />
+          </div>
+
+          {/* Expense List - View Only */}
+          <ExpenseList expenses={trip.expenses} currentUserEmail={session.user.email || undefined} tripId={trip.id} />
         </div>
       </div>
   );
