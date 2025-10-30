@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 
-export default function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  className?: string;
+  compact?: boolean;
+};
+
+export default function LanguageSwitcher({
+  className = "",
+  compact = false,
+}: LanguageSwitcherProps = {}) {
   const [locale, setLocale] = useState<"en" | "zh">("en");
 
   useEffect(() => {
@@ -21,10 +29,14 @@ export default function LanguageSwitcher() {
     window.location.reload(); // Simple reload to update all text
   };
 
+  const sizeClasses = compact
+    ? "px-3 py-1.5 text-xs sm:text-sm"
+    : "px-4 py-2 text-sm";
+
   return (
     <button
       onClick={toggleLocale}
-      className="px-4 py-2 bg-gradient-blue-pink text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all"
+      className={`inline-flex items-center justify-center bg-gradient-blue-pink text-white rounded-xl font-semibold hover:shadow-lg transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${sizeClasses} ${className}`.trim()}
     >
       {locale === "en" ? "中文" : "EN"}
     </button>

@@ -44,16 +44,18 @@ export default async function Dashboard() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           {/* Travel Trips Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">✈️ {t.myTrips}</h1>
-              <p className="text-gray-600">{t.planTrackManage}</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 leading-tight">
+                ✈️ {t.myTrips}
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base">{t.planTrackManage}</p>
             </div>
             <Link
               href="/trips/new"
-              className="inline-flex items-center gap-2 bg-gradient-blue-pink text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-blue-pink px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             >
               <span className="text-xl">+</span>
               {t.planTrip}
@@ -71,14 +73,14 @@ export default async function Dashboard() {
               </p>
               <Link
                 href="/trips/new"
-                className="inline-flex items-center gap-2 bg-gradient-blue-pink text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-blue-pink px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               >
                 <span className="text-xl">+</span>
                 {t.createFirstTrip}
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
               {tripsWithStats.map((trip) => (
                 <TripCard key={trip.id} trip={trip} />
               ))}

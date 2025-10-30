@@ -7,6 +7,7 @@ import Link from "next/link";
 import ExpenseList from "@/components/ExpenseList";
 import BudgetChart from "@/components/BudgetChart";
 import TripTabs from "@/components/TripTabs";
+import CurrencyConverterTab from "@/components/CurrencyConverterTab";
 import ItineraryView from "@/components/ItineraryView";
 import ExpenseInsights from "@/components/ExpenseInsights";
 import { getTranslations, translateCategory } from "@/lib/i18n";
@@ -278,6 +279,12 @@ export default async function TripDetailPage({
               startDate={trip.startDate}
               endDate={trip.endDate}
               itineraryImageUrl={trip.itineraryImageUrl}
+            />
+          }
+          converterTab={
+            <CurrencyConverterTab
+              baseCurrency={trip.currency}
+              destination={trip.destination}
             />
           }
           />

@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${notoSansSC.variable}`}>
-      <body className="font-sans pb-16 md:pb-0">
+      <body className="font-sans pb-24 md:pb-0">
         {children}
         <MobileNav />
       </body>
