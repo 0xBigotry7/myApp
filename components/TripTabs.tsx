@@ -4,33 +4,30 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations } from "@/lib/i18n";
 
-type ActiveTab = "budget" | "itinerary" | "converter";
+type ActiveTab = "budget" | "itinerary";
 
 interface TripTabsProps {
   budgetTab: React.ReactNode;
   itineraryTab: React.ReactNode;
-  converterTab?: React.ReactNode;
 }
 
 export default function TripTabs({
   budgetTab,
   itineraryTab,
-  converterTab,
 }: TripTabsProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
   const [activeTab, setActiveTab] = useState<ActiveTab>("budget");
 
-  const tabs: Array<{ id: ActiveTab; label: string; icon: string; hidden?: boolean }> = useMemo(
+  const tabs: Array<{ id: ActiveTab; label: string; icon: string }> = useMemo(
     () => [
       { id: "budget", label: t.budgetExpenses, icon: "💰" },
       { id: "itinerary", label: t.itinerary, icon: "📅" },
-      { id: "converter", label: t.converter ?? "Converter", icon: "💱", hidden: !converterTab },
     ],
-    [converterTab, t.budgetExpenses, t.converter, t.itinerary],
+    [t.budgetExpenses, t.itinerary],
   );
 
-  const visibleTabs = useMemo(() => tabs.filter((tab) => !tab.hidden), [tabs]);
+  const visibleTabs = useMemo(() => tabs, [tabs]);
 
   useEffect(() => {
     if (!visibleTabs.some((tab) => tab.id === activeTab) && visibleTabs.length > 0) {
@@ -66,7 +63,6 @@ export default function TripTabs({
       <div>
         {activeTab === "budget" && budgetTab}
         {activeTab === "itinerary" && itineraryTab}
-        {activeTab === "converter" && converterTab}
       </div>
     </div>
   );
