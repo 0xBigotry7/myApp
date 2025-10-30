@@ -21,6 +21,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const navLinks = [
     { href: "/", label: `✈️ ${t.myTrips}` },
     { href: "/finance", label: `💰 ${t.finance}` },
+    { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
     { href: "/health", label: `🌸 ${t.health}` },
     { href: "/transactions", label: `📊 ${t.transactions}` },
   ];

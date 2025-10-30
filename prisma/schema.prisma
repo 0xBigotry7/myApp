@@ -21,6 +21,7 @@ model User {
   expenses              Expense[]
   preferences           UserPreference[]
   accounts              Account[]
+  bankConnections       BankConnection[]
   transactions          Transaction[]
   budgets               Budget[]
   savingsGoals          SavingsGoal[]
@@ -149,21 +150,46 @@ model TripMember {
 // ===== GENERAL FINANCE MODELS =====
 
 model Account {
-  id               String        @id @default(cuid())
+  id               String          @id @default(cuid())
   userId           String
   name             String
-  type             String        // "checking", "savings", "credit_card", "cash", "investment"
-  balance          Float         @default(0)
-  currency         String        @default("USD")
-  isActive         Boolean       @default(true)
-  icon             String?       // emoji or icon name
-  color            String?       // hex color for UI
+  type             String          // "checking", "savings", "credit_card", "cash", "investment"
+  balance          Float           @default(0)
+  currency         String          @default("USD")
+  isActive         Boolean         @default(true)
+  icon             String?         // emoji or icon name
+  color            String?         // hex color for UI
   notes            String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankConnectionId String?         // link to bank connection
+  plaidAccountId   String?         // Plaid's account ID
+  wiseProfileId    String?         // Wise profile ID
+  lastSyncedAt     DateTime?       // last time transactions were synced
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankConnection   BankConnection? @relation(fields: [bankConnectionId], references: [id])
   transactions     Transaction[]
   savingsGoals     SavingsGoal[]
+}
+
+model BankConnection {
+  id                String    @id @default(cuid())
+  userId            String
+  provider          String    // "plaid" or "wise"
+  institutionName   String?   // e.g., "Bank of America"
+  institutionId     String?   // Plaid institution ID
+  accessToken       String    // encrypted Plaid access token or Wise API token
+  itemId            String?   // Plaid item ID
+  cursor            String?   // for incremental sync
+  isActive          Boolean   @default(true)
+  lastSyncedAt      DateTime?
+  consentExpiresAt  DateTime? // for Plaid consent
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts          Account[]
+
+  @@unique([userId, itemId])
 }
 
 model Budget {
@@ -215,6 +241,9 @@ model Transaction {
   location              String?
   latitude              Float?
   longitude             Float?
+  isFromBankSync        Boolean                @default(false) // true if synced from bank
+  bankTransactionId     String?                @unique // Plaid or Wise transaction ID
+  pending               Boolean                @default(false) // for pending transactions
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
