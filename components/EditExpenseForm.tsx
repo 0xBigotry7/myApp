@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
@@ -14,6 +14,7 @@ interface EditExpenseFormProps {
     date: Date;
     note: string | null;
     location: string | null;
+    receiptUrl: string | null;
   };
   tripId: string;
   categories: string[];
@@ -28,6 +29,10 @@ export default function EditExpenseForm({
   const locale = useLocale();
   const t = getTranslations(locale);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(expense.receiptUrl);
 
   const [formData, setFormData] = useState({
     amount: expense.amount.toString(),
@@ -42,11 +47,50 @@ export default function EditExpenseForm({
   // Determine date input type based on category
   const needsTime = ["Transportation", "Activities"].includes(formData.category);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(expense.receiptUrl);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let receiptUrl = expense.receiptUrl;
+
+      // Upload new receipt if selected
+      if (selectedFile) {
+        setUploading(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", selectedFile);
+
+        const uploadRes = await fetch("/api/upload-photo", {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload receipt");
+        }
+
+        const { url } = await uploadRes.json();
+        receiptUrl = url;
+        setUploading(false);
+      }
+
       const response = await fetch(`/api/expenses/${expense.id}`, {
         method: "PATCH",
         headers: {
@@ -57,14 +101,19 @@ export default function EditExpenseForm({
           category: formData.category,
           date: formData.time
             ? new Date(`${formData.date}T${formData.time}:00`)
-            : new Date(formData.date),
+            : new Date(`${formData.date}T12:00:00`),
           currency: formData.currency,
           location: formData.location || undefined,
           note: formData.note || undefined,
+          receiptUrl: receiptUrl || undefined,
         }),
       });
 
       if (response.ok) {
+        // Clean up preview URL if we created one
+        if (selectedFile && previewUrl && previewUrl !== expense.receiptUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
         router.push(`/trips/${tripId}`);
         router.refresh();
       } else {
@@ -75,6 +124,7 @@ export default function EditExpenseForm({
       alert("Error updating expense");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -239,14 +289,59 @@ export default function EditExpenseForm({
         />
       </div>
 
+      {/* Receipt Photo */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
+          📷 Receipt Photo{" "}
+          <span className="text-gray-400 font-normal">({t.optional})</span>
+        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        {previewUrl ? (
+          <div className="relative group">
+            <img
+              src={previewUrl.includes('drive.google.com') || previewUrl.includes('googleusercontent.com')
+                ? `/api/proxy-image?url=${encodeURIComponent(previewUrl)}`
+                : previewUrl}
+              alt="Receipt preview"
+              className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-gray-200"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveFile}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold hover:bg-red-600 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4 px-6 rounded-2xl font-bold text-lg hover:shadow-lg transition-all"
+          >
+            Choose Photo
+          </button>
+        )}
+      </div>
+
       {/* Submit Buttons */}
       <div className="pt-4 space-y-3">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploading}
           className="w-full bg-gradient-sunset-pink text-white py-5 rounded-2xl font-bold text-xl hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
         >
-          {loading ? `💾 ${t.saving}` : `✓ ${t.save} ${t.addExpense}`}
+          {uploading
+            ? "📤 Uploading..."
+            : loading
+            ? `💾 ${t.saving}`
+            : `✓ ${t.save} ${t.addExpense}`}
         </button>
 
         <button

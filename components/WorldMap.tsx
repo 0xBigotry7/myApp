@@ -144,7 +144,18 @@ export default function WorldMap({ destinations }: WorldMapProps) {
   const visitedCountryNames = useMemo(() => {
     const names = new Set<string>();
     visitedDestinations.forEach((dest) => {
-      names.add(dest.country.toLowerCase());
+      const countryLower = dest.country.toLowerCase();
+      names.add(countryLower);
+
+      // Add aliases for USA to match map data
+      if (countryLower === "usa" || countryLower === "united states" || countryLower === "us") {
+        names.add("united states of america");
+      }
+      if (countryLower === "united states of america") {
+        names.add("usa");
+        names.add("united states");
+        names.add("us");
+      }
     });
     console.log("Visited countries:", Array.from(names));
     return names;

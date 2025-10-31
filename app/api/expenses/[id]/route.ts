@@ -68,7 +68,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { amount, category, currency, date, note, location } = body;
+    const { amount, category, currency, date, note, location, receiptUrl } = body;
 
     // Get the expense to check ownership
     const expense = await prisma.expense.findUnique({
@@ -106,6 +106,7 @@ export async function PATCH(
         date: date ? new Date(date) : undefined,
         note: note || null,
         location: location || null,
+        receiptUrl: receiptUrl || null,
       },
       include: {
         user: true,
