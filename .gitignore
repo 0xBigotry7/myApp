@@ -39,3 +39,6 @@ next-env.d.ts
 
 # prisma
 /generated/prisma
+
+# generated images
+/public/generated-images

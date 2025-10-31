@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
 import QuickAddTransaction from "@/components/QuickAddTransaction";
 import { getHouseholdUserIds, getUserBadge } from "@/lib/household";
 
@@ -67,7 +68,9 @@ export default async function TransactionsPage() {
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -247,6 +250,7 @@ export default async function TransactionsPage() {
 
       {/* Quick Add FAB */}
       <QuickAddTransaction />
-    </div>
+      </div>
+    </>
   );
 }

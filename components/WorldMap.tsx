@@ -7,6 +7,7 @@ import {
   Geography,
   Marker,
   Line,
+  ZoomableGroup,
 } from "react-simple-maps";
 
 interface Destination {
@@ -24,76 +25,117 @@ interface WorldMapProps {
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// Tourism popularity tiers by country (ISO 3166-1 alpha-3 codes)
+// Tourism popularity tiers by country name (case-insensitive matching)
 const TOURISM_TIERS = {
   // Tier 1: Extremely Popular (80M+ tourists) - Bright colors
   tier1: new Set([
-    "FRA", // France
-    "ESP", // Spain
-    "USA", // United States
-    "CHN", // China
-    "ITA", // Italy
-    "TUR", // Turkey
-    "MEX", // Mexico
+    "france",
+    "spain",
+    "united states of america",
+    "usa",
+    "china",
+    "italy",
+    "turkey",
+    "türkiye",
+    "mexico",
   ]),
 
   // Tier 2: Very Popular (40-80M tourists) - Medium-bright colors
   tier2: new Set([
-    "DEU", // Germany
-    "THA", // Thailand
-    "GBR", // United Kingdom
-    "JPN", // Japan
-    "AUT", // Austria
-    "GRC", // Greece
-    "MYS", // Malaysia
-    "RUS", // Russia
-    "CAN", // Canada
-    "SAU", // Saudi Arabia
+    "germany",
+    "thailand",
+    "united kingdom",
+    "uk",
+    "japan",
+    "austria",
+    "greece",
+    "malaysia",
+    "russia",
+    "russian federation",
+    "canada",
+    "saudi arabia",
+    "hong kong",
   ]),
 
   // Tier 3: Popular (20-40M tourists) - Medium colors
   tier3: new Set([
-    "POL", // Poland
-    "NLD", // Netherlands
-    "ARE", // UAE
-    "IND", // India
-    "SGP", // Singapore
-    "KOR", // South Korea
-    "IDN", // Indonesia
-    "PRT", // Portugal
-    "AUS", // Australia
-    "CHE", // Switzerland
-    "VNM", // Vietnam
-    "BRA", // Brazil
-    "EGY", // Egypt
-    "HUN", // Hungary
-    "HRV", // Croatia
-    "MAR", // Morocco
-    "CZE", // Czech Republic
-    "DNK", // Denmark
+    "poland",
+    "netherlands",
+    "united arab emirates",
+    "uae",
+    "india",
+    "singapore",
+    "south korea",
+    "korea",
+    "republic of korea",
+    "indonesia",
+    "portugal",
+    "australia",
+    "switzerland",
+    "vietnam",
+    "viet nam",
+    "brazil",
+    "egypt",
+    "hungary",
+    "croatia",
+    "morocco",
+    "czechia",
+    "czech republic",
+    "denmark",
+    "macao",
+    "macau",
   ]),
 
   // Tier 4: Moderately Popular (10-20M tourists) - Lighter colors
   tier4: new Set([
-    "ZAF", // South Africa
-    "NOR", // Norway
-    "SWE", // Sweden
-    "BEL", // Belgium
-    "ARG", // Argentina
-    "PHL", // Philippines
-    "TUN", // Tunisia
-    "ROM", // Romania
-    "IRL", // Ireland
-    "JOR", // Jordan
-    "FIN", // Finland
-    "PER", // Peru
-    "NZL", // New Zealand
+    "south africa",
+    "norway",
+    "sweden",
+    "belgium",
+    "argentina",
+    "philippines",
+    "tunisia",
+    "romania",
+    "ireland",
+    "jordan",
+    "finland",
+    "peru",
+    "new zealand",
+    "colombia",
+    "chile",
+    "netherlands",
   ]),
 };
 
 export default function WorldMap({ destinations }: WorldMapProps) {
   const [hoveredCity, setHoveredCity] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [clickedCountry, setClickedCountry] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState<[number, number]>([0, 0]);
+
+  const handleZoomIn = () => {
+    if (zoom < 4) {
+      setZoom(zoom * 1.5);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (zoom > 1) {
+      setZoom(zoom / 1.5);
+    }
+  };
+
+  const handleReset = () => {
+    setZoom(1);
+    setCenter([0, 0]);
+  };
+
+  const handleMoveEnd = (newCenter: [number, number], newZoom: number) => {
+    setCenter(newCenter);
+    setZoom(newZoom);
+  };
 
   const visitedDestinations = destinations.filter((d) => !d.isFuture);
   const futureDestinations = destinations.filter((d) => d.isFuture);
@@ -111,26 +153,26 @@ export default function WorldMap({ destinations }: WorldMapProps) {
   // Function to determine country color based on popularity and visited status
   const getCountryColor = (geo: any) => {
     const countryName = geo.properties.name;
-    const countryCode = geo.id; // ISO 3166-1 alpha-3 code
+    const countryNameLower = countryName.toLowerCase();
 
     // Check if country is visited (match by name, case-insensitive)
-    const isVisited = visitedCountryNames.has(countryName.toLowerCase());
+    const isVisited = visitedCountryNames.has(countryNameLower);
 
     if (isVisited) {
       return "#10B981"; // Emerald green for visited countries
     }
 
-    // Color based on tourism popularity tier
-    if (TOURISM_TIERS.tier1.has(countryCode)) {
+    // Color based on tourism popularity tier (using country names)
+    if (TOURISM_TIERS.tier1.has(countryNameLower)) {
       return "#F59E0B"; // Bright orange for extremely popular
     }
-    if (TOURISM_TIERS.tier2.has(countryCode)) {
+    if (TOURISM_TIERS.tier2.has(countryNameLower)) {
       return "#FBBF24"; // Yellow for very popular
     }
-    if (TOURISM_TIERS.tier3.has(countryCode)) {
+    if (TOURISM_TIERS.tier3.has(countryNameLower)) {
       return "#FCD34D"; // Light yellow for popular
     }
-    if (TOURISM_TIERS.tier4.has(countryCode)) {
+    if (TOURISM_TIERS.tier4.has(countryNameLower)) {
       return "#FDE68A"; // Very light yellow for moderately popular
     }
 
@@ -140,25 +182,25 @@ export default function WorldMap({ destinations }: WorldMapProps) {
 
   // Get hover color
   const getHoverColor = (geo: any) => {
-    const countryCode = geo.id;
     const countryName = geo.properties.name;
+    const countryNameLower = countryName.toLowerCase();
 
-    const isVisited = visitedCountryNames.has(countryName.toLowerCase());
+    const isVisited = visitedCountryNames.has(countryNameLower);
 
     if (isVisited) {
       return "#059669"; // Darker green for visited
     }
 
-    if (TOURISM_TIERS.tier1.has(countryCode)) {
+    if (TOURISM_TIERS.tier1.has(countryNameLower)) {
       return "#DC2626"; // Red for tier 1
     }
-    if (TOURISM_TIERS.tier2.has(countryCode)) {
+    if (TOURISM_TIERS.tier2.has(countryNameLower)) {
       return "#EA580C"; // Dark orange for tier 2
     }
-    if (TOURISM_TIERS.tier3.has(countryCode)) {
+    if (TOURISM_TIERS.tier3.has(countryNameLower)) {
       return "#F59E0B"; // Orange for tier 3
     }
-    if (TOURISM_TIERS.tier4.has(countryCode)) {
+    if (TOURISM_TIERS.tier4.has(countryNameLower)) {
       return "#FBBF24"; // Yellow for tier 4
     }
 
@@ -166,19 +208,68 @@ export default function WorldMap({ destinations }: WorldMapProps) {
   };
 
   return (
-    <div className="relative w-full bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 rounded-3xl p-2 sm:p-4 border-2 border-purple-200 shadow-2xl overflow-hidden">
+    <div className="relative w-full h-[500px] sm:h-[600px] md:h-[700px] bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 rounded-2xl sm:rounded-3xl p-1 sm:p-3 border-2 border-purple-200 shadow-2xl overflow-hidden">
+      {/* Zoom Controls */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <button
+          onClick={handleZoomIn}
+          className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-100 active:scale-95 transition-all"
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-xl font-bold hover:bg-gray-100 active:scale-95 transition-all"
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+        <button
+          onClick={handleReset}
+          className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-xs font-bold hover:bg-gray-100 active:scale-95 transition-all"
+          aria-label="Reset zoom"
+        >
+          ↺
+        </button>
+      </div>
+
+      {/* Tooltip for hovered country (desktop) */}
+      {hoveredCountry && tooltipPosition && (
+        <div
+          className="hidden md:block absolute z-20 pointer-events-none"
+          style={{
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y - 40}px`,
+          }}
+        >
+          <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-xl text-sm font-semibold whitespace-nowrap">
+            {hoveredCountry}
+          </div>
+        </div>
+      )}
+
+      {/* Tooltip for clicked country (mobile) */}
+      {clickedCountry && (
+        <div className="md:hidden absolute top-4 left-4 z-20 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-xl text-sm font-semibold">
+          {clickedCountry}
+        </div>
+      )}
+
       <ComposableMap
         projectionConfig={{
           rotate: [-10, 0, 0],
-          scale: 180,
+          scale: 280,
         }}
-        width={980}
-        height={551}
-        style={{
-          width: "100%",
-          height: "auto",
-        }}
+        width={2000}
+        height={1000}
+        className="w-full h-full"
       >
+        <ZoomableGroup
+          zoom={zoom}
+          center={center}
+          onMoveEnd={({ coordinates, zoom: newZoom }) => handleMoveEnd(coordinates, newZoom)}
+        >
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
             geographies.map((geo) => {
@@ -202,11 +293,25 @@ export default function WorldMap({ destinations }: WorldMapProps) {
                     },
                     pressed: { outline: "none" },
                   }}
-                  onMouseEnter={() => {
+                  onMouseEnter={(event: any) => {
                     setHoveredCountry(geo.properties.name);
-                    console.log("Country:", geo.properties.name, "Code:", geo.id);
                   }}
-                  onMouseLeave={() => setHoveredCountry(null)}
+                  onMouseMove={(event: any) => {
+                    const svg = event.currentTarget.ownerSVGElement;
+                    const rect = svg.getBoundingClientRect();
+                    setTooltipPosition({
+                      x: event.clientX - rect.left,
+                      y: event.clientY - rect.top,
+                    });
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredCountry(null);
+                    setTooltipPosition(null);
+                  }}
+                  onClick={() => {
+                    setClickedCountry(geo.properties.name);
+                    setTimeout(() => setClickedCountry(null), 2000);
+                  }}
                 />
               );
             })
@@ -350,57 +455,58 @@ export default function WorldMap({ destinations }: WorldMapProps) {
             </g>
           </Marker>
         ))}
+        </ZoomableGroup>
       </ComposableMap>
 
       {/* Enhanced Legend */}
-      <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border-2 border-purple-200">
-        <h3 className="text-sm font-bold text-gray-700 mb-3 text-center">Map Legend</h3>
+      <div className="mt-2 sm:mt-4 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-4 shadow-lg border-2 border-purple-200">
+        <h3 className="text-xs sm:text-sm font-bold text-gray-700 mb-2 sm:mb-3 text-center">Map Legend</h3>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
           {/* Country popularity */}
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-orange-500 rounded-sm border border-orange-700"></div>
-            <span className="text-xs font-semibold text-gray-700">Most Popular</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-orange-500 rounded-sm border border-orange-700"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700">Most Popular</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-yellow-400 rounded-sm border border-yellow-600"></div>
-            <span className="text-xs font-semibold text-gray-700">Very Popular</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-yellow-400 rounded-sm border border-yellow-600"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700">Very Popular</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-yellow-300 rounded-sm border border-yellow-500"></div>
-            <span className="text-xs font-semibold text-gray-700">Popular</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-yellow-300 rounded-sm border border-yellow-500"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700">Popular</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-yellow-200 rounded-sm border border-yellow-400"></div>
-            <span className="text-xs font-semibold text-gray-700">Moderate</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-yellow-200 rounded-sm border border-yellow-400"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700">Moderate</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-gray-300 rounded-sm border border-gray-400"></div>
-            <span className="text-xs font-semibold text-gray-700">Less Visited</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-gray-300 rounded-sm border border-gray-400"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700">Less Visited</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-4 bg-emerald-500 rounded-sm border border-emerald-700"></div>
-            <span className="text-xs font-semibold text-emerald-700">✓ You Visited</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-4 h-3 sm:w-6 sm:h-4 bg-emerald-500 rounded-sm border border-emerald-700"></div>
+            <span className="text-[10px] sm:text-xs font-semibold text-emerald-700">✓ You Visited</span>
           </div>
         </div>
 
-        <div className="h-px bg-gray-300 my-3"></div>
+        <div className="h-px bg-gray-300 my-2 sm:my-3"></div>
 
         {/* City markers */}
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             <div className="relative">
-              <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-md"></div>
-              <span className="absolute -top-1 -right-1 text-xs">✓</span>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white shadow-md"></div>
+              <span className="absolute -top-1 -right-1 text-[10px] sm:text-xs">✓</span>
             </div>
-            <span className="text-xs font-bold text-green-700">Visited City</span>
+            <span className="text-[10px] sm:text-xs font-bold text-green-700">Visited City</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <div className="relative">
-              <div className="w-5 h-5 bg-white rounded-full border-2 border-orange-500 shadow-md" style={{ borderWidth: "3px" }}></div>
-              <span className="absolute -top-1 -right-1 text-xs">★</span>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full border-2 border-orange-500 shadow-md" style={{ borderWidth: "3px" }}></div>
+              <span className="absolute -top-1 -right-1 text-[10px] sm:text-xs">★</span>
             </div>
-            <span className="text-xs font-bold text-orange-700">Future Trip</span>
+            <span className="text-[10px] sm:text-xs font-bold text-orange-700">Future Trip</span>
           </div>
         </div>
       </div>

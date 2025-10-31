@@ -67,14 +67,14 @@ export default function TravelMapClient({
   const totalCountries = new Set(initialDestinations.map((d) => d.countryCode)).size;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-24">
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20 sm:pb-24">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-8">
         {/* Header */}
-        <div className="mb-4 md:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        <div className="mb-2 sm:mb-4 md:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-4">
             <div>
-              <h1 className="text-2xl sm:text-4xl font-black text-gray-900 mb-1">🗺️ {t.ourTravelMap}</h1>
-              <p className="text-sm sm:text-base text-gray-600">Exploring the world, one destination at a time</p>
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-gray-900 mb-0.5 sm:mb-1">🗺️ {t.ourTravelMap}</h1>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600">Exploring the world, one destination at a time</p>
             </div>
             <Link
               href="/map/add"
@@ -86,7 +86,7 @@ export default function TravelMapClient({
           </div>
 
           {/* Stats Cards - Compact on mobile */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-2 sm:mb-4 md:mb-6">
             <div className="bg-white rounded-xl p-3 md:p-6 border-2 border-gray-200 shadow-sm">
               <div className="text-2xl md:text-4xl mb-1 md:mb-2">🌍</div>
               <div className="text-xl md:text-3xl font-black text-gray-900">{totalCountries}</div>

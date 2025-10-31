@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default async function AccountsPage() {
   const session = await auth();
@@ -25,22 +26,16 @@ export default async function AccountsPage() {
     .reduce((sum, acc) => sum + acc.balance, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Accounts
-            </h1>
-            <p className="text-gray-600 mt-1">Manage your financial accounts</p>
-          </div>
-          <Link
-            href="/"
-            className="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            ← Back to Dashboard
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Accounts
+          </h1>
+          <p className="text-gray-600 mt-1">Manage your financial accounts</p>
         </div>
 
         {/* Total Balance Card */}
@@ -192,6 +187,7 @@ export default async function AccountsPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

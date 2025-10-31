@@ -26,7 +26,6 @@ export default function NavbarClient({ user }: NavbarClientProps) {
     { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
     { href: "/health", label: `🌸 ${t.health}` },
     { href: "/transactions", label: `📊 ${t.transactions}` },
-    { href: "/accounts", label: `🏦 ${t.accounts || "Accounts"}` },
   ];
 
   const userInitial =
