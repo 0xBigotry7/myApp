@@ -43,8 +43,33 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
     isRecurring: false,
   });
 
+  const [baseAmount, setBaseAmount] = useState("");
+  const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if category is food/restaurant related
+  const isFoodCategory = formData.category.toLowerCase().includes("food") ||
+                         formData.category.toLowerCase().includes("dining") ||
+                         formData.category.toLowerCase().includes("restaurant");
+
+  // Handle tip calculation
+  const handleTipSelect = (tipPercentage: number) => {
+    if (!baseAmount || isNaN(parseFloat(baseAmount))) return;
+
+    const base = parseFloat(baseAmount);
+    const tipAmount = base * (tipPercentage / 100);
+    const total = base + tipAmount;
+
+    setSelectedTip(tipPercentage);
+    setFormData({ ...formData, amount: total.toFixed(2) });
+  };
+
+  const handleBaseAmountChange = (value: string) => {
+    setBaseAmount(value);
+    setFormData({ ...formData, amount: value });
+    setSelectedTip(null);
+  };
 
   const handleFileSelect = async (file: File) => {
     setReceiptFile(file);
@@ -213,7 +238,9 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
 
       {/* Amount Input - Large and prominent */}
       <div>
-        <label className="block text-lg font-bold text-gray-900 mb-3">💵 Amount</label>
+        <label className="block text-lg font-bold text-gray-900 mb-3">
+          💵 {isFoodCategory ? "Subtotal (before tip)" : "Amount"}
+        </label>
         <div className="relative">
           <span className="absolute left-6 top-1/2 -translate-y-1/2 text-4xl font-black text-gray-300">
             $
@@ -223,12 +250,56 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
             inputMode="decimal"
             step="0.01"
             required
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            value={isFoodCategory ? baseAmount : formData.amount}
+            onChange={(e) =>
+              isFoodCategory
+                ? handleBaseAmountChange(e.target.value)
+                : setFormData({ ...formData, amount: e.target.value })
+            }
             className="w-full pl-20 pr-8 py-6 text-5xl font-black border-3 border-gray-200 rounded-3xl text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white shadow-sm"
             placeholder="0.00"
           />
         </div>
+
+        {/* Tip Calculator for Food/Dining Categories */}
+        {isFoodCategory && baseAmount && !isNaN(parseFloat(baseAmount)) && (
+          <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-gray-700">💡 Quick Tip</span>
+              {selectedTip && (
+                <span className="text-xs font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">
+                  {selectedTip}% selected
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[15, 18, 20, 22].map((tip) => {
+                const tipAmount = parseFloat(baseAmount) * (tip / 100);
+                return (
+                  <button
+                    key={tip}
+                    type="button"
+                    onClick={() => handleTipSelect(tip)}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl font-bold transition-all active:scale-95 ${
+                      selectedTip === tip
+                        ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg scale-105"
+                        : "bg-white border-2 border-green-300 text-gray-700 hover:border-green-500 hover:bg-green-50"
+                    }`}
+                  >
+                    <div className="text-lg">{tip}%</div>
+                    <div className="text-xs mt-1">${tipAmount.toFixed(2)}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTip && (
+              <div className="pt-2 border-t-2 border-green-300 flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-700">Total with tip:</span>
+                <span className="text-2xl font-bold text-green-700">${formData.amount}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Category Selection - Compact grid */}
@@ -239,7 +310,14 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
             <button
               key={cat.name}
               type="button"
-              onClick={() => setFormData({ ...formData, category: cat.name })}
+              onClick={() => {
+                setFormData({ ...formData, category: cat.name });
+                // Reset tip calculation when changing category
+                setSelectedTip(null);
+                if (baseAmount) {
+                  setFormData({ ...formData, category: cat.name, amount: baseAmount });
+                }
+              }}
               className={`relative aspect-square rounded-2xl transition-all duration-200 ${
                 formData.category === cat.name
                   ? `bg-gradient-to-br ${cat.color} shadow-xl scale-105 ring-4 ring-offset-2 ring-gray-900/10`
