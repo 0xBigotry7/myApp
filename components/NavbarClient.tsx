@@ -26,6 +26,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
     { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
     { href: "/health", label: `🌸 ${t.health}` },
     { href: "/transactions", label: `📊 ${t.transactions}` },
+    { href: "/accounts", label: `🏦 ${t.accounts || "Accounts"}` },
   ];
 
   const userInitial =
@@ -36,7 +37,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const userDisplayName = user?.name ?? user?.email ?? t.you;
 
   return (
-    <nav className="hidden md:block bg-gradient-blue-pink border-b border-white/20 sticky top-0 z-50 backdrop-blur-lg shadow-lg">
+    <nav className="bg-gradient-blue-pink border-b border-white/20 sticky top-0 z-50 backdrop-blur-lg shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4">
           <div className="flex items-center gap-4 sm:gap-8">
@@ -86,65 +87,66 @@ export default function NavbarClient({ user }: NavbarClientProps) {
               <button
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-white/90 transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:hidden"
+                className="md:hidden inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-white/90 transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 aria-expanded={isMenuOpen}
                 aria-controls="mobile-nav-menu"
               >
                 <span className="sr-only">Toggle navigation</span>
-                <span className="text-lg font-semibold">{isMenuOpen ? "✕" : "☰"}</span>
+                <span className="text-xl font-semibold">{isMenuOpen ? "✕" : "☰"}</span>
               </button>
             </div>
           )}
         </div>
-        {user && (
+        {user && isMenuOpen && (
           <div
             id="mobile-nav-menu"
-            className={`md:hidden transition-all duration-200 ease-out ${
-              isMenuOpen
-                ? "pointer-events-auto visible opacity-100 translate-y-0"
-                : "pointer-events-none invisible -translate-y-2 opacity-0"
-            }`}
-            aria-hidden={!isMenuOpen}
+            className="md:hidden fixed inset-0 top-[64px] z-50 bg-black/20 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
           >
-            <div className="mt-2 rounded-3xl border border-white/60 bg-white/95 p-4 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-blue-pink text-lg font-semibold text-white shadow-lg">
-                    {userInitial}
+            <div
+              className="absolute top-2 left-4 right-4 rounded-3xl border border-white/60 bg-white shadow-2xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-blue-pink text-lg font-semibold text-white shadow-lg">
+                      {userInitial}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-base font-semibold text-gray-900">
+                        {userDisplayName}
+                      </span>
+                      {user?.email && (
+                        <span className="text-xs text-gray-500">{user.email}</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-base font-semibold text-gray-900">
-                      {userDisplayName}
-                    </span>
-                    {user?.email && (
-                      <span className="text-xs text-gray-500">{user.email}</span>
-                    )}
-                  </div>
+                  <LanguageSwitcher compact />
                 </div>
-                <LanguageSwitcher compact />
-              </div>
-              <div className="mt-4 grid gap-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-sm font-semibold text-gray-800 shadow-sm transition-all hover:bg-white"
+                <div className="grid gap-2">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-3 text-sm font-semibold text-gray-800 shadow-sm transition-all hover:shadow-md hover:from-blue-100 hover:to-purple-100"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span>{link.label}</span>
+                      <span className="text-lg">›</span>
+                    </Link>
+                  ))}
+                </div>
+                <form action={handleSignOut} className="mt-4">
+                  <button
+                    type="submit"
+                    className="w-full rounded-2xl bg-gradient-blue-pink py-3 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span>{link.label}</span>
-                    <span className="text-lg">›</span>
-                  </Link>
-                ))}
+                    {t.signOut}
+                  </button>
+                </form>
               </div>
-              <form action={handleSignOut} className="mt-4">
-                <button
-                  type="submit"
-                  className="w-full rounded-2xl bg-gradient-blue-pink py-3 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {t.signOut}
-                </button>
-              </form>
             </div>
           </div>
         )}

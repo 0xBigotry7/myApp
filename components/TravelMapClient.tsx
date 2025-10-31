@@ -68,46 +68,46 @@ export default function TravelMapClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-12">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 md:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
             <div>
-              <h1 className="text-4xl font-black text-gray-900 mb-2">🗺️ {t.ourTravelMap}</h1>
-              <p className="text-gray-600">Exploring the world, one destination at a time</p>
+              <h1 className="text-2xl sm:text-4xl font-black text-gray-900 mb-1">🗺️ {t.ourTravelMap}</h1>
+              <p className="text-sm sm:text-base text-gray-600">Exploring the world, one destination at a time</p>
             </div>
             <Link
               href="/map/add"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl font-bold hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-bold hover:shadow-xl transition-all active:scale-95 flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
             >
-              <span className="text-xl">✈️</span>
+              <span className="text-lg sm:text-xl">✈️</span>
               <span>{t.addDestination}</span>
             </Link>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
-              <div className="text-4xl mb-2">🌍</div>
-              <div className="text-3xl font-black text-gray-900">{totalCountries}</div>
-              <div className="text-sm text-gray-600 font-semibold">{t.countries}</div>
+          {/* Stats Cards - Compact on mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
+            <div className="bg-white rounded-xl p-3 md:p-6 border-2 border-gray-200 shadow-sm">
+              <div className="text-2xl md:text-4xl mb-1 md:mb-2">🌍</div>
+              <div className="text-xl md:text-3xl font-black text-gray-900">{totalCountries}</div>
+              <div className="text-xs md:text-sm text-gray-600 font-semibold">{t.countries}</div>
             </div>
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
-              <div className="text-4xl mb-2">📍</div>
-              <div className="text-3xl font-black text-gray-900">{totalVisited}</div>
-              <div className="text-sm text-gray-600 font-semibold">{t.placesVisited}</div>
+            <div className="bg-white rounded-xl p-3 md:p-6 border-2 border-gray-200 shadow-sm">
+              <div className="text-2xl md:text-4xl mb-1 md:mb-2">📍</div>
+              <div className="text-xl md:text-3xl font-black text-gray-900">{totalVisited}</div>
+              <div className="text-xs md:text-sm text-gray-600 font-semibold">{t.placesVisited}</div>
             </div>
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
-              <div className="text-4xl mb-2">✈️</div>
-              <div className="text-3xl font-black text-gray-900">{totalFuture}</div>
-              <div className="text-sm text-gray-600 font-semibold">{t.futureTrips}</div>
+            <div className="bg-white rounded-xl p-3 md:p-6 border-2 border-gray-200 shadow-sm">
+              <div className="text-2xl md:text-4xl mb-1 md:mb-2">✈️</div>
+              <div className="text-xl md:text-3xl font-black text-gray-900">{totalFuture}</div>
+              <div className="text-xs md:text-sm text-gray-600 font-semibold">{t.futureTrips}</div>
             </div>
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-sm">
-              <div className="text-4xl mb-2">⭐</div>
-              <div className="text-3xl font-black text-gray-900">
+            <div className="bg-white rounded-xl p-3 md:p-6 border-2 border-gray-200 shadow-sm">
+              <div className="text-2xl md:text-4xl mb-1 md:mb-2">⭐</div>
+              <div className="text-xl md:text-3xl font-black text-gray-900">
                 {initialDestinations.filter((d) => d.rating).length}
               </div>
-              <div className="text-sm text-gray-600 font-semibold">{t.ratedPlaces}</div>
+              <div className="text-xs md:text-sm text-gray-600 font-semibold">{t.ratedPlaces}</div>
             </div>
           </div>
 
