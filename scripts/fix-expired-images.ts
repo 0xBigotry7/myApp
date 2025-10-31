@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import OpenAI from "openai";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 import crypto from "crypto";
 
 const prisma = new PrismaClient();
@@ -9,23 +8,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function downloadAndSaveImage(url: string, filename: string): Promise<string> {
+async function uploadImageToBlob(url: string, filename: string): Promise<string> {
   try {
     const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const blob = await response.blob();
 
-    const publicPath = join(process.cwd(), "public", "generated-images");
-    const filePath = join(publicPath, filename);
+    // Upload to Vercel Blob
+    const { url: blobUrl } = await put(filename, blob, {
+      access: "public",
+      addRandomSuffix: false,
+    });
 
-    const fs = await import("fs/promises");
-    await fs.mkdir(publicPath, { recursive: true });
-
-    await writeFile(filePath, buffer);
-
-    return `/generated-images/${filename}`;
+    return blobUrl;
   } catch (error) {
-    console.error("Error downloading image:", error);
+    console.error("Error uploading image to blob:", error);
     throw error;
   }
 }
@@ -81,14 +77,14 @@ async function generateThemeImage(theme: string, destination: string): Promise<s
 
   // Generate a unique filename
   const hash = crypto.createHash("md5").update(`${theme}-${destination}-${Date.now()}`).digest("hex");
-  const filename = `${theme}-${destination.replace(/[^a-zA-Z0-9]/g, "-")}-${hash}.png`;
+  const filename = `trip-images/${theme}-${destination.replace(/[^a-zA-Z0-9]/g, "-")}-${hash}.png`;
 
-  // Download and save the image
-  const savedImageUrl = await downloadAndSaveImage(tempImageUrl, filename);
+  // Upload to Vercel Blob
+  const blobUrl = await uploadImageToBlob(tempImageUrl, filename);
 
-  console.log(`✓ Generated and saved ${theme} image: ${savedImageUrl}`);
+  console.log(`✓ Generated and uploaded ${theme} image: ${blobUrl}`);
 
-  return savedImageUrl;
+  return blobUrl;
 }
 
 async function generateDestinationImage(destination: string): Promise<string> {
@@ -114,14 +110,14 @@ async function generateDestinationImage(destination: string): Promise<string> {
 
   // Generate a unique filename
   const hash = crypto.createHash("md5").update(`${destination}-${Date.now()}`).digest("hex");
-  const filename = `destination-${destination.replace(/[^a-zA-Z0-9]/g, "-")}-${hash}.png`;
+  const filename = `trip-images/destination-${destination.replace(/[^a-zA-Z0-9]/g, "-")}-${hash}.png`;
 
-  // Download and save the image
-  const savedImageUrl = await downloadAndSaveImage(tempImageUrl, filename);
+  // Upload to Vercel Blob
+  const blobUrl = await uploadImageToBlob(tempImageUrl, filename);
 
-  console.log(`✓ Generated and saved destination image: ${savedImageUrl}`);
+  console.log(`✓ Generated and uploaded destination image: ${blobUrl}`);
 
-  return savedImageUrl;
+  return blobUrl;
 }
 
 async function main() {
