@@ -16,12 +16,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 - **Framework**: Next.js 15 with App Router
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM (Neon serverless)
 - **Authentication**: NextAuth.js v5 (Auth.js)
 - **Styling**: Tailwind CSS
 - **Charts**: Recharts
-- **Storage**: Google Drive API (for trip photos)
-- **AI**: Groq (Llama Vision), OpenAI (DALL-E)
+- **Maps**: react-simple-maps for interactive world map
+- **Storage**: Google Drive API (for trip photos and receipts)
+- **AI**:
+  - Groq (Llama 3.2 Vision 90B) for receipt scanning (FREE)
+  - OpenAI (DALL-E 3) for trip image generation
 
 ### Key Directories
 - `app/` - Next.js pages and API routes (App Router structure)
@@ -32,14 +35,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Database Schema
 Key models:
-- **User** - Authentication, user info, and Google Drive credentials
-- **Trip** - Travel trips with budget totals, date ranges, and AI-generated images
-- **BudgetCategory** - Budget allocations for each category within a trip
-- **Expense** - Individual expense records linked to trips and users (includes tip calculation)
-- **TripPost** - Timeline posts (photos, notes, check-ins) with Google Drive URLs
-- **TravelDestination** - Map of places visited with coordinates and photos
+- **User** - Authentication, user info, Google Drive OAuth tokens
+- **Trip** - Travel trips with budget, dates, AI-generated cover images
+- **BudgetCategory** - Budget allocations by category per trip
+- **Expense** - Expense records with receipt photos, location, tips
+- **TripPost** - Timeline posts (photos, notes, check-ins) stored in Google Drive
+- **TravelDestination** - Map markers with coordinates, ratings, personal/shared visibility (350+ cities database)
 - **Account** - Financial accounts (checking, savings, credit cards)
 - **Transaction** - Bank transactions synced from Plaid/Wise
+- **Budget** - Monthly budgets for non-trip expenses
+- **BudgetItem** - Category allocations for monthly budgets
 
 ### Authentication Flow
 - Uses NextAuth.js v5 with credentials provider
@@ -50,12 +55,13 @@ Key models:
 ### Page Structure
 - `/` - Dashboard showing all trips with budget summaries
 - `/login` - Authentication page
-- `/trips/new` - Create new trip with budget planning
-- `/trips/[id]` - Trip detail with timeline, expense tracking, and analytics
-- `/settings` - User settings and Google Drive connection
-- `/map` - Interactive world map of travel destinations
-- `/finance` - Personal finance dashboard with accounts and budgets
-- `/expenses` - General expense tracking (non-trip expenses)
+- `/trips/new` - Create new trip with budget planning and DALL-E image generation
+- `/trips/[id]` - Trip detail with:
+  - **Timeline Tab**: Instagram-style feed of photos and expenses
+  - **Budget Tab**: Expense tracking with AI receipt scanning and tip calculator
+- `/map` - Interactive world map with 350+ cities, visit tracking, personal/shared filtering
+- `/settings` - User settings and Google Drive OAuth connection
+- `/finance` - Personal finance dashboard with Plaid/Wise integration
 
 ### Data Flow
 - Server components fetch data directly using Prisma
@@ -77,13 +83,13 @@ Key models:
 - See `GOOGLE_DRIVE_SETUP.md` for complete setup instructions
 
 ### Key Features
-- **Trip Timeline**: Social media-style feed with photos, notes, and expenses
-- **Budget Tracking**: Real-time budget vs actual spending with AI insights
-- **Tip Calculator**: Auto-detects food expenses and suggests 15-22% tips
-- **Travel Map**: Interactive world map showing visited destinations
-- **AI Features**:
-  - Receipt scanning with Llama Vision
-  - Trip image generation with DALL-E
-  - Expense insights and recommendations
-- **Bank Sync**: Automatic transaction import via Plaid/Wise
-- **Multi-currency**: Support for USD, EUR, CNY with real-time exchange rates
+- **Photo Timeline**: Instagram-style feed combining photos and expenses with user attribution
+- **AI Receipt Scanning**: Groq Llama Vision extracts amount, date, merchant, category (FREE)
+- **Smart Tip Calculator**: Auto-detects food expenses, suggests 15-22% tips with one-tap application
+- **Interactive World Map**: react-simple-maps with 350+ cities, color-coded countries, connection lines
+- **Personal/Shared Destinations**: Control visibility of travel destinations (household vs private)
+- **Google Drive Integration**: OAuth2 photo storage in users' personal Drive accounts
+- **AI Trip Images**: DALL-E 3 generated cover images based on destination
+- **Multi-currency**: USD, EUR, GBP, JPY, CNY with real-time conversion
+- **Bank Sync**: Plaid/Wise for transaction import (optional)
+- **Household Sharing**: Multi-user with color-coded attribution badges
