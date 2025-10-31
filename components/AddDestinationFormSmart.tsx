@@ -267,6 +267,7 @@ export default function AddDestinationFormSmart() {
     longitude: 0,
     visitDate: "",
     isFuture: false,
+    isPersonal: false,
     notes: "",
     rating: 0,
     highlights: "",
@@ -477,6 +478,20 @@ export default function AddDestinationFormSmart() {
             <label htmlFor="future" className="flex-1">
               <div className="font-bold text-sm text-gray-900">⏰ {t.futureTrip}</div>
               <div className="text-xs text-gray-600">{t.markAsFuture}</div>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-2xl border-2 border-purple-200">
+            <input
+              type="checkbox"
+              id="personal"
+              checked={formData.isPersonal}
+              onChange={(e) => setFormData({ ...formData, isPersonal: e.target.checked })}
+              className="w-5 h-5 text-purple-600 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            />
+            <label htmlFor="personal" className="flex-1">
+              <div className="font-bold text-sm text-gray-900">🔒 Personal Travel</div>
+              <div className="text-xs text-gray-600">Only visible to you (unchecked = shared with household)</div>
             </label>
           </div>
 

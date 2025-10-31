@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import TravelMapClient from "@/components/TravelMapClient";
+import { getHouseholdUserIds } from "@/lib/household";
 
 export default async function TravelMapPage() {
   const session = await auth();
@@ -10,10 +11,25 @@ export default async function TravelMapPage() {
     redirect("/login");
   }
 
-  // Get all travel destinations for the user
+  const householdUserIds = await getHouseholdUserIds(session.user.id);
+
+  // Get all travel destinations:
+  // 1. Shared destinations (isPersonal = false) from all household members
+  // 2. Personal destinations (isPersonal = true) only from current user
   const destinations = await prisma.travelDestination.findMany({
     where: {
-      userId: session.user.id,
+      OR: [
+        {
+          // Shared destinations from any household member
+          userId: { in: householdUserIds },
+          isPersonal: false,
+        },
+        {
+          // Personal destinations from current user only
+          userId: session.user.id,
+          isPersonal: true,
+        },
+      ],
     },
     orderBy: {
       visitDate: "desc",

@@ -389,6 +389,7 @@ model TravelDestination {
   longitude     Float
   visitDate     DateTime? // When visited (null for future trips)
   isFuture      Boolean  @default(false) // true for planned future trips
+  isPersonal    Boolean  @default(false) // true for personal-only destinations, false for shared
   tripId        String?  // Optional link to Trip model
   notes         String?
   photos        String[] @default([]) // Array of photo URLs
