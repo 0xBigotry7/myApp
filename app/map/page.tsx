@@ -11,7 +11,7 @@ export default async function TravelMapPage() {
     redirect("/login");
   }
 
-  const householdUserIds = await getHouseholdUserIds(session.user.id);
+  const householdUserIds = await getHouseholdUserIds();
 
   // Get all travel destinations:
   // 1. Shared destinations (isPersonal = false) from all household members
