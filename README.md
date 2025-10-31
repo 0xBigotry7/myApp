@@ -1,51 +1,68 @@
-# ✈️ TravelAI - AI-Powered Travel Planner
+# ✈️ TravelAI - AI-Powered Travel Planner & Expense Tracker
 
-A beautiful travel planning and expense tracking app with AI-powered features, anime-style visuals, and bilingual support (English/中文).
+A comprehensive travel planning and expense tracking app with AI-powered features, social media-style trip sharing, and interactive world map.
 
-**Built for personal use by BABER and his wife.**
+**Built for personal/household use** - Perfect for couples and families who travel together.
 
 > **🚀 Ready for Production**: This app is configured for deployment to Vercel with PostgreSQL. See [DEPLOYMENT.md](DEPLOYMENT.md) for setup instructions.
 
 ## Features
 
 ### 🤖 AI-Powered Features
-- **AI Destination Suggestions**: Get personalized destination recommendations based on your budget and interests
-- **AI Itinerary Generation**: Automatically generate detailed day-by-day itineraries with activities, timing, and cost estimates
+- **AI Receipt Scanning**: Upload receipt photos and automatically extract amount, date, merchant, and category using Groq Llama Vision
+- **AI Trip Image Generation**: Auto-generate beautiful trip cover images with DALL-E
+- **Smart Tip Calculator**: Automatically suggests 15-22% tips for food/dining expenses with real-time calculations
 - **AI Expense Insights**: Real-time spending analysis with smart recommendations and budget alerts
-- **Smart Recommendations**: AI-powered tips on attractions, restaurants, and activities
 
-### 📅 Trip Planning & Itinerary
-- **Interactive Itinerary Builder**: Drag-and-drop interface to organize your daily activities
-- **Day-by-Day Planning**: Organize activities by date with start/end times
-- **Activity Management**: Add, edit, and reorder activities with location and cost tracking
-- **Customizable Plans**: Easy customization of AI-generated itineraries
+### 📸 Social Media-Style Trip Timeline
+- **Photo Upload**: Upload multiple trip photos with captions and location tags to your Google Drive
+- **Trip Posts**: Share moments with photos, notes, and check-ins
+- **Timeline Feed**: Social media-style feed merging expenses and posts chronologically
+- **Household Sharing**: All household members can view and contribute to trip timelines
+- **User Attribution**: Color-coded badges showing who posted each item
+
+### 🗺️ Interactive World Travel Map
+- **Visual World Map**: Interactive, zoomable world map showing all your travels
+- **350+ City Database**: Pre-loaded with cities across all continents with coordinates
+- **Visit Tracking**: Mark cities as visited or future trips
+- **Personal/Shared Destinations**: Control visibility - share with household or keep private
+- **Travel Statistics**: Track countries visited, places rated, and future trips
+- **Destination Details**: Add ratings, photos, highlights, and notes to each destination
 
 ### 💰 Expense Tracking & Budget
 - **Quick Expense Entry**: Fast, mobile-optimized expense recording during trips
-- **Receipt Upload**: Attach receipt photos to expenses for record-keeping
-- **Category Budgeting**: Set and track budgets across 6 categories
+- **Receipt Photos**: Attach receipt photos stored in your Google Drive
+- **AI Receipt Scanning**: Extract expense details automatically from receipt photos
+- **Smart Tip Calculator**: Auto-detects food expenses and suggests tips (15%, 18%, 20%, 22%)
+- **Category Budgeting**: Set and track budgets across multiple categories
 - **Real-time Analytics**: Visual charts and spending breakdowns
-- **Currency Support**: Multi-currency expenses with conversion support
+- **Multi-Currency Support**: USD, EUR, GBP, JPY, CNY with real-time conversion
 
 ### 🌍 Travel Features
-- **Multi-User Support**: Separate accounts with shared trip visibility
-- **Location Tracking**: Track where expenses occurred
-- **Budget Alerts**: Get notified when approaching budget limits
+- **Multi-User Household**: Separate accounts with shared trip visibility
+- **Trip Timeline**: Social feed combining expenses and photo posts
+- **Location Tracking**: GPS coordinates and location names for expenses and posts
+- **Budget Alerts**: Visual warnings when approaching budget limits
 - **Trip Dashboard**: Overview of all trips with spending status
+- **Expense Editing**: Edit expenses anytime and attach photos retroactively
 
 ## Tech Stack
 
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
+- **Styling**: Tailwind CSS with custom animations
+- **Database**: PostgreSQL with Prisma ORM (hosted on Neon)
 - **Authentication**: NextAuth.js v5 (Auth.js)
-- **AI**: Anthropic Claude API (Claude 3.5 Sonnet)
+- **AI & Vision**:
+  - Groq API with Llama 3.2 Vision (90B) for receipt scanning
+  - OpenAI DALL-E for trip image generation
+- **Storage**: Google Drive API (for trip photos and receipts)
 - **UI Components**:
-  - Drag-and-Drop: @dnd-kit
-  - Charts: Recharts
-  - File Upload: UploadThing
+  - Maps: react-simple-maps for interactive world map
+  - Charts: Recharts for expense analytics
+  - Icons: Lucide React
 - **APIs**:
-  - Currency Conversion: ExchangeRate-API
+  - Currency Conversion: Real-time exchange rates
+  - Google Drive: OAuth2 for photo storage
   - Date Handling: date-fns
 
 ## Getting Started
@@ -53,9 +70,10 @@ A beautiful travel planning and expense tracking app with AI-powered features, a
 ### Prerequisites
 
 - Node.js 18+ installed
-- Anthropic API key (get one at [console.anthropic.com](https://console.anthropic.com))
-- (Optional) UploadThing account for receipt uploads
-- (Optional) ExchangeRate-API key for live currency rates
+- PostgreSQL database (e.g., Neon, Supabase, or local)
+- Groq API key (get free at [console.groq.com](https://console.groq.com))
+- OpenAI API key (for DALL-E trip images at [platform.openai.com](https://platform.openai.com))
+- Google Cloud project with Drive API enabled (see [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md))
 
 ### Installation
 
@@ -64,21 +82,30 @@ A beautiful travel planning and expense tracking app with AI-powered features, a
 npm install
 ```
 
-2. Set up environment variables in `.env`:
+2. Set up environment variables in `.env` (see `.env.example`):
 ```bash
-DATABASE_URL="file:./dev.db"
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://user:password@host/database"
+
+# Authentication
 NEXTAUTH_SECRET="your-secret-key-change-this-in-production"
 NEXTAUTH_URL="http://localhost:3002"
 
 # Required for AI features
-ANTHROPIC_API_KEY="your-anthropic-api-key"
+GROQ_API_KEY="your-groq-api-key"
+OPENAI_API_KEY="your-openai-api-key"
 
-# Optional: For receipt uploads
-UPLOADTHING_SECRET="your-uploadthing-secret"
-UPLOADTHING_APP_ID="your-uploadthing-app-id"
+# Required for photo uploads
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+GOOGLE_REDIRECT_URI="http://localhost:3002/api/auth/google-drive/callback"
 
-# Optional: For live currency rates (fallback rates work without this)
-EXCHANGE_RATE_API_KEY="your-exchange-rate-api-key"
+# Optional: For bank sync
+PLAID_CLIENT_ID="your-plaid-client-id"
+PLAID_SECRET="your-plaid-secret"
+PLAID_ENV="sandbox"
+
+WISE_API_TOKEN="your-wise-api-token"
 ```
 
 3. Set up the database:
@@ -114,26 +141,37 @@ After seeding, you can log in with:
 
 ### Planning a Trip
 
-1. **Get AI Destination Ideas**: Click "AI Destination Ideas" on the new trip page for personalized suggestions
-2. **Create Trip**: Fill in trip details, dates, and budget
-3. **Set Category Budgets**: Allocate your budget across different expense categories
-
-### Building Your Itinerary
-
-1. **Generate AI Itinerary**: Click "AI Generate Itinerary" on the Itinerary tab
-2. **Customize Activities**: Drag and drop to reorder, edit details, or add custom activities
-3. **View by Day**: See your activities organized by date with timing and locations
+1. **Create Trip**: Fill in trip details, dates, and budget on the new trip page
+2. **Set Category Budgets**: Allocate your budget across different expense categories
+3. **Generate Cover Image**: Auto-generate beautiful AI cover image with DALL-E
 
 ### Tracking Expenses
 
-1. **Add Expenses**: Quick entry form on the Budget tab
-2. **Upload Receipts**: Attach receipt photos to expenses
-3. **Track Location**: Record where each expense occurred
-4. **Multi-Currency**: Add expenses in different currencies
+1. **Quick Add**: Use the expense form on the Budget tab
+2. **Scan Receipt**: Upload receipt photo for automatic data extraction with AI
+3. **Smart Tips**: Auto-calculates suggested tips (15-22%) for food/dining expenses
+4. **Attach Photos**: Add receipt photos stored in your Google Drive
+5. **Multi-Currency**: Add expenses in USD, EUR, GBP, JPY, or CNY
+6. **Track Location**: Record where each expense occurred
+
+### Sharing Trip Moments
+
+1. **Upload Photos**: Click "Add Photo" to upload trip photos with captions
+2. **Tag Locations**: Add location names to photos and posts
+3. **View Timeline**: See chronological feed of expenses and photos
+4. **Household Sharing**: All household members see and contribute to timeline
+
+### Exploring the Travel Map
+
+1. **View Map**: Navigate to the Map page to see interactive world map
+2. **Add Destinations**: Mark cities as visited or future trips from 350+ city database
+3. **Personal/Shared**: Choose to share destinations with household or keep private
+4. **Add Details**: Rate places (1-5 stars), add photos, notes, and highlights
+5. **Track Statistics**: See countries visited, total places, and future trip count
 
 ### Getting Insights
 
-1. **AI Analysis**: Click "Analyze Spending" for AI-powered insights
+1. **AI Analysis**: View real-time spending insights with personalized recommendations
 2. **View Charts**: Visual breakdown of spending by category
 3. **Budget Alerts**: Get warnings when approaching limits
 4. **Daily Budget**: See how much you can spend per remaining day
@@ -143,43 +181,59 @@ After seeding, you can log in with:
 ```
 ├── app/
 │   ├── api/
-│   │   ├── ai/                    # AI endpoints
-│   │   │   ├── generate-itinerary/  # AI itinerary generation
-│   │   │   ├── analyze-expenses/    # AI expense analysis
-│   │   │   └── suggest-destinations/# AI destination suggestions
-│   │   ├── activities/            # Activity CRUD
-│   │   ├── currency/              # Currency conversion
-│   │   ├── uploadthing/           # File upload handler
-│   │   ├── expenses/              # Expense tracking
-│   │   └── trips/                 # Trip management
+│   │   ├── ai/
+│   │   │   ├── scan-receipt/        # AI receipt scanning (Groq Llama Vision)
+│   │   │   └── generate-image/      # DALL-E trip image generation
+│   │   ├── auth/
+│   │   │   └── google-drive/        # Google OAuth for Drive access
+│   │   ├── currency/                # Currency conversion
+│   │   ├── destinations/            # Travel destination CRUD
+│   │   ├── expenses/                # Expense tracking
+│   │   ├── trips/                   # Trip management & posts
+│   │   ├── upload-photo/            # Photo upload to Google Drive
+│   │   └── image-proxy/             # Proxy for Google Drive images
 │   ├── trips/
-│   │   ├── [id]/                  # Trip detail page
-│   │   └── new/                   # New trip page
-│   └── page.tsx                   # Dashboard
+│   │   ├── [id]/                    # Trip detail with timeline
+│   │   └── new/                     # New trip page
+│   ├── map/                         # Interactive world travel map
+│   ├── settings/                    # User settings & Google Drive
+│   ├── finance/                     # Personal finance dashboard
+│   └── page.tsx                     # Dashboard
 ├── components/
-│   ├── TripTabs.tsx              # Tab navigation
-│   ├── ItineraryView.tsx         # Itinerary builder
-│   ├── ExpenseInsights.tsx       # AI insights display
-│   ├── ExpenseForm.tsx           # Expense entry form
+│   ├── AddPhotoModal.tsx            # Photo upload modal
+│   ├── AddExpenseForm.tsx           # Expense form with tip calculator
+│   ├── EditExpenseForm.tsx          # Edit expense with photo attach
+│   ├── TripTimeline.tsx             # Social feed timeline
+│   ├── WorldMap.tsx                 # Interactive world map
+│   ├── TravelMapClient.tsx          # Map filtering & controls
+│   ├── AddDestinationFormSmart.tsx  # 350+ city database
 │   └── ...
 ├── lib/
-│   ├── ai.ts                     # AI service layer
-│   ├── auth.ts                   # NextAuth config
-│   ├── prisma.ts                 # Prisma client
-│   └── uploadthing.ts            # Upload helpers
+│   ├── auth.ts                      # NextAuth config
+│   ├── prisma.ts                    # Prisma client
+│   ├── google-drive.ts              # Google Drive integration
+│   └── currency.ts                  # Currency conversion
 └── prisma/
-    └── schema.prisma             # Database schema
+    └── schema.prisma                # Database schema
 ```
 
 ## Database Schema
 
-- **User**: User accounts with preferences
-- **Trip**: Travel trips with budget and metadata
+**Core Models:**
+- **User**: User accounts with Google Drive credentials and preferences
+- **Trip**: Travel trips with budget, date ranges, and AI-generated images
 - **BudgetCategory**: Budget allocations by category
-- **Expense**: Expense records with receipts and location
-- **Activity**: Itinerary activities with timing and costs
-- **Place**: Saved places and attractions
-- **UserPreference**: User settings and preferences
+- **Expense**: Expense records with receipt photos, location, and tips
+
+**Social & Sharing:**
+- **TripPost**: Timeline posts (photos, notes, check-ins) with Google Drive URLs
+- **TravelDestination**: Map of places visited with coordinates, ratings, and photos
+
+**Finance:**
+- **Account**: Financial accounts (checking, savings, credit cards)
+- **Transaction**: Bank transactions synced from Plaid/Wise
+- **Budget**: Monthly budgets for non-trip expenses
+- **BudgetItem**: Budget category allocations
 
 ## Development
 
@@ -193,58 +247,106 @@ After seeding, you can log in with:
 ## API Endpoints
 
 ### AI Endpoints
-- `POST /api/ai/generate-itinerary` - Generate AI itinerary
-- `POST /api/ai/analyze-expenses` - Get spending insights
-- `POST /api/ai/suggest-destinations` - Get destination ideas
+- `POST /api/ai/scan-receipt` - Scan receipt with Groq Llama Vision (extracts amount, date, merchant, category)
+- `POST /api/ai/generate-image` - Generate trip cover image with DALL-E
 
-### Data Endpoints
+### Trip & Timeline
 - `GET/POST /api/trips` - Trip management
-- `GET/POST /api/activities` - Activity management
-- `PATCH/DELETE /api/activities/[id]` - Update/delete activity
-- `POST /api/activities/reorder` - Reorder activities
-- `GET/POST /api/expenses` - Expense tracking
+- `GET/POST /api/trips/[id]/posts` - Trip posts (photos, notes, check-ins)
+- `GET /api/trips/[id]/timeline` - Combined timeline of expenses and posts
+
+### Expense Tracking
+- `GET/POST /api/expenses` - Expense CRUD
+- `PATCH /api/expenses/[id]` - Update expense
+- `POST /api/upload-photo` - Upload photo to Google Drive
+
+### Travel Map
+- `GET/POST /api/destinations` - Travel destination management
+- `PATCH /api/destinations/[id]` - Update destination
+- `DELETE /api/destinations/[id]` - Remove destination
+
+### Utilities
 - `POST /api/currency/convert` - Currency conversion
 - `GET /api/currency/convert?base=USD` - Get exchange rates
+- `GET /api/image-proxy` - Proxy Google Drive images for CORS
+- `GET/POST /api/auth/google-drive/*` - Google OAuth flow
 
 ## Key Features Explained
 
-### AI Itinerary Generation
-The AI analyzes your destination, dates, budget, and interests to create a personalized day-by-day itinerary with:
-- Specific activities and attractions
-- Recommended timing (start/end times)
-- Cost estimates per activity
-- Mix of popular spots and hidden gems
-- Balanced pacing with rest time
+### AI Receipt Scanning
+Upload a receipt photo and Groq's Llama Vision model automatically extracts:
+- Total amount (including tax)
+- Date of purchase
+- Merchant/store name
+- Item description
+- Suggested category (Food, Transport, Shopping, etc.)
+- **Free & Fast** - Groq API is free with generous limits
 
-### Expense Insights
-AI-powered analysis provides:
-- Spending pattern detection
-- Budget overspend warnings
-- Category-specific recommendations
-- Daily budget calculations
-- Personalized saving tips
+### Smart Tip Calculator
+When adding food/dining expenses:
+- Auto-detects food-related categories
+- Shows 4 quick tip buttons: 15%, 18%, 20%, 22%
+- Real-time calculation of tip amount
+- Displays total with tip included
+- One-tap to apply suggested tip
 
-### Drag-and-Drop Itinerary
-Built with @dnd-kit for smooth, accessible drag-and-drop:
-- Reorder activities within a day
-- Visual feedback while dragging
-- Automatic save on drop
-- Keyboard navigation support
+### Interactive World Map
+Visual representation of your travels:
+- **350+ cities** pre-loaded with coordinates across all continents
+- Color-coded countries (green=visited, orange=tourism hotspots, gray=other)
+- City markers with checkmarks (visited) or stars (future)
+- Connection lines between visited destinations
+- Filter by: All, Visited Only, Future Trips
+- Map or list view toggle
+- Travel statistics dashboard
+
+### Social Timeline Feed
+Instagram-style feed combining:
+- Trip photos with captions and locations
+- Expense records with amounts and categories
+- Check-ins and notes
+- User attribution with color-coded badges
+- Chronological ordering by timestamp
+- Household-wide sharing (all members contribute)
+
+### Google Drive Integration
+Secure photo storage in users' personal Google Drive:
+- OAuth2 authentication flow
+- Automatic folder creation ("Travel App Photos")
+- High-resolution photo storage
+- Privacy maintained (photos in user's own Drive)
+- Image proxy for seamless loading
 
 ## Notes
 
-- The app uses **fallback exchange rates** if no API key is provided
-- **UploadThing** is optional - the app works without receipt uploads
-- All AI features require an **Anthropic API key**
-- Perfect for **personal use** - optimized for 2 users (you and your wife)
+- **Free AI** - Groq API offers free receipt scanning with generous limits
+- **Google Drive** - Photos stored in users' own Drive (full privacy control)
+- **Multi-user** - Perfect for couples and families (2-6 household members)
+- **PostgreSQL** - Production-ready database (not SQLite)
+- **Real-time** - Live currency conversion and budget updates
+- **Mobile-first** - Optimized for on-the-go expense tracking
+
+## What Makes This Special
+
+✨ **AI Receipt Scanning** - Just snap a photo, AI does the rest (free with Groq)
+
+🗺️ **Visual Travel Map** - See all your travels on an interactive world map with 350+ cities
+
+📸 **Social Timeline** - Instagram-style feed combining photos and expenses
+
+💡 **Smart Tip Calculator** - Auto-suggests tips for food expenses
+
+🔒 **Privacy First** - Photos in your own Google Drive, control what you share
+
+🏠 **Household App** - Perfect for couples/families traveling together
 
 ## Future Enhancements
 
-- Map visualization for itinerary locations
-- Shared trip collaboration features
-- Export trip data to PDF
-- Mobile PWA version
+- PDF export for trip summaries and expense reports
+- Mobile PWA with offline support
+- Weather integration for trip planning
+- Flight and hotel booking tracking
+- Packing list generator
+- Trip collaboration (real-time editing)
 - Push notifications for budget alerts
 - Trip templates for popular destinations
-- Weather integration
-- Flight and hotel tracking
