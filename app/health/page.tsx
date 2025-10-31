@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import { getServerLocale } from "@/lib/locale-server";
 import { getTranslations } from "@/lib/i18n";
-import PeriodDashboard from "@/components/period/PeriodDashboard";
+import HealthDashboardClient from "@/components/period/HealthDashboardClient";
 
 export default async function HealthPage() {
   const session = await auth();
@@ -17,39 +17,49 @@ export default async function HealthPage() {
   const t = getTranslations(locale);
 
   // Fetch current cycle and recent cycles
-  const cycles = await prisma.periodCycle.findMany({
-    where: { userId: session.user.id },
-    include: {
-      dailyLogs: {
-        orderBy: { date: "desc" },
+  // Wrap in try-catch in case tables don't exist yet
+  let cycles: any[] = [];
+  let todayLog: any = null;
+  let insights: any[] = [];
+
+  try {
+    cycles = await prisma.periodCycle.findMany({
+      where: { userId: session.user.id },
+      include: {
+        dailyLogs: {
+          orderBy: { date: "desc" },
+        },
       },
-    },
-    orderBy: { startDate: "desc" },
-    take: 12,
-  });
+      orderBy: { startDate: "desc" },
+      take: 12,
+    });
 
-  // Fetch today's log
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+    // Fetch today's log
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const todayLog = await prisma.dailyLog.findFirst({
-    where: {
-      userId: session.user.id,
-      date: {
-        gte: today,
-        lt: tomorrow,
+    todayLog = await prisma.dailyLog.findFirst({
+      where: {
+        userId: session.user.id,
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
       },
-    },
-  });
+    });
 
-  // Fetch recent insights
-  const insights = await prisma.healthInsight.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
+    // Fetch recent insights
+    insights = await prisma.healthInsight.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+  } catch (error) {
+    console.error("Error fetching period data:", error);
+    // Tables might not exist yet, show empty state
+  }
 
   // Calculate statistics
   const completedCycles = cycles.filter((c) => c.isComplete);
@@ -85,31 +95,17 @@ export default async function HealthPage() {
             </div>
           </div>
 
-          {cycles.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-200">
-              <div className="w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-5xl">🌸</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {t.noCyclesYet}
-              </h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                {t.startTrackingPeriod}
-              </p>
-            </div>
-          ) : (
-            <PeriodDashboard
-              cycles={JSON.parse(JSON.stringify(cycles))}
-              todayLog={todayLog ? JSON.parse(JSON.stringify(todayLog)) : null}
-              insights={JSON.parse(JSON.stringify(insights))}
-              currentCycle={
-                currentCycle ? JSON.parse(JSON.stringify(currentCycle)) : null
-              }
-              avgCycleLength={avgCycleLength}
-              avgPeriodLength={avgPeriodLength}
-              locale={locale}
-            />
-          )}
+          <HealthDashboardClient
+            cycles={JSON.parse(JSON.stringify(cycles))}
+            todayLog={todayLog ? JSON.parse(JSON.stringify(todayLog)) : null}
+            insights={JSON.parse(JSON.stringify(insights))}
+            currentCycle={
+              currentCycle ? JSON.parse(JSON.stringify(currentCycle)) : null
+            }
+            avgCycleLength={avgCycleLength}
+            avgPeriodLength={avgPeriodLength}
+            locale={locale}
+          />
         </div>
       </div>
     </>

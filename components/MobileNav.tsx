@@ -24,16 +24,6 @@ export default function MobileNav() {
       label: t.myTrips || "Trips",
     },
     {
-      path: "/map",
-      icon: "🗺️",
-      label: "Map",
-    },
-    {
-      path: "/expenses",
-      icon: "💸",
-      label: "Expenses",
-    },
-    {
       path: "/finance",
       icon: "💰",
       label: t.finance || "Finance",
@@ -46,40 +36,40 @@ export default function MobileNav() {
     {
       path: "/transactions",
       icon: "📊",
-      label: "History",
+      label: t.transactions || "History",
+    },
+    {
+      path: "/accounts",
+      icon: "🏦",
+      label: t.accounts || "Accounts",
     },
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">
-      <div
-        className="px-4"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
-      >
-        <div className="mx-auto max-w-xl rounded-3xl border border-white/60 bg-white/90 px-2 py-2 shadow-2xl backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`flex flex-1 flex-col items-center justify-center rounded-2xl px-2 py-2 text-[0.75rem] font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
-                    active
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-gray-600 hover:text-indigo-500"
-                  }`}
-                  aria-current={active ? "page" : undefined}
-                >
-                  <span className={`text-xl transition-transform ${active ? "scale-110" : ""}`}>
-                    {item.icon}
-                  </span>
-                  <span className="mt-1 truncate text-[0.7rem]">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg">
+      <div className="flex justify-around items-center h-16 px-2">
+        {navItems.map((item) => (
+          <Link
+            key={item.path}
+            href={item.path}
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-all ${
+              isActive(item.path)
+                ? "text-indigo-600"
+                : "text-gray-600"
+            }`}
+          >
+            <span className={`text-xl mb-1 ${
+              isActive(item.path) ? "scale-110" : ""
+            }`}>
+              {item.icon}
+            </span>
+            <span className={`text-[10px] font-medium ${
+              isActive(item.path) ? "font-semibold" : ""
+            }`}>
+              {item.label}
+            </span>
+          </Link>
+        ))}
       </div>
     </nav>
   );

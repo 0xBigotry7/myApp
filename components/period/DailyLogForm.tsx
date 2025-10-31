@@ -108,10 +108,10 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                 onClick={() =>
                   setFormData((prev) => ({ ...prev, flowIntensity: level }))
                 }
-                className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
                   formData.flowIntensity === level
                     ? "border-pink-500 bg-pink-50 text-pink-700 font-semibold"
-                    : "border-gray-200 hover:border-pink-300"
+                    : "border-gray-300"
                 }`}
               >
                 {t[level as keyof typeof t]}
@@ -134,7 +134,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                 className={`px-3 py-2 rounded-lg border-2 text-sm transition-all ${
                   formData.symptoms.includes(symptom)
                     ? "border-purple-500 bg-purple-50 text-purple-700 font-semibold"
-                    : "border-gray-200 hover:border-purple-300"
+                    : "border-gray-300"
                 }`}
               >
                 {t[symptom as keyof typeof t]}
@@ -157,7 +157,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                 className={`px-3 py-2 rounded-lg border-2 text-sm transition-all ${
                   formData.mood.includes(mood)
                     ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
-                    : "border-gray-200 hover:border-blue-300"
+                    : "border-gray-300"
                 }`}
               >
                 {t[mood as keyof typeof t]}
@@ -183,7 +183,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                   className={`w-12 h-12 rounded-lg border-2 transition-all ${
                     formData.energyLevel === level
                       ? "border-yellow-500 bg-yellow-50 text-yellow-700 font-bold"
-                      : "border-gray-200 hover:border-yellow-300"
+                      : "border-gray-300"
                   }`}
                 >
                   {level}
@@ -207,7 +207,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
                   className={`w-12 h-12 rounded-lg border-2 transition-all ${
                     formData.sleepQuality === level
                       ? "border-indigo-500 bg-indigo-50 text-indigo-700 font-bold"
-                      : "border-gray-200 hover:border-indigo-300"
+                      : "border-gray-300"
                   }`}
                 >
                   {level}
@@ -237,7 +237,7 @@ export default function DailyLogForm({ todayLog, locale }: Props) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 rounded-lg transition-all font-medium disabled:opacity-50"
         >
           {isLoading ? t.saving : t.save}
         </button>
