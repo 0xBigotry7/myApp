@@ -16,6 +16,8 @@ model User {
   password              String
   name                  String
   createdAt             DateTime                @default(now())
+  googleDriveRefreshToken String?               // Google Drive OAuth refresh token
+  googleDriveFolderId   String?                 // Shared Google Drive folder ID for photos
   ownedTrips            Trip[]                  @relation("TripOwner")
   sharedTrips           TripMember[]
   expenses              Expense[]
@@ -32,6 +34,7 @@ model User {
   dailyLogs             DailyLog[]
   healthInsights        HealthInsight[]
   travelDestinations    TravelDestination[]
+  tripPosts             TripPost[]
 }
 
 model Trip {
@@ -57,6 +60,7 @@ model Trip {
   expenses             Expense[]
   activities           Activity[]
   places               Place[]
+  posts                TripPost[]
 }
 
 model BudgetCategory {
@@ -122,6 +126,26 @@ model Place {
   visited     Boolean  @default(false)
   createdAt   DateTime @default(now())
   trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model TripPost {
+  id          String   @id @default(cuid())
+  tripId      String
+  userId      String
+  type        String   // "photo", "note", "checkin"
+  content     String?  // Text content for notes, caption for photos
+  photos      String[] @default([]) // Array of photo URLs
+  location    String?  // Location name
+  latitude    Float?
+  longitude   Float?
+  timestamp   DateTime // When this moment happened (can be different from createdAt for backdating)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, timestamp])
+  @@index([userId])
 }
 
 model UserPreference {

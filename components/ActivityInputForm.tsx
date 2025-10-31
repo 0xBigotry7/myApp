@@ -62,6 +62,9 @@ export default function ActivityInputForm({
     setLoading(true);
 
     try {
+      // Fix timezone: use noon local time to avoid date shifts
+      const activityDate = new Date(`${formData.date}T12:00:00`);
+
       const response = await fetch("/api/activities", {
         method: "POST",
         headers: {
@@ -71,7 +74,7 @@ export default function ActivityInputForm({
           tripId,
           title: formData.title,
           description: formData.description || undefined,
-          date: new Date(formData.date),
+          date: activityDate.toISOString(),
           startTime: formData.startTime || undefined,
           endTime: formData.endTime || undefined,
           location: formData.location || undefined,

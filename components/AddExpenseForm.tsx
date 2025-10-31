@@ -132,6 +132,9 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
         }
       }
 
+      // Fix timezone: use noon local time to avoid date shifts
+      const expenseDate = new Date(`${formData.date}T12:00:00`);
+
       const response = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,7 +143,7 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
           amount: -Math.abs(parseFloat(formData.amount)),
           description: formData.description || formData.merchantName,
           category: formData.category,
-          date: new Date(formData.date),
+          date: expenseDate.toISOString(),
           merchantName: formData.merchantName || undefined,
           receiptUrl,
           isTripRelated: false,

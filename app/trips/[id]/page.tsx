@@ -7,8 +7,11 @@ import Link from "next/link";
 import ExpenseList from "@/components/ExpenseList";
 import BudgetChart from "@/components/BudgetChart";
 import ExpenseInsights from "@/components/ExpenseInsights";
+import TripTimeline from "@/components/TripTimeline";
+import TripTimelineWrapper from "@/components/TripTimelineWrapper";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import { getServerLocale } from "@/lib/locale-server";
+import { getHouseholdUserIds } from "@/lib/household";
 
 export default async function TripDetailPage({
   params,
@@ -37,6 +40,18 @@ export default async function TripDetailPage({
       },
       activities: {
         orderBy: [{ date: "asc" }, { order: "asc" }],
+      },
+      posts: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: { timestamp: "desc" },
       },
     },
   });
@@ -75,6 +90,18 @@ export default async function TripDetailPage({
     acc[dateKey] = (acc[dateKey] || 0) + exp.amount;
     return acc;
   }, {} as Record<string, number>);
+
+  // Get all household users for user badges in timeline
+  const householdUserIds = await getHouseholdUserIds();
+  const householdUsers = await prisma.user.findMany({
+    where: {
+      id: { in: householdUserIds },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -252,6 +279,23 @@ export default async function TripDetailPage({
           {/* AI Expense Insights */}
           <div className="mb-6">
             <ExpenseInsights tripId={trip.id} />
+          </div>
+
+          {/* Trip Timeline - Photos, Notes, and Expenses */}
+          <div className="mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span>📸</span>
+                <span>Trip Timeline</span>
+              </h2>
+              <TripTimelineWrapper tripId={trip.id}>
+                <TripTimeline
+                  expenses={trip.expenses}
+                  posts={trip.posts}
+                  users={householdUsers}
+                />
+              </TripTimelineWrapper>
+            </div>
           </div>
 
           {/* Expense List - View Only */}

@@ -127,7 +127,17 @@ export default function ExpenseInputForm({
         }
       }
 
-      // Create expense
+      // Create expense with proper timezone handling
+      // When user enters a date/time, treat it as their local timezone
+      let expenseDate;
+      if (formData.time) {
+        // Has time: combine date and time as local time
+        expenseDate = new Date(`${formData.date}T${formData.time}:00`);
+      } else {
+        // No time: use noon local time to avoid timezone shift to previous day
+        expenseDate = new Date(`${formData.date}T12:00:00`);
+      }
+
       const response = await fetch("/api/expenses", {
         method: "POST",
         headers: {
@@ -137,9 +147,7 @@ export default function ExpenseInputForm({
           tripId,
           amount: parseFloat(formData.amount),
           category: formData.category,
-          date: formData.time
-            ? new Date(`${formData.date}T${formData.time}:00`)
-            : new Date(formData.date),
+          date: expenseDate.toISOString(),
           currency: formData.currency,
           location: formData.location || undefined,
           note: formData.note || undefined,

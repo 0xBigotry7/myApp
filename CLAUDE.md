@@ -16,10 +16,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 - **Framework**: Next.js 15 with App Router
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth.js v5 (Auth.js)
 - **Styling**: Tailwind CSS
 - **Charts**: Recharts
+- **Storage**: Google Drive API (for trip photos)
+- **AI**: Groq (Llama Vision), OpenAI (DALL-E)
 
 ### Key Directories
 - `app/` - Next.js pages and API routes (App Router structure)
@@ -29,11 +31,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `types/` - TypeScript type definitions
 
 ### Database Schema
-The app uses four main models:
-- **User** - Authentication and user info
-- **Trip** - Travel trips with budget totals and date ranges
+Key models:
+- **User** - Authentication, user info, and Google Drive credentials
+- **Trip** - Travel trips with budget totals, date ranges, and AI-generated images
 - **BudgetCategory** - Budget allocations for each category within a trip
-- **Expense** - Individual expense records linked to trips and users
+- **Expense** - Individual expense records linked to trips and users (includes tip calculation)
+- **TripPost** - Timeline posts (photos, notes, check-ins) with Google Drive URLs
+- **TravelDestination** - Map of places visited with coordinates and photos
+- **Account** - Financial accounts (checking, savings, credit cards)
+- **Transaction** - Bank transactions synced from Plaid/Wise
 
 ### Authentication Flow
 - Uses NextAuth.js v5 with credentials provider
@@ -45,7 +51,11 @@ The app uses four main models:
 - `/` - Dashboard showing all trips with budget summaries
 - `/login` - Authentication page
 - `/trips/new` - Create new trip with budget planning
-- `/trips/[id]` - Trip detail with expense tracking and analytics
+- `/trips/[id]` - Trip detail with timeline, expense tracking, and analytics
+- `/settings` - User settings and Google Drive connection
+- `/map` - Interactive world map of travel destinations
+- `/finance` - Personal finance dashboard with accounts and budgets
+- `/expenses` - General expense tracking (non-trip expenses)
 
 ### Data Flow
 - Server components fetch data directly using Prisma
@@ -53,7 +63,27 @@ The app uses four main models:
 - After mutations, use `router.refresh()` to revalidate server components
 
 ### Important Notes
-- Database file is `dev.db` in the root directory (gitignored)
-- Environment variables are in `.env` (gitignored)
+- PostgreSQL database hosted on Neon (connection string in `.env`)
+- Environment variables are in `.env` (gitignored) - see `.env.example` for required vars
 - NextAuth requires `NEXTAUTH_SECRET` and `NEXTAUTH_URL` in .env
-- The app is designed for local use by two users (you and your wife)
+- Google Drive API requires OAuth credentials - see `GOOGLE_DRIVE_SETUP.md`
+- The app is designed for personal/household use (2-4 users sharing trips)
+
+### Google Drive Integration
+- Trip photos are stored in users' personal Google Drive accounts
+- Each user connects their own Google Drive via OAuth
+- Photos are saved to a "Travel App Photos" folder
+- Users maintain full control over their photos
+- See `GOOGLE_DRIVE_SETUP.md` for complete setup instructions
+
+### Key Features
+- **Trip Timeline**: Social media-style feed with photos, notes, and expenses
+- **Budget Tracking**: Real-time budget vs actual spending with AI insights
+- **Tip Calculator**: Auto-detects food expenses and suggests 15-22% tips
+- **Travel Map**: Interactive world map showing visited destinations
+- **AI Features**:
+  - Receipt scanning with Llama Vision
+  - Trip image generation with DALL-E
+  - Expense insights and recommendations
+- **Bank Sync**: Automatic transaction import via Plaid/Wise
+- **Multi-currency**: Support for USD, EUR, CNY with real-time exchange rates

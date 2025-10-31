@@ -8,6 +8,24 @@ const nextConfig: NextConfig = {
         hostname: "oaidalleapiprodscus.blob.core.windows.net",
         pathname: "/private/**",
       },
+      {
+        protocol: "https",
+        hostname: "drive.google.com",
+        pathname: "/uc",
+      },
+      {
+        protocol: "https",
+        hostname: "drive.google.com",
+        pathname: "/thumbnail",
+      },
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
     // Disable image optimization errors for expired external URLs
     unoptimized: false,
