@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 
-// Initialize Groq client (FREE & FAST!)
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "",
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "",
 });
 
 export async function POST(req: NextRequest) {
@@ -15,12 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Check if Groq API key is configured
-    if (!process.env.GROQ_API_KEY) {
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         {
-          error: "Groq API key not configured",
-          hint: "Get your FREE API key at https://console.groq.com/keys"
+          error: "OpenAI API key not configured",
+          hint: "Get your API key at https://platform.openai.com/api-keys"
         },
         { status: 500 }
       );
@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     const base64Image = buffer.toString("base64");
     const mimeType = file.type;
 
-    // Call Groq Vision API with Llama 3.2 Vision (FREE & FAST!)
-    const response = await groq.chat.completions.create({
-      model: "llama-3.2-90b-vision-preview",
+    // Call OpenAI Vision API with GPT-4o
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: [
         {
           role: "user",
@@ -89,7 +89,7 @@ IMPORTANT:
       const jsonString = content.replace(/```json\n?|\n?```/g, "").trim();
       receiptData = JSON.parse(jsonString);
     } catch (parseError) {
-      console.error("Failed to parse Groq response:", content);
+      console.error("Failed to parse OpenAI response:", content);
       return NextResponse.json(
         { error: "Failed to parse receipt data", rawResponse: content },
         { status: 500 }
