@@ -123,17 +123,17 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div>
-                            <div className="font-bold text-gray-900">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-gray-900 truncate">
                               💰 {expense.category}
                             </div>
                             <div className="text-sm text-gray-600">
                               {badge.name} • {format(item.date, "h:mm a")}
                             </div>
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="text-2xl font-bold text-indigo-600">
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600 whitespace-nowrap">
                               {expense.currency} {expense.amount.toFixed(2)}
                             </div>
                           </div>

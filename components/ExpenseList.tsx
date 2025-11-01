@@ -90,29 +90,29 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
           return (
             <div
               key={expense.id}
-              className={`flex justify-between items-center p-4 rounded-xl transition-all ${colors.bg} group`}
+              className={`flex justify-between items-start p-4 rounded-xl transition-all ${colors.bg} group`}
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-semibold text-lg">
+              <div className="flex-1 min-w-0 mr-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-base sm:text-lg whitespace-nowrap">
                     ${expense.amount.toFixed(2)}
                   </span>
-                  <span className={`text-sm px-3 py-1 rounded-lg font-medium ${colors.badge}`}>
+                  <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg font-medium ${colors.badge} truncate`}>
                     {translateCategory(expense.category, locale)}
                   </span>
                 </div>
                 {expense.note && (
-                  <p className="text-sm text-gray-600 mt-1 break-words">{expense.note}</p>
+                  <p className="text-sm text-gray-600 mt-1 break-words line-clamp-2">{expense.note}</p>
                 )}
-                <div className="flex gap-4 text-xs text-gray-500 mt-1 flex-wrap">
-                  <span>{format(new Date(expense.date), "MMM d, yyyy")}</span>
+                <div className="flex gap-3 text-xs text-gray-500 mt-1 flex-wrap">
+                  <span className="whitespace-nowrap">{format(new Date(expense.date), "MMM d, yyyy")}</span>
                   <span className="flex items-center gap-1">
                     {colors.icon && <span>{colors.icon}</span>}
-                    <span>{t.addedBy} {expense.user.name}</span>
+                    <span className="truncate">{t.addedBy} {expense.user.name}</span>
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2 ml-3 flex-shrink-0">
+              <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                 <button
                   onClick={() => router.push(`/trips/${tripId}/edit-expense/${expense.id}`)}
                   className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all touch-manipulation md:opacity-0 md:group-hover:opacity-100"

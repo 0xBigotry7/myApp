@@ -205,13 +205,13 @@ export default function ExpensesClient({
 
               return (
                 <div key={envelope.id} className="p-3 bg-gray-50 rounded-xl">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{categoryInfo?.icon || "📦"}</span>
-                      <span className="font-semibold text-gray-900">{envelope.category}</span>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 mr-2">
+                      <span className="text-lg sm:text-xl flex-shrink-0">{categoryInfo?.icon || "📦"}</span>
+                      <span className="font-semibold text-sm sm:text-base text-gray-900 truncate">{envelope.category}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-sm sm:text-base text-gray-900 whitespace-nowrap">
                         ${spent.toFixed(0)} <span className="text-gray-400">/</span> ${allocated.toFixed(0)}
                       </p>
                     </div>
@@ -273,23 +273,23 @@ export default function ExpensesClient({
               return (
                 <div
                   key={transaction.id}
-                  className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="flex justify-between items-start p-3 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-2xl">{categoryInfo?.icon || "📦"}</span>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mr-2">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{categoryInfo?.icon || "📦"}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">
                         {transaction.merchantName || transaction.category}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span>{format(new Date(transaction.date), "MMM d, yyyy")}</span>
-                        <span>•</span>
-                        <span>{transaction.account.name}</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
+                        <span className="whitespace-nowrap">{format(new Date(transaction.date), "MMM d, yyyy")}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate">{transaction.account.name}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right ml-3">
-                    <p className="font-bold text-gray-900">
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-sm sm:text-base text-gray-900 whitespace-nowrap">
                       ${Math.abs(transaction.amount).toFixed(2)}
                     </p>
                     {transaction.isRecurring && (
@@ -317,12 +317,12 @@ export default function ExpensesClient({
               return (
                 <div
                   key={recurring.id}
-                  className="flex justify-between items-center p-3 bg-purple-50 rounded-lg"
+                  className="flex justify-between items-start p-3 bg-purple-50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{categoryInfo?.icon || "📦"}</span>
-                    <div>
-                      <p className="font-semibold text-gray-900">{recurring.name}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mr-2">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{categoryInfo?.icon || "📦"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{recurring.name}</p>
                       <p className="text-xs text-gray-600">
                         {daysUntil === 0
                           ? "Due today"
@@ -332,7 +332,7 @@ export default function ExpensesClient({
                       </p>
                     </div>
                   </div>
-                  <p className="font-bold text-gray-900">${recurring.amount.toFixed(2)}</p>
+                  <p className="font-bold text-sm sm:text-base text-gray-900 whitespace-nowrap flex-shrink-0">${recurring.amount.toFixed(2)}</p>
                 </div>
               );
             })}
@@ -350,15 +350,15 @@ export default function ExpensesClient({
                 key={account.id}
                 className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-gray-900 flex items-center gap-2">
-                      {account.icon && <span>{account.icon}</span>}
-                      {account.name}
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm sm:text-base text-gray-900 flex items-center gap-2 truncate">
+                      {account.icon && <span className="flex-shrink-0">{account.icon}</span>}
+                      <span className="truncate">{account.name}</span>
                     </p>
                     <p className="text-xs text-gray-500 capitalize mt-1">{account.type.replace("_", " ")}</p>
                   </div>
-                  <p className="font-bold text-lg text-gray-900">
+                  <p className="font-bold text-base sm:text-lg text-gray-900 whitespace-nowrap flex-shrink-0">
                     ${account.balance.toLocaleString()}
                   </p>
                 </div>
