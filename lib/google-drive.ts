@@ -3,6 +3,16 @@ import { prisma } from "./prisma";
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 
+// Folder structure constants
+const ROOT_FOLDER_NAME = "Travel App Photos";
+const SUBFOLDERS = {
+  PHOTOS: "Trip Photos",
+  RECEIPTS: "Receipts",
+  AI_GENERATED: "AI Generated Images",
+} as const;
+
+export type FolderType = keyof typeof SUBFOLDERS;
+
 // Initialize OAuth2 client
 export function getOAuth2Client() {
   return new google.auth.OAuth2(
@@ -49,34 +59,67 @@ export async function getDriveClient(userId: string) {
   return google.drive({ version: "v3", auth: oauth2Client });
 }
 
-// Create or get the shared folder for trip photos
-export async function getOrCreateTripPhotosFolder(userId: string): Promise<string> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { googleDriveFolderId: true },
-  });
-
-  // If folder already exists, return it
-  if (user?.googleDriveFolderId) {
-    return user.googleDriveFolderId;
-  }
-
-  // Create new folder
-  const drive = await getDriveClient(userId);
-
-  const folderMetadata = {
-    name: "Travel App Photos",
+// Create a folder in Google Drive
+async function createFolder(
+  drive: ReturnType<typeof google.drive>,
+  folderName: string,
+  parentId?: string
+): Promise<string> {
+  const folderMetadata: any = {
+    name: folderName,
     mimeType: "application/vnd.google-apps.folder",
   };
+
+  if (parentId) {
+    folderMetadata.parents = [parentId];
+  }
 
   const folder = await drive.files.create({
     requestBody: folderMetadata,
     fields: "id",
   });
 
-  const folderId = folder.data.id!;
+  return folder.data.id!;
+}
 
-  // Save folder ID to database
+// Find a folder by name in a parent folder
+async function findFolder(
+  drive: ReturnType<typeof google.drive>,
+  folderName: string,
+  parentId?: string
+): Promise<string | null> {
+  let query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+
+  if (parentId) {
+    query += ` and '${parentId}' in parents`;
+  }
+
+  const response = await drive.files.list({
+    q: query,
+    fields: "files(id, name)",
+    spaces: "drive",
+  });
+
+  return response.data.files?.[0]?.id || null;
+}
+
+// Create or get the root folder for trip photos
+export async function getOrCreateTripPhotosFolder(userId: string): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { googleDriveFolderId: true },
+  });
+
+  // If root folder already exists, return it
+  if (user?.googleDriveFolderId) {
+    return user.googleDriveFolderId;
+  }
+
+  // Create new root folder
+  const drive = await getDriveClient(userId);
+  const folderId = await createFolder(drive, ROOT_FOLDER_NAME);
+
+  // Save root folder ID to database
   await prisma.user.update({
     where: { id: userId },
     data: { googleDriveFolderId: folderId },
@@ -85,15 +128,37 @@ export async function getOrCreateTripPhotosFolder(userId: string): Promise<strin
   return folderId;
 }
 
-// Upload a file to Google Drive
+// Get or create a subfolder within the root folder
+export async function getOrCreateSubfolder(
+  userId: string,
+  folderType: FolderType
+): Promise<string> {
+  const drive = await getDriveClient(userId);
+  const rootFolderId = await getOrCreateTripPhotosFolder(userId);
+
+  const subfolderName = SUBFOLDERS[folderType];
+
+  // Check if subfolder exists
+  let subfolderId = await findFolder(drive, subfolderName, rootFolderId);
+
+  // Create subfolder if it doesn't exist
+  if (!subfolderId) {
+    subfolderId = await createFolder(drive, subfolderName, rootFolderId);
+  }
+
+  return subfolderId;
+}
+
+// Upload a file to Google Drive with organized folder structure
 export async function uploadToGoogleDrive(
   userId: string,
   fileBuffer: Buffer,
   fileName: string,
-  mimeType: string
+  mimeType: string,
+  folderType: FolderType = "PHOTOS"
 ): Promise<string> {
   const drive = await getDriveClient(userId);
-  const folderId = await getOrCreateTripPhotosFolder(userId);
+  const folderId = await getOrCreateSubfolder(userId, folderType);
 
   const fileMetadata = {
     name: fileName,

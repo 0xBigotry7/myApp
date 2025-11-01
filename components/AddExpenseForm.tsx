@@ -120,8 +120,9 @@ export default function AddExpenseForm({ accounts }: { accounts: Account[] }) {
       if (receiptFile) {
         const uploadFormData = new FormData();
         uploadFormData.append("file", receiptFile);
+        uploadFormData.append("type", "receipt"); // Specify this is a receipt
 
-        const uploadRes = await fetch("/api/upload", {
+        const uploadRes = await fetch("/api/upload-photo", {
           method: "POST",
           body: uploadFormData,
         });

@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const type = formData.get("type") as string | null; // "photo" or "receipt"
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -47,18 +48,23 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Generate a unique filename
+    // Generate a unique filename based on type
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split(".").pop();
-    const filename = `trip-${timestamp}-${randomString}.${extension}`;
+    const prefix = type === "receipt" ? "receipt" : "trip";
+    const filename = `${prefix}-${timestamp}-${randomString}.${extension}`;
+
+    // Determine folder type based on upload type
+    const folderType = type === "receipt" ? "RECEIPTS" : "PHOTOS";
 
     // Upload to Google Drive
     const url = await uploadToGoogleDrive(
       session.user.id,
       buffer,
       filename,
-      file.type
+      file.type,
+      folderType // Store in appropriate subfolder
     );
 
     return NextResponse.json({ url }, { status: 201 });

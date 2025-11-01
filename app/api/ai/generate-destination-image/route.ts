@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
       session.user.id,
       imageBuffer,
       filename,
-      "image/png"
+      "image/png",
+      "AI_GENERATED" // Store in AI Generated Images subfolder
     );
 
     return NextResponse.json({ imageUrl: driveUrl });

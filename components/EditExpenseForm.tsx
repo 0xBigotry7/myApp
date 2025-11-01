@@ -76,6 +76,7 @@ export default function EditExpenseForm({
         setUploading(true);
         const uploadFormData = new FormData();
         uploadFormData.append("file", selectedFile);
+        uploadFormData.append("type", "receipt"); // Specify this is a receipt
 
         const uploadRes = await fetch("/api/upload-photo", {
           method: "POST",
