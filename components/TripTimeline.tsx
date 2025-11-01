@@ -152,7 +152,9 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                         {expense.receiptUrl && (
                           <div className="mt-3">
                             <img
-                              src={expense.receiptUrl}
+                              src={expense.receiptUrl.includes('drive.google.com') || expense.receiptUrl.includes('googleusercontent.com')
+                                ? `/api/proxy-image?url=${encodeURIComponent(expense.receiptUrl)}`
+                                : expense.receiptUrl}
                               alt="Receipt"
                               className="rounded-xl max-w-sm cursor-pointer hover:opacity-90 transition-opacity"
                               onClick={() => window.open(expense.receiptUrl!, "_blank")}

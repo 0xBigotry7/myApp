@@ -115,8 +115,9 @@ export default function ExpenseInputForm({
       if (receiptFile) {
         const uploadFormData = new FormData();
         uploadFormData.append("file", receiptFile);
+        uploadFormData.append("type", "receipt");
 
-        const uploadRes = await fetch("/api/upload", {
+        const uploadRes = await fetch("/api/upload-photo", {
           method: "POST",
           body: uploadFormData,
         });
