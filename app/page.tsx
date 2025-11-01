@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TripCard from "@/components/TripCard";
+import DatabaseErrorPage from "@/components/DatabaseErrorPage";
 import { getServerLocale } from "@/lib/locale-server";
 import { getTranslations } from "@/lib/i18n";
 

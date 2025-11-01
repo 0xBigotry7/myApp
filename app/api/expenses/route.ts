@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { tripId, amount, category, currency, date, note, accountId } = body;
+    const { tripId, amount, category, currency, date, note, accountId, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
 
     // Verify the trip belongs to the user or they are a member
     const trip = await prisma.trip.findFirst({
@@ -51,6 +51,11 @@ export async function POST(request: Request) {
         currency,
         date: new Date(date),
         note: note || null,
+        location: location || null,
+        receiptUrl: receiptUrl || null,
+        transportationMethod: transportationMethod || null,
+        fromLocation: fromLocation || null,
+        toLocation: toLocation || null,
       },
       include: {
         user: true,
