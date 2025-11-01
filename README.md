@@ -55,7 +55,7 @@ A comprehensive travel planning and expense tracking app with AI-powered feature
 - **AI & Vision**:
   - Groq API with Llama 3.2 Vision (90B) for receipt scanning
   - OpenAI DALL-E for trip image generation
-- **Storage**: Google Drive API (for trip photos and receipts)
+- **Storage**: Google Drive API (for trip photos, receipts, and AI-generated images)
 - **UI Components**:
   - Maps: react-simple-maps for interactive world map
   - Charts: Recharts for expense analytics

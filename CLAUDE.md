@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Styling**: Tailwind CSS
 - **Charts**: Recharts
 - **Maps**: react-simple-maps for interactive world map
-- **Storage**: Google Drive API (for trip photos and receipts)
+- **Storage**: Google Drive API (for trip photos, receipts, and AI-generated images)
 - **AI**:
   - Groq (Llama 3.2 Vision 90B) for receipt scanning (FREE)
   - OpenAI (DALL-E 3) for trip image generation
