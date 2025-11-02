@@ -19,6 +19,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
+    { href: "/timeline", label: `🌟 Timeline` },
     { href: "/", label: `✈️ ${t.myTrips}` },
     { href: "/map", label: `🗺️ Travel Map` },
     { href: "/expenses", label: `💸 Expenses` },
