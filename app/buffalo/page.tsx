@@ -302,48 +302,48 @@ export default function BuffaloSlotPage() {
 
       <div className="relative z-10 w-full max-w-7xl">
         {/* Title */}
-        <div className="text-center mb-6">
-          <h1 className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 drop-shadow-[0_0_40px_rgba(251,191,36,1)] animate-glow mb-3">
+        <div className="text-center mb-3 sm:mb-6">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 drop-shadow-[0_0_40px_rgba(251,191,36,1)] animate-glow mb-2 sm:mb-3">
             🦬 BUFFALO 🦬
           </h1>
-          <p className="text-4xl font-black text-yellow-300 tracking-widest drop-shadow-lg">
+          <p className="text-sm sm:text-2xl md:text-4xl font-black text-yellow-300 tracking-widest drop-shadow-lg">
             XTRA REEL POWER™ • 1024 WAYS
           </p>
         </div>
 
         {/* Slot Machine */}
-        <div className="bg-gradient-to-b from-yellow-600 via-amber-700 to-amber-900 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 border-[16px] border-yellow-500">
+        <div className="bg-gradient-to-b from-yellow-600 via-amber-700 to-amber-900 rounded-2xl sm:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] p-3 sm:p-6 md:p-8 border-4 sm:border-8 md:border-[16px] border-yellow-500">
           {/* Credits Bar */}
-          <div className="bg-black rounded-2xl p-6 mb-6 grid grid-cols-3 gap-6 border-4 border-yellow-600">
+          <div className="bg-black rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 border-2 sm:border-4 border-yellow-600">
             <div className="text-center">
-              <div className="text-yellow-400 text-xl font-black mb-2">CREDITS</div>
-              <div className="text-6xl font-black text-white">{credits}</div>
+              <div className="text-yellow-400 text-xs sm:text-sm md:text-xl font-black mb-1 sm:mb-2">CREDITS</div>
+              <div className="text-2xl sm:text-4xl md:text-6xl font-black text-white">{credits}</div>
             </div>
             <div className="text-center">
-              <div className="text-yellow-400 text-xl font-black mb-2">BET</div>
-              <div className="text-6xl font-black text-white">{bet}</div>
+              <div className="text-yellow-400 text-xs sm:text-sm md:text-xl font-black mb-1 sm:mb-2">BET</div>
+              <div className="text-2xl sm:text-4xl md:text-6xl font-black text-white">{bet}</div>
             </div>
             <div className="text-center">
-              <div className="text-yellow-400 text-xl font-black mb-2">FREE SPINS</div>
-              <div className="text-6xl font-black text-green-400 animate-pulse">{freeSpins}</div>
+              <div className="text-yellow-400 text-xs sm:text-sm md:text-xl font-black mb-1 sm:mb-2">FREE SPINS</div>
+              <div className="text-2xl sm:text-4xl md:text-6xl font-black text-green-400 animate-pulse">{freeSpins}</div>
             </div>
           </div>
 
           {/* Reels */}
-          <div className="bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl p-6 mb-6 border-8 border-amber-900 relative overflow-visible">
+          <div className="bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-xl sm:rounded-2xl md:rounded-3xl p-2 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 border-4 sm:border-6 md:border-8 border-amber-900 relative overflow-visible">
             {winAmount > 0 && (
-              <div className="absolute inset-0 bg-yellow-400/20 animate-flash z-10 pointer-events-none rounded-2xl" />
+              <div className="absolute inset-0 bg-yellow-400/20 animate-flash z-10 pointer-events-none rounded-lg sm:rounded-xl md:rounded-2xl" />
             )}
 
-            <div className="grid grid-cols-5 gap-4 relative">
+            <div className="grid grid-cols-5 gap-1 sm:gap-2 md:gap-4 relative">
               {finalSymbols.map((reel, reelIdx) => (
                 <div
                   key={reelIdx}
                   ref={(el) => {
                     reelRefs.current[reelIdx] = el;
                   }}
-                  className="bg-gradient-to-b from-amber-950 to-black rounded-2xl overflow-hidden relative"
-                  style={{ height: "540px" }}
+                  className="bg-gradient-to-b from-amber-950 to-black rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden relative"
+                  style={{ height: "min(80vw, 540px)" }}
                 >
                   {reel.map((symbol, rowIdx) => {
                     const isWinning = isInWinningLine(reelIdx, rowIdx);
@@ -351,27 +351,26 @@ export default function BuffaloSlotPage() {
                     return (
                       <div
                         key={rowIdx}
-                        className="symbol flex items-center justify-center border-y-2 border-amber-800/50 relative"
-                        style={{ height: "135px" }}
+                        className="symbol flex items-center justify-center border-y border-amber-800/50 relative h-[25%]"
                       >
                         {/* Winning highlight glow */}
                         {isWinning && (
-                          <div className="absolute inset-0 bg-yellow-400/40 animate-winning-glow z-0 rounded-lg" />
+                          <div className="absolute inset-0 bg-yellow-400/40 animate-winning-glow z-0 rounded-md sm:rounded-lg" />
                         )}
 
                         <div
                           className={`
-                            rounded-2xl flex items-center justify-center w-full h-full transition-all duration-200 relative z-10
-                            ${symbol === "🌅" ? "bg-gradient-to-br from-orange-600 via-red-600 to-orange-700 shadow-[0_0_30px_rgba(234,88,12,0.8)]" : ""}
-                            ${symbol === "💰" ? "bg-gradient-to-br from-yellow-500 via-yellow-400 to-yellow-600 shadow-[0_0_30px_rgba(234,179,8,0.8)] animate-pulse" : ""}
+                            rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center w-full h-full transition-all duration-200 relative z-10
+                            ${symbol === "🌅" ? "bg-gradient-to-br from-orange-600 via-red-600 to-orange-700 shadow-[0_0_15px_rgba(234,88,12,0.8)] sm:shadow-[0_0_30px_rgba(234,88,12,0.8)]" : ""}
+                            ${symbol === "💰" ? "bg-gradient-to-br from-yellow-500 via-yellow-400 to-yellow-600 shadow-[0_0_15px_rgba(234,179,8,0.8)] sm:shadow-[0_0_30px_rgba(234,179,8,0.8)] animate-pulse" : ""}
                             ${!["🌅", "💰"].includes(symbol) ? "bg-gradient-to-br from-amber-200 to-amber-300" : ""}
-                            ${isWinning ? "scale-110 shadow-[0_0_40px_rgba(251,191,36,1)]" : ""}
+                            ${isWinning ? "scale-110 shadow-[0_0_20px_rgba(251,191,36,1)] sm:shadow-[0_0_40px_rgba(251,191,36,1)]" : ""}
                           `}
                         >
                           <span
                             className={`
-                              ${["🦬", "🦅", "🐺", "🐆", "🦌", "🌅", "💰"].includes(symbol) ? "text-8xl" : "text-7xl font-black text-amber-900"}
-                              drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]
+                              ${["🦬", "🦅", "🐺", "🐆", "🦌", "🌅", "💰"].includes(symbol) ? "text-3xl sm:text-5xl md:text-7xl lg:text-8xl" : "text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-amber-900"}
+                              drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] sm:drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]
                               ${isWinning ? "animate-bounce-subtle" : ""}
                             `}
                           >
@@ -468,10 +467,10 @@ export default function BuffaloSlotPage() {
 
           {/* Win Message */}
           {message && (
-            <div className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 rounded-2xl p-6 mb-6 text-center border-4 border-yellow-500 shadow-2xl animate-bounce-slow">
-              <p className="text-5xl font-black text-amber-900">{message}</p>
+            <div className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 text-center border-2 sm:border-4 border-yellow-500 shadow-2xl animate-bounce-slow">
+              <p className="text-2xl sm:text-4xl md:text-5xl font-black text-amber-900">{message}</p>
               {winAmount > 0 && (
-                <p className="text-7xl font-black text-green-700 mt-3 animate-pulse">
+                <p className="text-4xl sm:text-6xl md:text-7xl font-black text-green-700 mt-2 sm:mt-3 animate-pulse">
                   +${winAmount}
                 </p>
               )}
@@ -479,21 +478,21 @@ export default function BuffaloSlotPage() {
           )}
 
           {/* Controls */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-black/80 rounded-2xl p-6 border-4 border-yellow-600">
-              <p className="text-yellow-400 text-2xl font-black mb-4 text-center">BET</p>
-              <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+            <div className="bg-black/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border-2 sm:border-4 border-yellow-600">
+              <p className="text-yellow-400 text-sm sm:text-xl md:text-2xl font-black mb-2 sm:mb-3 md:mb-4 text-center">BET</p>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <button
                   onClick={() => setBet(Math.max(10, bet - 10))}
                   disabled={spinning}
-                  className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-3xl py-6 rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-3 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
                 >
                   −10
                 </button>
                 <button
                   onClick={() => setBet(Math.min(200, bet + 10))}
                   disabled={spinning}
-                  className="bg-gradient-to-b from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-3xl py-6 rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="bg-gradient-to-b from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-3 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
                 >
                   +10
                 </button>
@@ -507,8 +506,8 @@ export default function BuffaloSlotPage() {
                 bg-gradient-to-b from-green-400 via-green-600 to-green-800
                 hover:from-green-500 hover:via-green-700 hover:to-green-900
                 disabled:from-gray-700 disabled:via-gray-800 disabled:to-gray-900
-                text-white font-black text-6xl py-12 rounded-2xl
-                shadow-2xl border-8 border-green-600
+                text-white font-black text-3xl sm:text-5xl md:text-6xl py-6 sm:py-10 md:py-12 rounded-xl sm:rounded-2xl
+                shadow-2xl border-4 sm:border-6 md:border-8 border-green-600
                 hover:border-green-500 disabled:border-gray-700
                 transform hover:scale-105 active:scale-95 transition-all
                 disabled:cursor-not-allowed
@@ -521,10 +520,10 @@ export default function BuffaloSlotPage() {
         </div>
 
         {/* Add Credits Button */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-3 sm:mt-4 md:mt-6">
           <button
             onClick={() => setCredits(1000)}
-            className="px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black text-2xl rounded-xl shadow-2xl transform hover:scale-105 transition-all border-4 border-purple-500"
+            className="px-4 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black text-base sm:text-xl md:text-2xl rounded-lg sm:rounded-xl shadow-2xl transform hover:scale-105 transition-all border-2 sm:border-4 border-purple-500"
           >
             🎁 ADD 1000 CREDITS
           </button>
