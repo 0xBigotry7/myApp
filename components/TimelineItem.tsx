@@ -269,35 +269,11 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
             <span className="text-sm text-gray-600">{item.metadata.category}</span>
           </div>
           {item.metadata.transportationMethod && (
-<<<<<<< HEAD
-            <div className="mt-2 space-y-1">
-              <div className="text-sm font-medium text-blue-700">
-                🚗 {item.metadata.transportationMethod}
-              </div>
-              {(item.metadata.fromLocation || item.metadata.toLocation) && (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-blue-600">
-                  {item.metadata.fromLocation && (
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium shrink-0">📍 From:</span>
-                      <span className="break-words">{item.metadata.fromLocation}</span>
-                    </div>
-                  )}
-                  {item.metadata.fromLocation && item.metadata.toLocation && (
-                    <span className="text-blue-400 hidden sm:inline">→</span>
-                  )}
-                  {item.metadata.toLocation && (
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium shrink-0">🎯 To:</span>
-                      <span className="break-words">{item.metadata.toLocation}</span>
-                    </div>
-                  )}
-=======
             <div className="mt-2 text-sm text-blue-700">
               🚗 {item.metadata.transportationMethod}
               {item.metadata.fromLocation && item.metadata.toLocation && (
                 <div className="mt-1">
                   {cleanLocationName(item.metadata.fromLocation)} → {cleanLocationName(item.metadata.toLocation)}
->>>>>>> 38f0992 (Add edit button to timeline and fix mobile button display)
                 </div>
               )}
             </div>
