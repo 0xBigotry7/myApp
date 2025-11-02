@@ -35,9 +35,45 @@ export default function BuffaloSlotPage() {
   const [freeSpins, setFreeSpins] = useState(0);
   const [winningLines, setWinningLines] = useState<WinningLine[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
 
   const reelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [finalSymbols, setFinalSymbols] = useState<string[][]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize Audio Context
+  useEffect(() => {
+    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+    // Create background music (looping ambient casino sound)
+    backgroundMusicRef.current = new Audio();
+    backgroundMusicRef.current.loop = true;
+    backgroundMusicRef.current.volume = 0.3;
+
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+      }
+    };
+  }, []);
+
+  // Control background music
+  useEffect(() => {
+    if (backgroundMusicRef.current) {
+      if (musicEnabled) {
+        // Generate simple background music using oscillators
+        playBackgroundMusic();
+      } else {
+        backgroundMusicRef.current.pause();
+      }
+    }
+  }, [musicEnabled]);
 
   useEffect(() => {
     // Initialize with random symbols
@@ -53,11 +89,199 @@ export default function BuffaloSlotPage() {
     if (winningLines.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentLineIndex((prev) => (prev + 1) % winningLines.length);
+      setCurrentLineIndex((prev) => {
+        playSound('click', 0.3);
+        return (prev + 1) % winningLines.length;
+      });
     }, 1500);
 
     return () => clearInterval(interval);
   }, [winningLines]);
+
+  // Sound Effects using Web Audio API
+  const playSound = (type: string, volume = 0.5) => {
+    if (!soundEnabled || !audioContextRef.current) return;
+
+    const ctx = audioContextRef.current;
+    const now = ctx.currentTime;
+
+    switch (type) {
+      case 'spin':
+        // Reel spinning sound - mechanical whoosh
+        for (let i = 0; i < 5; i++) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100 + i * 20, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+
+          gain.gain.setValueAtTime(volume * 0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+          osc.start(now + i * 0.05);
+          osc.stop(now + 0.3 + i * 0.05);
+        }
+        break;
+
+      case 'reelStop':
+        // Reel stop sound - thud
+        const stopOsc = ctx.createOscillator();
+        const stopGain = ctx.createGain();
+        stopOsc.connect(stopGain);
+        stopGain.connect(ctx.destination);
+
+        stopOsc.type = 'sine';
+        stopOsc.frequency.setValueAtTime(80, now);
+        stopOsc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+
+        stopGain.gain.setValueAtTime(volume, now);
+        stopGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+        stopOsc.start(now);
+        stopOsc.stop(now + 0.1);
+        break;
+
+      case 'win':
+        // Win sound - ascending chimes
+        for (let i = 0; i < 8; i++) {
+          const winOsc = ctx.createOscillator();
+          const winGain = ctx.createGain();
+          winOsc.connect(winGain);
+          winGain.connect(ctx.destination);
+
+          winOsc.type = 'sine';
+          winOsc.frequency.setValueAtTime(400 + i * 100, now + i * 0.05);
+
+          winGain.gain.setValueAtTime(volume * 0.4, now + i * 0.05);
+          winGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.3);
+
+          winOsc.start(now + i * 0.05);
+          winOsc.stop(now + i * 0.05 + 0.3);
+        }
+        break;
+
+      case 'bigWin':
+        // Big win sound - triumphant fanfare
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.15);
+
+          gain.gain.setValueAtTime(volume * 0.5, now + i * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.4);
+
+          osc.start(now + i * 0.15);
+          osc.stop(now + i * 0.15 + 0.4);
+        });
+        break;
+
+      case 'scatter':
+        // Scatter bonus sound - magical sparkle
+        for (let i = 0; i < 12; i++) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1000 + Math.random() * 1000, now + i * 0.03);
+
+          gain.gain.setValueAtTime(volume * 0.2, now + i * 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.03 + 0.2);
+
+          osc.start(now + i * 0.03);
+          osc.stop(now + i * 0.03 + 0.2);
+        }
+        break;
+
+      case 'click':
+        // Button click sound
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        clickOsc.connect(clickGain);
+        clickGain.connect(ctx.destination);
+
+        clickOsc.type = 'square';
+        clickOsc.frequency.setValueAtTime(800, now);
+
+        clickGain.gain.setValueAtTime(volume * 0.2, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+        clickOsc.start(now);
+        clickOsc.stop(now + 0.05);
+        break;
+
+      case 'coins':
+        // Coin sound - metallic clinks
+        for (let i = 0; i < 15; i++) {
+          const coinOsc = ctx.createOscillator();
+          const coinGain = ctx.createGain();
+          coinOsc.connect(coinGain);
+          coinGain.connect(ctx.destination);
+
+          coinOsc.type = 'square';
+          coinOsc.frequency.setValueAtTime(800 + Math.random() * 400, now + i * 0.02);
+
+          coinGain.gain.setValueAtTime(volume * 0.15, now + i * 0.02);
+          coinGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.02 + 0.1);
+
+          coinOsc.start(now + i * 0.02);
+          coinOsc.stop(now + i * 0.02 + 0.1);
+        }
+        break;
+    }
+  };
+
+  // Vibration (haptic feedback)
+  const vibrate = (pattern: number | number[]) => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(pattern);
+    }
+  };
+
+  // Background music
+  const playBackgroundMusic = () => {
+    if (!audioContextRef.current) return;
+
+    const ctx = audioContextRef.current;
+    const playMelody = () => {
+      const notes = [262, 294, 330, 349, 392]; // C, D, E, F, G
+      let time = ctx.currentTime;
+
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+
+        gain.gain.setValueAtTime(0.05, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.8);
+
+        osc.start(time);
+        osc.stop(time + 0.8);
+
+        time += 0.5;
+      });
+
+      // Schedule next iteration
+      setTimeout(playMelody, 3000);
+    };
+
+    if (musicEnabled) {
+      playMelody();
+    }
+  };
 
   const spin = async () => {
     if (spinning) return;
@@ -66,6 +290,9 @@ export default function BuffaloSlotPage() {
       setTimeout(() => setMessage(""), 2000);
       return;
     }
+
+    playSound('spin');
+    vibrate(50);
 
     setSpinning(true);
     setMessage("");
@@ -118,6 +345,10 @@ export default function BuffaloSlotPage() {
         newSymbols[i] = results[i];
         return newSymbols;
       });
+
+      // Play stop sound and vibrate for each reel
+      playSound('reelStop', 0.4);
+      vibrate(100);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 400));
@@ -143,6 +374,11 @@ export default function BuffaloSlotPage() {
 
     // Scatter payouts and free spins
     if (scatterPositions.length >= 3) {
+      playSound('scatter');
+      vibrate([200, 100, 200]);
+      setShowParticles(true);
+      setTimeout(() => setShowParticles(false), 3000);
+
       const bonusSpins = scatterPositions.length === 3 ? 8 : scatterPositions.length === 4 ? 15 : 20;
       setFreeSpins((prev) => prev + bonusSpins);
       setMessage(`🎉 ${bonusSpins} FREE SPINS! 🎉`);
@@ -239,6 +475,20 @@ export default function BuffaloSlotPage() {
       setCredits((prev) => prev + Math.floor(totalWin));
       setWinningLines(allIndividualLines);
 
+      // Play win sounds based on win amount
+      if (totalWin >= bet * 5) {
+        playSound('bigWin');
+        vibrate([200, 100, 200, 100, 200]);
+        setShowParticles(true);
+        setTimeout(() => setShowParticles(false), 3000);
+      } else {
+        playSound('win');
+        vibrate([100, 50, 100]);
+      }
+
+      // Coin sound for credits update
+      setTimeout(() => playSound('coins'), 300);
+
       if (scatterPositions.length < 3) {
         setMessage(`💰 WIN: $${Math.floor(totalWin)}! 💰`);
       }
@@ -277,9 +527,9 @@ export default function BuffaloSlotPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-900 via-amber-800 to-black flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-amber-900 via-amber-800 to-black flex items-center justify-center p-2 sm:p-4 relative overflow-hidden">
       {/* Animated buffalo silhouettes */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
+      <div className="absolute inset-0 opacity-5 pointer-events-none hidden sm:block">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
@@ -296,9 +546,69 @@ export default function BuffaloSlotPage() {
         ))}
       </div>
 
-      <Link href="/" className="absolute top-4 left-4 px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg shadow-lg z-50">
+      {/* Particle Effects for Big Wins */}
+      {showParticles && (
+        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute text-4xl sm:text-5xl md:text-6xl animate-coin-fall"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: '-10%',
+                animationDelay: `${Math.random() * 0.5}s`,
+                animationDuration: `${2 + Math.random()}s`,
+              }}
+            >
+              💰
+            </div>
+          ))}
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={`sparkle-${i}`}
+              className="absolute text-3xl sm:text-4xl animate-sparkle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 0.3}s`,
+              }}
+            >
+              ✨
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Link href="/" className="absolute top-2 left-2 sm:top-4 sm:left-4 px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm sm:text-base font-bold rounded-lg shadow-lg z-50">
         ← Back
       </Link>
+
+      {/* Sound and Music Controls */}
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex gap-2 z-50">
+        <button
+          onClick={() => {
+            playSound('click', 0.3);
+            setSoundEnabled(!soundEnabled);
+          }}
+          className="px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-700 hover:bg-amber-600 text-white text-lg sm:text-2xl font-bold rounded-lg shadow-lg transition-all active:scale-95"
+          title={soundEnabled ? "Sound On" : "Sound Off"}
+        >
+          {soundEnabled ? "🔊" : "🔇"}
+        </button>
+        <button
+          onClick={() => {
+            playSound('click', 0.3);
+            setMusicEnabled(!musicEnabled);
+            if (!musicEnabled) {
+              playBackgroundMusic();
+            }
+          }}
+          className="px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-700 hover:bg-amber-600 text-white text-lg sm:text-2xl font-bold rounded-lg shadow-lg transition-all active:scale-95"
+          title={musicEnabled ? "Music On" : "Music Off"}
+        >
+          {musicEnabled ? "🎵" : "🎶"}
+        </button>
+      </div>
 
       <div className="relative z-10 w-full max-w-7xl">
         {/* Title */}
@@ -342,8 +652,7 @@ export default function BuffaloSlotPage() {
                   ref={(el) => {
                     reelRefs.current[reelIdx] = el;
                   }}
-                  className="bg-gradient-to-b from-amber-950 to-black rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden relative"
-                  style={{ height: "min(80vw, 540px)" }}
+                  className="bg-gradient-to-b from-amber-950 to-black rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden relative h-[280px] sm:h-[400px] md:h-[500px] lg:h-[540px]"
                 >
                   {reel.map((symbol, rowIdx) => {
                     const isWinning = isInWinningLine(reelIdx, rowIdx);
@@ -441,9 +750,9 @@ export default function BuffaloSlotPage() {
 
             {/* Winning line info */}
             {winningLines.length > 0 && (
-              <div className="mt-4 text-center">
-                <div className="inline-block bg-black/80 px-6 py-3 rounded-xl border-2 border-yellow-500">
-                  <p className="text-yellow-400 font-black text-xl">
+              <div className="mt-2 sm:mt-4 text-center">
+                <div className="inline-block bg-black/80 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-yellow-500">
+                  <p className="text-yellow-400 font-black text-base sm:text-xl">
                     {winningLines[currentLineIndex].symbol} x {
                       // Count consecutive reels from left
                       (() => {
@@ -457,7 +766,7 @@ export default function BuffaloSlotPage() {
                       })()
                     } = ${winningLines[currentLineIndex].amount}
                   </p>
-                  <p className="text-white text-sm mt-1">
+                  <p className="text-white text-xs sm:text-sm mt-1">
                     Win {currentLineIndex + 1} of {winningLines.length}
                   </p>
                 </div>
@@ -478,39 +787,53 @@ export default function BuffaloSlotPage() {
           )}
 
           {/* Controls */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
+            {/* Bet Controls - Full width on mobile */}
             <div className="bg-black/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border-2 sm:border-4 border-yellow-600">
-              <p className="text-yellow-400 text-sm sm:text-xl md:text-2xl font-black mb-2 sm:mb-3 md:mb-4 text-center">BET</p>
+              <p className="text-yellow-400 text-sm sm:text-xl md:text-2xl font-black mb-2 sm:mb-3 md:mb-4 text-center">BET AMOUNT</p>
               <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <button
-                  onClick={() => setBet(Math.max(10, bet - 10))}
+                  onClick={() => {
+                    playSound('click', 0.3);
+                    vibrate(30);
+                    setBet(Math.max(10, bet - 10));
+                  }}
                   disabled={spinning}
-                  className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-3 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="bg-gradient-to-b from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 active:from-red-700 active:to-red-900 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-4 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform active:scale-95 transition-all touch-manipulation"
                 >
                   −10
                 </button>
                 <button
-                  onClick={() => setBet(Math.min(200, bet + 10))}
+                  onClick={() => {
+                    playSound('click', 0.3);
+                    vibrate(30);
+                    setBet(Math.min(200, bet + 10));
+                  }}
                   disabled={spinning}
-                  className="bg-gradient-to-b from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-3 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform hover:scale-105 active:scale-95 transition-all"
+                  className="bg-gradient-to-b from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 active:from-green-700 active:to-green-900 disabled:from-gray-700 disabled:to-gray-900 text-white font-black text-xl sm:text-2xl md:text-3xl py-4 sm:py-4 md:py-6 rounded-lg sm:rounded-xl shadow-xl transform active:scale-95 transition-all touch-manipulation"
                 >
                   +10
                 </button>
               </div>
             </div>
 
+            {/* Spin Button - Full width on mobile, larger touch target */}
             <button
               onClick={spin}
               disabled={spinning || (credits < bet && freeSpins === 0)}
               className={`
                 bg-gradient-to-b from-green-400 via-green-600 to-green-800
                 hover:from-green-500 hover:via-green-700 hover:to-green-900
+                active:from-green-600 active:via-green-800 active:to-green-950
                 disabled:from-gray-700 disabled:via-gray-800 disabled:to-gray-900
-                text-white font-black text-3xl sm:text-5xl md:text-6xl py-6 sm:py-10 md:py-12 rounded-xl sm:rounded-2xl
+                text-white font-black text-2xl sm:text-5xl md:text-6xl py-6 sm:py-10 md:py-12
+                rounded-xl sm:rounded-2xl
                 shadow-2xl border-4 sm:border-6 md:border-8 border-green-600
                 hover:border-green-500 disabled:border-gray-700
-                transform hover:scale-105 active:scale-95 transition-all
+                transform active:scale-95 transition-all
                 disabled:cursor-not-allowed
+                touch-manipulation
+                min-h-[80px] sm:min-h-0
                 ${spinning ? "animate-pulse-fast" : ""}
               `}
             >
@@ -522,8 +845,12 @@ export default function BuffaloSlotPage() {
         {/* Add Credits Button */}
         <div className="text-center mt-3 sm:mt-4 md:mt-6">
           <button
-            onClick={() => setCredits(1000)}
-            className="px-4 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black text-base sm:text-xl md:text-2xl rounded-lg sm:rounded-xl shadow-2xl transform hover:scale-105 transition-all border-2 sm:border-4 border-purple-500"
+            onClick={() => {
+              playSound('coins');
+              vibrate([50, 30, 50]);
+              setCredits(1000);
+            }}
+            className="px-4 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black text-base sm:text-xl md:text-2xl rounded-lg sm:rounded-xl shadow-2xl transform hover:scale-105 transition-all border-2 sm:border-4 border-purple-500 touch-manipulation active:scale-95"
           >
             🎁 ADD 1000 CREDITS
           </button>
@@ -642,6 +969,36 @@ export default function BuffaloSlotPage() {
 
         .animate-line-pulse {
           animation: line-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes coin-fall {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110vh) rotate(360deg);
+            opacity: 0.3;
+          }
+        }
+
+        @keyframes sparkle {
+          0%, 100% {
+            transform: scale(0) rotate(0deg);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.5) rotate(180deg);
+            opacity: 1;
+          }
+        }
+
+        .animate-coin-fall {
+          animation: coin-fall 2s ease-in forwards;
+        }
+
+        .animate-sparkle {
+          animation: sparkle 1s ease-in-out infinite;
         }
       `}</style>
     </div>

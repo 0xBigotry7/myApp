@@ -6,6 +6,13 @@ import { getUserBadge } from "@/lib/household";
 import TimelineItem from "./TimelineItem";
 import TimelineStats from "./TimelineStats";
 import AddLifeEventModal from "./AddLifeEventModal";
+import TimelineViewSwitcher, { TimelineView } from "./TimelineViewSwitcher";
+import HorizontalTimelineView from "./HorizontalTimelineView";
+import CalendarView from "./CalendarView";
+import MapView from "./MapView";
+import StatsView from "./StatsView";
+import GridView from "./GridView";
+import StoryView from "./StoryView";
 
 interface TimelineItemType {
   id: string;
@@ -60,6 +67,9 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
 
   // Modal
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // View mode
+  const [currentView, setCurrentView] = useState<TimelineView>("feed");
 
   const fetchTimeline = async () => {
     try {
@@ -179,6 +189,9 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
           <span>Add Life Event</span>
         </button>
       </div>
+
+      {/* View Switcher */}
+      <TimelineViewSwitcher currentView={currentView} onViewChange={setCurrentView} />
 
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="mb-3 sm:mb-4">
@@ -355,21 +368,145 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
         )}
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading your memories...</p>
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-3xl border-2 border-dashed border-purple-200">
-          <div className="text-6xl mb-4">🌟</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No memories found</h3>
-          <p className="text-gray-600 mb-4">{selectedUser !== "all" ? "Try selecting a different user or changing your filters" : "Start capturing your life moments!"}</p>
-          <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
-            Add Your First Memory
-          </button>
-        </div>
-      ) : (
+      {/* Horizontal Timeline View */}
+      {currentView === "horizontal" && !loading && filteredItems.length > 0 && (
+        <HorizontalTimelineView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+          onEventClick={(event) => {
+            // TODO: Open event detail modal
+            console.log("Event clicked:", event);
+          }}
+        />
+      )}
+
+      {/* Calendar View */}
+      {currentView === "calendar" && !loading && filteredItems.length > 0 && (
+        <CalendarView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+          onEventClick={(event) => {
+            // TODO: Open event detail modal
+            console.log("Event clicked:", event);
+          }}
+          onDateClick={(date, events) => {
+            console.log("Date clicked:", date, "Events:", events);
+          }}
+        />
+      )}
+
+      {/* Map View */}
+      {currentView === "map" && !loading && filteredItems.length > 0 && (
+        <MapView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+          onEventClick={(event) => {
+            // TODO: Open event detail modal
+            console.log("Event clicked:", event);
+          }}
+        />
+      )}
+
+      {/* Stats View */}
+      {currentView === "stats" && !loading && filteredItems.length > 0 && (
+        <StatsView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+        />
+      )}
+
+      {/* Grid View */}
+      {currentView === "grid" && !loading && filteredItems.length > 0 && (
+        <GridView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+          onEventClick={(event) => {
+            // TODO: Open event detail modal
+            console.log("Event clicked:", event);
+          }}
+        />
+      )}
+
+      {/* Story View */}
+      {currentView === "story" && !loading && filteredItems.length > 0 && (
+        <StoryView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+          }))}
+        />
+      )}
+
+      {/* Feed View (original) */}
+      {currentView === "feed" && (
+        <>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Loading your memories...</p>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-3xl border-2 border-dashed border-purple-200">
+              <div className="text-6xl mb-4">🌟</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No memories found</h3>
+              <p className="text-gray-600 mb-4">{selectedUser !== "all" ? "Try selecting a different user or changing your filters" : "Start capturing your life moments!"}</p>
+              <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                Add Your First Memory
+              </button>
+            </div>
+          ) : (
         <div className="space-y-6 sm:space-y-8">
           {Object.entries(groupedItems).sort(([yearA], [yearB]) => parseInt(yearB) - parseInt(yearA)).map(([year, months]) => (
             <div key={year}>
@@ -409,7 +546,11 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
             </div>
           ))}
         </div>
+          )}
+        </>
       )}
+
+      {/* Placeholder - All views now implemented! */}
 
       {showAddModal && <AddLifeEventModal onClose={() => setShowAddModal(false)} onCreated={handleEventCreated} />}
     </div>
