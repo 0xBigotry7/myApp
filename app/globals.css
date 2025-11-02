@@ -47,3 +47,51 @@
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
   border-color: transparent;
 }
+
+/* Google Maps Places Autocomplete - Mobile Fix */
+.pac-container {
+  z-index: 9999 !important;
+  /* Ensure proper touch handling on mobile */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Fix for mobile browsers */
+  position: fixed !important;
+  /* Ensure dropdown is clickable on mobile */
+  pointer-events: auto !important;
+}
+
+.pac-item {
+  /* Better touch targets for mobile */
+  padding: 12px 16px !important;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.pac-item:active {
+  background-color: #e5e7eb;
+}
+
+.pac-item-query {
+  font-size: 15px;
+}
+
+/* Ensure autocomplete dropdown is above modals on mobile */
+@media (max-width: 768px) {
+  .pac-container {
+    z-index: 10000 !important;
+    /* Fix iOS Safari issues */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Prevent scrolling issues */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pac-item {
+    /* Larger touch targets for mobile */
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+}
