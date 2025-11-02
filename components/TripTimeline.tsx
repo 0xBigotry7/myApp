@@ -152,8 +152,14 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
         ? `/api/expenses/${editingItem.id}`
         : `/api/posts/${editingItem.id}`;
 
-      // Combine date and time into ISO string
-      const combinedDateTime = new Date(`${editDate}T${editTime}:00`).toISOString();
+      // Combine date and time - treat as local time, not UTC
+      // Parse the date and time components
+      const [year, month, day] = editDate.split('-').map(Number);
+      const [hours, minutes] = editTime.split(':').map(Number);
+
+      // Create date in local timezone
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      const combinedDateTime = localDate.toISOString();
 
       const body = editingItem.type === "expense"
         ? {

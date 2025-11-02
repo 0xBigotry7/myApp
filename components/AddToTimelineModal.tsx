@@ -44,7 +44,10 @@ export default function AddToTimelineModal({ tripId, onClose }: AddToTimelineMod
     setIsSubmitting(true);
 
     try {
-      const timestamp = new Date(`${date}T${time}`);
+      // Create date in local timezone, not UTC
+      const [year, month, day] = date.split('-').map(Number);
+      const [hours, minutes] = time.split(':').map(Number);
+      const timestamp = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
       // If has expense, create expense entry
       if (hasExpense && amount) {

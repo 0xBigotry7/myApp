@@ -13,6 +13,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { tripId, amount, category, currency, date, note, accountId, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
 
+    // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
+    let parsedDate: Date;
+    if (date && typeof date === 'string') {
+      if (date.includes('T') || date.includes('Z')) {
+        // Already has time info, use as-is
+        parsedDate = new Date(date);
+      } else {
+        // Just a date string - parse as local date at noon to avoid timezone issues
+        const [year, month, day] = date.split('-').map(Number);
+        parsedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
+      }
+    } else {
+      parsedDate = new Date();
+    }
+
     // Verify the trip belongs to the user or they are a member
     const trip = await prisma.trip.findFirst({
       where: {
@@ -49,7 +64,7 @@ export async function POST(request: Request) {
         amount,
         category,
         currency,
-        date: new Date(date),
+        date: parsedDate,
         note: note || null,
         location: location || null,
         receiptUrl: receiptUrl || null,
@@ -79,7 +94,7 @@ export async function POST(request: Request) {
               amount: -Math.abs(amount), // Always negative for expenses
               category: category || "Travel",
               description: note || `Trip expense: ${trip.name}`,
-              date: new Date(date),
+              date: parsedDate,
               isTripRelated: true,
               tripId: tripId,
               location: trip.destination,
