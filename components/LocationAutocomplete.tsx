@@ -62,11 +62,14 @@ export default function LocationAutocomplete({
   useEffect(() => {
     if (!isLoaded || !inputRef.current || disabled) return;
 
-    // Initialize autocomplete
+    // Initialize autocomplete with mobile-friendly options
     autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
       types: ["geocode", "establishment"],
       fields: ["formatted_address", "name", "types", "address_components"],
     });
+
+    // Set bounds to bias results (optional, can improve mobile experience)
+    // autocompleteRef.current.setBounds() can be added if user location is available
 
     // Listen for place selection
     const listener = autocompleteRef.current.addListener("place_changed", () => {
@@ -83,6 +86,11 @@ export default function LocationAutocomplete({
           : (place.formatted_address || place.name || "");
 
         onChange(location);
+
+        // Blur input on mobile after selection to dismiss keyboard
+        if (inputRef.current && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          inputRef.current.blur();
+        }
       }
     });
 
@@ -103,6 +111,11 @@ export default function LocationAutocomplete({
       disabled={disabled}
       className={className}
       autoComplete="off"
+      // Mobile-specific attributes for better UX
+      inputMode="text"
+      enterKeyHint="done"
+      // Prevent iOS zoom on focus
+      style={{ fontSize: '16px' }}
     />
   );
 }

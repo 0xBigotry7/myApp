@@ -560,21 +560,21 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                                     </div>
                                   )}
                                   {(expense.fromLocation || expense.toLocation) && (
-                                    <div className="flex items-center gap-2 text-sm text-blue-800">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-blue-800">
                                       {expense.fromLocation && (
-                                        <>
-                                          <span className="font-medium">From:</span>
-                                          <span>{expense.fromLocation}</span>
-                                        </>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium shrink-0">📍 From:</span>
+                                          <span className="break-words">{expense.fromLocation}</span>
+                                        </div>
                                       )}
                                       {expense.fromLocation && expense.toLocation && (
-                                        <span className="text-blue-400">→</span>
+                                        <span className="text-blue-400 hidden sm:inline">→</span>
                                       )}
                                       {expense.toLocation && (
-                                        <>
-                                          <span className="font-medium">To:</span>
-                                          <span>{expense.toLocation}</span>
-                                        </>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium shrink-0">🎯 To:</span>
+                                          <span className="break-words">{expense.toLocation}</span>
+                                        </div>
                                       )}
                                     </div>
                                   )}
