@@ -68,7 +68,18 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { content, location } = body;
+    const { content, location, timestamp } = body;
+
+    // Parse timestamp correctly if provided
+    let parsedTimestamp: Date | undefined;
+    if (timestamp && typeof timestamp === 'string') {
+      if (timestamp.includes('T') || timestamp.includes('Z')) {
+        parsedTimestamp = new Date(timestamp);
+      } else {
+        const [year, month, day] = timestamp.split('-').map(Number);
+        parsedTimestamp = new Date(year, month - 1, day, 12, 0, 0, 0);
+      }
+    }
 
     // Get the post to check ownership
     const post = await prisma.tripPost.findUnique({
@@ -102,6 +113,7 @@ export async function PATCH(
       data: {
         content: content !== undefined ? content : undefined,
         location: location !== undefined ? (location || null) : undefined,
+        timestamp: parsedTimestamp,
       },
       include: {
         user: {

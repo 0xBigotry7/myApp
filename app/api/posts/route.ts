@@ -17,6 +17,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Trip ID is required" }, { status: 400 });
     }
 
+    // Parse timestamp correctly
+    let parsedTimestamp: Date;
+    if (timestamp && typeof timestamp === 'string') {
+      if (timestamp.includes('T') || timestamp.includes('Z')) {
+        parsedTimestamp = new Date(timestamp);
+      } else {
+        const [year, month, day] = timestamp.split('-').map(Number);
+        parsedTimestamp = new Date(year, month - 1, day, 12, 0, 0, 0);
+      }
+    } else {
+      parsedTimestamp = new Date();
+    }
+
     // Verify user has access to this trip
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
@@ -46,7 +59,7 @@ export async function POST(request: Request) {
         content: content || null,
         photos: photos || [],
         location: location || null,
-        timestamp: timestamp ? new Date(timestamp) : new Date(),
+        timestamp: parsedTimestamp,
       },
       include: {
         user: {

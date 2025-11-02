@@ -70,6 +70,19 @@ export async function PATCH(
     const body = await request.json();
     const { amount, category, currency, date, note, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
 
+    // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
+    let parsedDate: Date | undefined;
+    if (date && typeof date === 'string') {
+      if (date.includes('T') || date.includes('Z')) {
+        // Already has time info, use as-is
+        parsedDate = new Date(date);
+      } else {
+        // Just a date string - parse as local date at noon to avoid timezone issues
+        const [year, month, day] = date.split('-').map(Number);
+        parsedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
+      }
+    }
+
     // Get the expense to check ownership
     const expense = await prisma.expense.findUnique({
       where: { id },
@@ -103,7 +116,7 @@ export async function PATCH(
         amount: amount ? parseFloat(amount) : undefined,
         category,
         currency,
-        date: date ? new Date(date) : undefined,
+        date: parsedDate,
         note: note !== undefined ? (note || null) : undefined,
         location: location !== undefined ? (location || null) : undefined,
         receiptUrl: receiptUrl !== undefined ? (receiptUrl || null) : undefined,
