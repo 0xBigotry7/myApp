@@ -261,10 +261,26 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
     return items.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [expenses, posts, filterType, selectedUser, searchQuery]);
 
-  // Group by date
+  // Group by date - use local date components to avoid timezone issues
   const groupedByDate = useMemo(() => {
     return timelineItems.reduce((acc, item) => {
-      const dateKey = format(item.date, "yyyy-MM-dd");
+      // Use local date components instead of format() to avoid UTC issues
+      const year = item.date.getFullYear();
+      const month = String(item.date.getMonth() + 1).padStart(2, '0');
+      const day = String(item.date.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+
+      // Debug: log the first few items to see what's happening
+      if (timelineItems.indexOf(item) < 3) {
+        console.log('Grouping item:', {
+          rawDate: item.type === 'expense' ? (item.data as TimelineExpense).date : (item.data as TimelinePost).timestamp,
+          parsedDate: item.date,
+          dateKey,
+          localString: item.date.toLocaleString(),
+          isoString: item.date.toISOString()
+        });
+      }
+
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }

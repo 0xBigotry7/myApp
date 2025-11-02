@@ -138,6 +138,8 @@ export async function PATCH(
       },
     });
 
+    console.log('Saved to DB:', updatedExpense.date, 'Returning to client:', updatedExpense.date.toISOString());
+
     return NextResponse.json(updatedExpense);
   } catch (error) {
     console.error("Error updating expense:", error);
