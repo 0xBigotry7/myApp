@@ -38,11 +38,22 @@ export default function BuffaloSlotPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const reelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [finalSymbols, setFinalSymbols] = useState<string[][]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize Audio Context
   useEffect(() => {
@@ -713,12 +724,19 @@ export default function BuffaloSlotPage() {
 
                     const prevPos = winningLines[currentLineIndex].positions[idx - 1];
                     const reelWidth = 100 / 5; // 20% per reel
-                    const rowHeight = 135; // pixels per row
+
+                    // Calculate row height based on screen size (4 rows total)
+                    // Mobile: 280px / 4 = 70px, Desktop: 540px / 4 = 135px
+                    const containerHeight = isMobile ? 280 : 540;
+                    const rowHeight = containerHeight / 4;
 
                     const x1 = (prevPos.reel + 0.5) * reelWidth;
-                    const y1 = prevPos.row * rowHeight + 67.5;
+                    const y1 = prevPos.row * rowHeight + rowHeight / 2;
                     const x2 = (pos.reel + 0.5) * reelWidth;
-                    const y2 = pos.row * rowHeight + 67.5;
+                    const y2 = pos.row * rowHeight + rowHeight / 2;
+
+                    const strokeWidth = isMobile ? 4 : 8;
+                    const innerStrokeWidth = isMobile ? 2 : 3;
 
                     return (
                       <g key={`${pos.reel}-${pos.row}`}>
@@ -728,7 +746,7 @@ export default function BuffaloSlotPage() {
                           x2={`${x2}%`}
                           y2={y2}
                           stroke="rgba(251, 191, 36, 0.9)"
-                          strokeWidth="8"
+                          strokeWidth={strokeWidth}
                           filter="url(#glow)"
                           className="animate-line-pulse"
                         />
@@ -738,7 +756,7 @@ export default function BuffaloSlotPage() {
                           x2={`${x2}%`}
                           y2={y2}
                           stroke="rgba(255, 255, 255, 0.6)"
-                          strokeWidth="3"
+                          strokeWidth={innerStrokeWidth}
                           className="animate-line-pulse"
                         />
                       </g>
