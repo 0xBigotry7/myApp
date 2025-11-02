@@ -11,7 +11,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { tripId, amount, category, currency, date, note, accountId, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
+    const {
+      tripId, amount, category, currency, date, note, accountId, location, receiptUrl,
+      transportationMethod, fromLocation, toLocation,
+      // Accommodation fields
+      accommodationName, accommodationType, checkInDate, checkOutDate, numberOfNights,
+      googlePlaceId, hotelAddress, hotelPhone, hotelWebsite, hotelRating, hotelPhotos,
+      latitude, longitude, confirmationNumber
+    } = body;
 
     // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
     let parsedDate: Date;
@@ -56,6 +63,17 @@ export async function POST(request: Request) {
       userAccountId = defaultAccount?.id;
     }
 
+    // Parse accommodation dates if provided
+    let parsedCheckInDate: Date | null = null;
+    let parsedCheckOutDate: Date | null = null;
+
+    if (checkInDate) {
+      parsedCheckInDate = new Date(checkInDate);
+    }
+    if (checkOutDate) {
+      parsedCheckOutDate = new Date(checkOutDate);
+    }
+
     // Create expense and transaction together in a transaction
     const expense = await prisma.expense.create({
       data: {
@@ -71,6 +89,21 @@ export async function POST(request: Request) {
         transportationMethod: transportationMethod || null,
         fromLocation: fromLocation || null,
         toLocation: toLocation || null,
+        // Accommodation fields
+        accommodationName: accommodationName || null,
+        accommodationType: accommodationType || null,
+        checkInDate: parsedCheckInDate,
+        checkOutDate: parsedCheckOutDate,
+        numberOfNights: numberOfNights || null,
+        googlePlaceId: googlePlaceId || null,
+        hotelAddress: hotelAddress || null,
+        hotelPhone: hotelPhone || null,
+        hotelWebsite: hotelWebsite || null,
+        hotelRating: hotelRating || null,
+        hotelPhotos: hotelPhotos || [],
+        latitude: latitude || null,
+        longitude: longitude || null,
+        confirmationNumber: confirmationNumber || null,
       },
       include: {
         user: true,
