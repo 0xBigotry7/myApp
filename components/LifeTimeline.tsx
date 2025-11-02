@@ -112,8 +112,11 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
     const groups: Record<string, Record<string, TimelineItemType[]>> = {};
     filteredItems.forEach((item) => {
       const date = new Date(item.date);
-      const yearKey = format(date, "yyyy");
-      const monthKey = format(date, "yyyy-MM");
+      // Use local date components to avoid UTC timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const yearKey = String(year);
+      const monthKey = `${year}-${month}`;
       if (!groups[yearKey]) groups[yearKey] = {};
       if (!groups[yearKey][monthKey]) groups[yearKey][monthKey] = [];
       groups[yearKey][monthKey].push(item);
