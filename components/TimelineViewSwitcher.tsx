@@ -1,6 +1,6 @@
 "use client";
 
-export type TimelineView = "feed" | "horizontal" | "calendar" | "map" | "stats" | "grid" | "story";
+export type TimelineView = "enhanced" | "feed" | "horizontal" | "calendar" | "map" | "stats" | "grid" | "story";
 
 interface TimelineViewSwitcherProps {
   currentView: TimelineView;
@@ -9,15 +9,21 @@ interface TimelineViewSwitcherProps {
 
 const views: Array<{ id: TimelineView; icon: string; label: string; description: string }> = [
   {
+    id: "enhanced",
+    icon: "✨",
+    label: "Timeline",
+    description: "Enhanced vertical timeline",
+  },
+  {
     id: "feed",
     icon: "📱",
     label: "Feed",
-    description: "Vertical timeline feed",
+    description: "Simple feed view",
   },
   {
     id: "horizontal",
     icon: "📊",
-    label: "Timeline",
+    label: "Horizontal",
     description: "Interactive horizontal timeline",
   },
   {

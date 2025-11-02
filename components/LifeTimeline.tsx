@@ -7,6 +7,7 @@ import TimelineItem from "./TimelineItem";
 import TimelineStats from "./TimelineStats";
 import AddLifeEventModal from "./AddLifeEventModal";
 import TimelineViewSwitcher, { TimelineView } from "./TimelineViewSwitcher";
+import EnhancedTimelineView from "./EnhancedTimelineView";
 import HorizontalTimelineView from "./HorizontalTimelineView";
 import CalendarView from "./CalendarView";
 import MapView from "./MapView";
@@ -69,7 +70,7 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
   const [showAddModal, setShowAddModal] = useState(false);
 
   // View mode
-  const [currentView, setCurrentView] = useState<TimelineView>("feed");
+  const [currentView, setCurrentView] = useState<TimelineView>("enhanced");
 
   const fetchTimeline = async () => {
     try {
@@ -367,6 +368,28 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
           </div>
         )}
       </div>
+
+      {/* Enhanced Timeline View */}
+      {currentView === "enhanced" && !loading && filteredItems.length > 0 && (
+        <EnhancedTimelineView
+          events={filteredItems.map((item) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            type: item.type,
+            content: item.content || undefined,
+            photos: item.photos,
+            location: item.location || undefined,
+            mood: item.metadata?.mood,
+            user: item.user,
+            metadata: item.metadata,
+          }))}
+          onEventClick={(event) => {
+            // TODO: Open event detail modal
+            console.log("Event clicked:", event);
+          }}
+        />
+      )}
 
       {/* Horizontal Timeline View */}
       {currentView === "horizontal" && !loading && filteredItems.length > 0 && (
