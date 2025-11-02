@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import AddPhotoModal from "./AddPhotoModal";
+import AddToTimelineModal from "./AddToTimelineModal";
 
 interface TripTimelineWrapperProps {
   tripId: string;
@@ -9,29 +9,29 @@ interface TripTimelineWrapperProps {
 }
 
 export default function TripTimelineWrapper({ tripId, children }: TripTimelineWrapperProps) {
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   return (
     <div>
-      {/* Add Photo Button */}
+      {/* Add to Timeline Button */}
       <div className="mb-6">
         <button
-          onClick={() => setShowPhotoModal(true)}
-          className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          onClick={() => setShowAddModal(true)}
+          className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-3 transform active:scale-95"
         >
-          <span className="text-2xl">📸</span>
-          <span>Add Photos</span>
+          <span className="text-2xl">✨</span>
+          <span>Add to Timeline</span>
         </button>
       </div>
 
       {/* Timeline Content */}
       {children}
 
-      {/* Photo Modal */}
-      {showPhotoModal && (
-        <AddPhotoModal
+      {/* Add to Timeline Modal */}
+      {showAddModal && (
+        <AddToTimelineModal
           tripId={tripId}
-          onClose={() => setShowPhotoModal(false)}
+          onClose={() => setShowAddModal(false)}
         />
       )}
     </div>

@@ -35,6 +35,7 @@ model User {
   healthInsights        HealthInsight[]
   travelDestinations    TravelDestination[]
   tripPosts             TripPost[]
+  lifeEvents            LifeEvent[]
 }
 
 model Trip {
@@ -72,19 +73,23 @@ model BudgetCategory {
 }
 
 model Expense {
-  id          String   @id @default(cuid())
-  tripId      String
-  userId      String
-  amount      Float
-  category    String
-  currency    String   @default("USD")
-  date        DateTime
-  note        String?
-  receiptUrl  String?
-  location    String?
-  createdAt   DateTime @default(now())
-  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(cuid())
+  tripId                String
+  userId                String
+  amount                Float
+  category              String
+  currency              String   @default("USD")
+  date                  DateTime
+  note                  String?
+  receiptUrl            String?
+  location              String?
+  // Transportation-specific fields
+  transportationMethod  String?  // e.g., "Flight", "Train", "Bus", "Car", "Taxi", "Uber", "Boat"
+  fromLocation          String?  // Start location for transportation
+  toLocation            String?  // End location for transportation
+  createdAt             DateTime @default(now())
+  trip                  Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Activity {
@@ -425,4 +430,28 @@ model TravelDestination {
 
   @@index([userId, visitDate])
   @@index([userId, countryCode])
+}
+
+// ===== LIFE TIMELINE MODELS =====
+
+model LifeEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "milestone", "achievement", "memory", "note", "photo", "work", "social", "hobby", "family", "education"
+  title       String   // "Got promoted", "Started new job", "Family gathering"
+  content     String?  // Detailed description
+  photos      String[] @default([]) // Array of photo URLs
+  location    String?  // Location name
+  latitude    Float?
+  longitude   Float?
+  tags        String[] @default([]) // ["family", "career", "celebration"]
+  mood        String?  // "happy", "excited", "grateful", "sad", "neutral", "proud"
+  isPrivate   Boolean  @default(false) // Hide from shared household view
+  date        DateTime // When this event happened
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, type])
 }
