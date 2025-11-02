@@ -29,15 +29,27 @@ export async function GET(request: Request) {
       dateFilter.lte = new Date(dateTo);
     }
 
+    // Get all trips user has access to (owned or member of)
+    const userTrips = await prisma.trip.findMany({
+      where: {
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } },
+        ],
+      },
+      select: { id: true },
+    });
+    const tripIds = userTrips.map((t) => t.id);
+
     // Fetch data from all sources in parallel
     const sources = sourceFilter ? [sourceFilter] : ["travel", "finance", "health", "life"];
 
     const results = await Promise.all([
-      // Travel Posts (if travel included)
-      sources.includes("travel")
+      // Travel Posts (if travel included) - from all household trips
+      sources.includes("travel") && tripIds.length > 0
         ? prisma.tripPost.findMany({
             where: {
-              userId,
+              tripId: { in: tripIds },
               timestamp: Object.keys(dateFilter).length > 0 ? dateFilter : undefined,
             },
             include: {
@@ -48,11 +60,11 @@ export async function GET(request: Request) {
           })
         : Promise.resolve([]),
 
-      // Expenses (if travel included)
-      sources.includes("travel")
+      // Expenses (if travel included) - from all household trips
+      sources.includes("travel") && tripIds.length > 0
         ? prisma.expense.findMany({
             where: {
-              userId,
+              tripId: { in: tripIds },
               date: Object.keys(dateFilter).length > 0 ? dateFilter : undefined,
             },
             include: {
