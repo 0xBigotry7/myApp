@@ -110,13 +110,29 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, Record<string, TimelineItemType[]>> = {};
-    filteredItems.forEach((item) => {
+    filteredItems.forEach((item, index) => {
       const date = new Date(item.date);
       // Use local date components to avoid UTC timezone issues
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const yearKey = String(year);
       const monthKey = `${year}-${month}`;
+
+      // Debug: log first few items
+      if (index < 3) {
+        console.log('LifeTimeline - Grouping item:', {
+          rawDate: item.date,
+          parsedDate: date,
+          year,
+          month,
+          monthKey,
+          localString: date.toLocaleString(),
+          isoString: date.toISOString(),
+          getMonth: date.getMonth(),
+          getDate: date.getDate()
+        });
+      }
+
       if (!groups[yearKey]) groups[yearKey] = {};
       if (!groups[yearKey][monthKey]) groups[yearKey][monthKey] = [];
       groups[yearKey][monthKey].push(item);
@@ -254,7 +270,14 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
                   <div key={monthKey}>
                     <div className="sticky top-16 z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 sm:px-6 py-3 rounded-xl shadow-md mb-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg">{format(new Date(monthKey + "-01"), "MMMM yyyy")}</h3>
+                        <h3 className="font-bold text-lg">
+                          {(() => {
+                            // Parse monthKey as local date components to avoid UTC conversion
+                            const [year, month] = monthKey.split('-').map(Number);
+                            const localDate = new Date(year, month - 1, 1);
+                            return format(localDate, "MMMM yyyy");
+                          })()}
+                        </h3>
                         <span className="text-xs md:text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{monthItems.length}</span>
                       </div>
                     </div>

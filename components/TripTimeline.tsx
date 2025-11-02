@@ -281,12 +281,17 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
 
       // Debug: log the first few items to see what's happening
       if (timelineItems.indexOf(item) < 3) {
-        console.log('Grouping item:', {
+        console.log('TripTimeline - Grouping item:', {
           rawDate: item.type === 'expense' ? (item.data as TimelineExpense).date : (item.data as TimelinePost).timestamp,
           parsedDate: item.date,
+          year,
+          month,
+          day,
           dateKey,
           localString: item.date.toLocaleString(),
-          isoString: item.date.toISOString()
+          isoString: item.date.toISOString(),
+          getMonth: item.date.getMonth(),
+          getDate: item.date.getDate()
         });
       }
 
@@ -419,7 +424,12 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
             <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 sm:px-6 py-3 rounded-2xl shadow-lg mb-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-base sm:text-lg">
-                  {format(new Date(dateKey), "EEEE, MMMM d, yyyy")}
+                  {(() => {
+                    // Parse dateKey as local date components to avoid UTC conversion
+                    const [year, month, day] = dateKey.split('-').map(Number);
+                    const localDate = new Date(year, month - 1, day);
+                    return format(localDate, "EEEE, MMMM d, yyyy");
+                  })()}
                 </h3>
                 <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
                   {items.length} {items.length === 1 ? "item" : "items"}
