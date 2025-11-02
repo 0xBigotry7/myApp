@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { markdownToHtml } from "@/lib/markdown";
 
 interface TimelineItemProps {
   item: {
@@ -254,8 +255,11 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
 
       {/* Content */}
       {item.content && (
-        <div className="mb-3">
-          <p className="text-gray-700 whitespace-pre-wrap">{item.content}</p>
+        <div className="mb-3 bg-gray-50 rounded-xl p-4">
+          <div
+            className="text-gray-700 prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(item.content) }}
+          />
         </div>
       )}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import RichTextEditor from "./RichTextEditor";
 
 interface AddLifeEventModalProps {
   onClose: () => void;
@@ -239,12 +240,10 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
-            <textarea
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Tell the story..."
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+              onChange={setContent}
+              placeholder="Tell the story... (Markdown supported: **bold**, *italic*, ## heading, etc.)"
             />
           </div>
 
