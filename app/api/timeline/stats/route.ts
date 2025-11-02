@@ -11,46 +11,62 @@ export async function GET() {
 
     const userId = session.user.id;
 
+    // Get all trips user has access to (owned or member of)
+    const userTrips = await prisma.trip.findMany({
+      where: {
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } },
+        ],
+      },
+      select: { id: true, destination: true },
+    });
+    const tripIds = userTrips.map((t) => t.id);
+
     // Fetch counts in parallel
     const [
       tripPostsCount,
       expensesCount,
-      transactionsCount,
       healthLogsCount,
       lifeEventsCount,
-      uniqueCountries,
-      totalPhotos,
       totalSpent,
     ] = await Promise.all([
-      prisma.tripPost.count({ where: { userId } }),
-      prisma.expense.count({ where: { userId } }),
-      prisma.transaction.count({ where: { userId, amount: { gte: 100 } } }),
+      tripIds.length > 0
+        ? prisma.tripPost.count({ where: { tripId: { in: tripIds } } })
+        : Promise.resolve(0),
+      tripIds.length > 0
+        ? prisma.expense.count({ where: { tripId: { in: tripIds } } })
+        : Promise.resolve(0),
       prisma.dailyLog.count({ where: { userId } }),
       prisma.lifeEvent.count({ where: { userId } }),
-      prisma.travelDestination.findMany({
-        where: { userId },
-        select: { countryCode: true },
-        distinct: ["countryCode"],
-      }),
-      prisma.tripPost.aggregate({
-        where: { userId },
-        _sum: { photos: true },
-      }),
-      prisma.expense.aggregate({
-        where: { userId, currency: "USD" },
-        _sum: { amount: true },
-      }),
+      tripIds.length > 0
+        ? prisma.expense.aggregate({
+            where: { tripId: { in: tripIds } },
+            _sum: { amount: true },
+          })
+        : Promise.resolve({ _sum: { amount: 0 } }),
     ]);
 
-    const totalMemories =
-      tripPostsCount + expensesCount + transactionsCount + healthLogsCount + lifeEventsCount;
+    // Count unique destinations from trips (extract country from destination string)
+    const uniqueDestinations = new Set(
+      userTrips.map((t) => {
+        // Extract country from "City, Country" format
+        const parts = t.destination?.split(",") || [];
+        return parts.length > 1 ? parts[parts.length - 1].trim() : t.destination;
+      }).filter(Boolean)
+    );
 
-    // Calculate photo count
-    const photoCount = await prisma.tripPost.findMany({
-      where: { userId },
-      select: { photos: true },
-    });
-    const totalPhotoCount = photoCount.reduce((sum, post) => sum + post.photos.length, 0);
+    const totalMemories = tripPostsCount + expensesCount + healthLogsCount + lifeEventsCount;
+
+    // Calculate photo count from trip posts
+    const tripPosts =
+      tripIds.length > 0
+        ? await prisma.tripPost.findMany({
+            where: { tripId: { in: tripIds } },
+            select: { photos: true },
+          })
+        : [];
+    const totalPhotoCount = tripPosts.reduce((sum, post) => sum + post.photos.length, 0);
 
     // Get life event photos count
     const lifeEventPhotos = await prisma.lifeEvent.findMany({
@@ -66,11 +82,11 @@ export async function GET() {
       totalMemories,
       breakdown: {
         travel: tripPostsCount + expensesCount,
-        finance: transactionsCount,
+        finance: 0, // No transaction tracking yet
         health: healthLogsCount,
         lifeEvents: lifeEventsCount,
       },
-      countriesVisited: uniqueCountries.length,
+      countriesVisited: uniqueDestinations.size,
       photosUploaded: totalPhotoCount + lifeEventPhotoCount,
       totalSpent: totalSpent._sum.amount || 0,
     });

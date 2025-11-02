@@ -1,13 +1,22 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import LifeTimeline from "@/components/LifeTimeline";
+import { getHouseholdUserIds } from "@/lib/household";
 
 export default async function TimelinePage() {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
+
+  // Get household users for filtering
+  const householdUserIds = await getHouseholdUserIds();
+  const householdUsers = await prisma.user.findMany({
+    where: { id: { in: householdUserIds } },
+    select: { id: true, name: true, email: true },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -23,7 +32,10 @@ export default async function TimelinePage() {
           </p>
         </div>
 
-        <LifeTimeline />
+        <LifeTimeline
+          currentUserId={session.user.id}
+          householdUsers={householdUsers}
+        />
       </div>
     </div>
   );

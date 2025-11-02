@@ -6,7 +6,7 @@ import ExpenseInsights from "./ExpenseInsights";
 import ExpenseList from "./ExpenseList";
 import TripTimeline from "./TripTimeline";
 import TripTimelineWrapper from "./TripTimelineWrapper";
-import { getTranslations, translateCategory } from "@/lib/i18n";
+import { getTranslations, translateCategory, Locale } from "@/lib/i18n";
 import Link from "next/link";
 
 interface CategorySpending {
@@ -22,7 +22,7 @@ interface TripPageTabsProps {
   categorySpending: CategorySpending[];
   householdUsers: Array<{ id: string; name: string }>;
   currentUserEmail?: string;
-  locale: string;
+  locale: Locale;
   totalSpent: number;
   remaining: number;
   percentUsed: number;
