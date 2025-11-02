@@ -51,7 +51,12 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
   const [selectedUser, setSelectedUser] = useState<string | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [showPrivate, setShowPrivate] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -63,8 +68,18 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
       if (sourceFilter) params.append("source", sourceFilter);
       if (searchQuery) params.append("search", searchQuery);
       if (!showPrivate) params.append("showPrivate", "false");
+      if (locationFilter) params.append("location", locationFilter);
+      if (tagFilter) params.append("tag", tagFilter);
 
-      if (dateRange !== "all") {
+      // Date range filtering
+      if (dateRange === "custom" && (customDateFrom || customDateTo)) {
+        if (customDateFrom) params.append("dateFrom", new Date(customDateFrom).toISOString());
+        if (customDateTo) {
+          const dateTo = new Date(customDateTo);
+          dateTo.setHours(23, 59, 59, 999); // End of day
+          params.append("dateTo", dateTo.toISOString());
+        }
+      } else if (dateRange !== "all") {
         const now = new Date();
         const dateFrom = new Date();
         if (dateRange === "year") {
@@ -101,7 +116,7 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
   useEffect(() => {
     fetchTimeline();
     fetchStats();
-  }, [sourceFilter, searchQuery, dateRange, showPrivate]);
+  }, [sourceFilter, searchQuery, dateRange, customDateFrom, customDateTo, locationFilter, tagFilter, showPrivate]);
 
   const filteredItems = useMemo(() => {
     if (selectedUser === "all") return items;
@@ -227,6 +242,7 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
               <option value="year">This Year</option>
               <option value="month">This Month</option>
               <option value="week">This Week</option>
+              <option value="custom">Custom Range...</option>
             </select>
           </div>
           <div>
@@ -237,6 +253,106 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
             </select>
           </div>
         </div>
+
+        {/* Advanced Filters Toggle */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2"
+          >
+            {showAdvancedFilters ? "▼" : "▶"} Advanced Filters
+          </button>
+        </div>
+
+        {/* Advanced Filters Section */}
+        {showAdvancedFilters && (
+          <div className="mt-4 p-4 bg-purple-50 rounded-xl border-2 border-purple-200 space-y-4">
+            {/* Custom Date Range */}
+            {dateRange === "custom" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">📅 From Date:</label>
+                  <input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">📅 To Date:</label>
+                  <input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Location Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">📍 Location:</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  placeholder="Filter by location (e.g., Paris, New York)"
+                  className="w-full px-4 py-2 pr-10 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none"
+                />
+                {locationFilter && (
+                  <button
+                    onClick={() => setLocationFilter("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Tag Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">🏷️ Tag:</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                  placeholder="Filter by tag (e.g., family, career, celebration)"
+                  className="w-full px-4 py-2 pr-10 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:outline-none"
+                />
+                {tagFilter && (
+                  <button
+                    onClick={() => setTagFilter("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Clear All Filters */}
+            {(customDateFrom || customDateTo || locationFilter || tagFilter) && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setCustomDateFrom("");
+                    setCustomDateTo("");
+                    setLocationFilter("");
+                    setTagFilter("");
+                  }}
+                  className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium text-sm transition-all"
+                >
+                  Clear Advanced Filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (
