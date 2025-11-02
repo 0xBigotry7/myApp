@@ -12,6 +12,8 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
 
   // Form fields
   const [type, setType] = useState("memory");
+  const [customType, setCustomType] = useState("");
+  const [showCustomType, setShowCustomType] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -70,8 +72,10 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
         }
       }
 
+      const finalType = showCustomType && customType ? customType : type;
+
       const eventData = {
-        type,
+        type: finalType,
         title,
         content: content || undefined,
         photos: photoUrls,
@@ -121,21 +125,71 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
               Event Type
             </label>
             <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
+              value={showCustomType ? "custom" : type}
+              onChange={(e) => {
+                if (e.target.value === "custom") {
+                  setShowCustomType(true);
+                } else {
+                  setShowCustomType(false);
+                  setType(e.target.value);
+                }
+              }}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
             >
-              <option value="memory">💭 Memory</option>
-              <option value="milestone">🎯 Milestone</option>
-              <option value="achievement">🏆 Achievement</option>
-              <option value="work">💼 Work</option>
-              <option value="education">📚 Education</option>
-              <option value="family">👨‍👩‍👧‍👦 Family</option>
-              <option value="social">🎉 Social</option>
-              <option value="hobby">🎨 Hobby</option>
-              <option value="photo">📸 Photo</option>
-              <option value="note">📝 Note</option>
+              <optgroup label="🌟 Life Moments">
+                <option value="memory">💭 Memory</option>
+                <option value="milestone">🎯 Milestone</option>
+                <option value="achievement">🏆 Achievement</option>
+                <option value="birthday">🎂 Birthday</option>
+                <option value="anniversary">💝 Anniversary</option>
+              </optgroup>
+              <optgroup label="👥 Relationships">
+                <option value="family">👨‍👩‍👧‍👦 Family</option>
+                <option value="social">🎉 Social</option>
+                <option value="friendship">🤝 Friendship</option>
+                <option value="dating">💕 Dating</option>
+              </optgroup>
+              <optgroup label="💼 Career & Education">
+                <option value="work">💼 Work</option>
+                <option value="education">📚 Education</option>
+                <option value="project">🚀 Project</option>
+                <option value="promotion">📈 Promotion</option>
+              </optgroup>
+              <optgroup label="🏃 Health & Wellness">
+                <option value="health">🌸 Health</option>
+                <option value="fitness">💪 Fitness</option>
+                <option value="mental_health">🧘 Mental Health</option>
+              </optgroup>
+              <optgroup label="🎯 Hobbies & Interests">
+                <option value="hobby">🎨 Hobby</option>
+                <option value="travel">✈️ Travel</option>
+                <option value="reading">📖 Reading</option>
+                <option value="music">🎵 Music</option>
+                <option value="sports">⚽ Sports</option>
+                <option value="gaming">🎮 Gaming</option>
+              </optgroup>
+              <optgroup label="🏠 Home & Daily Life">
+                <option value="home">🏡 Home</option>
+                <option value="pet">🐾 Pet</option>
+                <option value="cooking">🍳 Cooking</option>
+              </optgroup>
+              <optgroup label="📝 Documentation">
+                <option value="photo">📸 Photo</option>
+                <option value="note">📝 Note</option>
+                <option value="journal">📔 Journal</option>
+              </optgroup>
+              <option value="custom">✨ Custom Type...</option>
             </select>
+            {showCustomType && (
+              <input
+                type="text"
+                value={customType}
+                onChange={(e) => setCustomType(e.target.value)}
+                placeholder="Enter custom event type (e.g., 'volunteering', 'adventure')"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none mt-2"
+                required={showCustomType}
+              />
+            )}
           </div>
 
           {/* Title */}
