@@ -9,27 +9,27 @@ const SYMBOLS = ["🦬", "🦅", "🐺", "🐆", "🦌", "🌅", "💰", "A", "K
 // Lower = harder to win (more house edge), Higher = easier to win (less house edge)
 // Casino typical: 85-96%
 // Recommended settings:
-//   0.80 = Very hard (20% house edge) - Quick losses, rare big wins
-//   0.85 = Hard (15% house edge) - Balanced challenge
-//   0.90 = Medium (10% house edge) - Fun gameplay
-//   0.95 = Easy (5% house edge) - Frequent small wins
-const RTP = 0.85;
+//   0.75 = Very hard (25% house edge) - Quick losses, rare big wins
+//   0.80 = Hard (20% house edge) - Challenging gameplay
+//   0.85 = Medium (15% house edge) - Balanced challenge
+//   0.90 = Easy (10% house edge) - Frequent small wins
+const RTP = 0.75;
 
 // Payout multipliers (per winning way, not total)
-// These are small because 1024 ways can create many simultaneous wins
+// These are VERY small because 1024 ways can create hundreds of simultaneous wins
 // Format: [2 symbols, 3 symbols, 4 symbols, 5 symbols]
 const SYMBOL_VALUES: Record<string, number[]> = {
-  "🦬": [0, 0.15, 0.30, 0.50, 1.20], // Buffalo: 2, 3, 4, 5 symbols
-  "🦅": [0, 0.08, 0.20, 0.40, 0.80], // Eagle: 2, 3, 4, 5
-  "🐆": [0, 0.08, 0.20, 0.40, 0.80], // Puma: 2, 3, 4, 5
-  "🐺": [0, 0.05, 0.15, 0.30, 0.60], // Wolf: 2, 3, 4, 5
-  "🦌": [0, 0.05, 0.15, 0.30, 0.60], // Deer: 2, 3, 4, 5
-  "A": [0, 0, 0.08, 0.20, 0.50],     // Ace: 3, 4, 5 only
-  "K": [0, 0, 0.08, 0.20, 0.50],     // King: 3, 4, 5 only
-  "Q": [0, 0, 0.05, 0.15, 0.40],     // Queen: 3, 4, 5 only
-  "J": [0, 0, 0.05, 0.15, 0.40],     // Jack: 3, 4, 5 only
-  "10": [0, 0, 0.05, 0.15, 0.40],    // 10: 3, 4, 5 only
-  "9": [0, 0, 0.05, 0.15, 0.40],     // 9: 3, 4, 5 only
+  "🦬": [0, 0.02, 0.05, 0.10, 0.25], // Buffalo: 2, 3, 4, 5 symbols
+  "🦅": [0, 0.01, 0.03, 0.07, 0.15], // Eagle: 2, 3, 4, 5
+  "🐆": [0, 0.01, 0.03, 0.07, 0.15], // Puma: 2, 3, 4, 5
+  "🐺": [0, 0.008, 0.02, 0.05, 0.12], // Wolf: 2, 3, 4, 5
+  "🦌": [0, 0.008, 0.02, 0.05, 0.12], // Deer: 2, 3, 4, 5
+  "A": [0, 0, 0.01, 0.03, 0.08],     // Ace: 3, 4, 5 only
+  "K": [0, 0, 0.01, 0.03, 0.08],     // King: 3, 4, 5 only
+  "Q": [0, 0, 0.008, 0.02, 0.06],    // Queen: 3, 4, 5 only
+  "J": [0, 0, 0.008, 0.02, 0.06],    // Jack: 3, 4, 5 only
+  "10": [0, 0, 0.008, 0.02, 0.06],   // 10: 3, 4, 5 only
+  "9": [0, 0, 0.008, 0.02, 0.06],    // 9: 3, 4, 5 only
 };
 
 interface WinningLine {
@@ -332,12 +332,27 @@ export default function BuffaloSlotPage() {
     // Generate final result
     const results: string[][] = Array(5).fill(null).map((_, reelIdx) =>
       Array(4).fill(null).map(() => {
-        // Wild only on reels 2, 3, 4
-        if (reelIdx >= 1 && reelIdx <= 3 && Math.random() < 0.08) return "🌅";
-        // Scatter
-        if (Math.random() < 0.06) return "💰";
-        // Regular symbols
-        return SYMBOLS[Math.floor(Math.random() * (SYMBOLS.length - 2))];
+        // Wild only on reels 2, 3, 4 - RARE (2% chance)
+        if (reelIdx >= 1 && reelIdx <= 3 && Math.random() < 0.02) return "🌅";
+        // Scatter - VERY RARE (1.5% chance)
+        if (Math.random() < 0.015) return "💰";
+        // Regular symbols - weighted towards low-paying cards
+        // SYMBOLS = ["🦬", "🦅", "🐺", "🐆", "🦌", "🌅", "💰", "A", "K", "Q", "J", "10", "9"]
+        // Indices:    0     1     2     3     4     5     6     7    8    9    10   11   12
+        const rand = Math.random();
+        if (rand < 0.5) {
+          // 50% chance: low cards (9, 10, J, Q, K, A)
+          return SYMBOLS[7 + Math.floor(Math.random() * 6)]; // Indices 7-12
+        } else if (rand < 0.75) {
+          // 25% chance: medium animals (Wolf, Deer)
+          return SYMBOLS[2 + Math.floor(Math.random() * 3)]; // Indices 2-4 (🐺, 🐆, 🦌)
+        } else if (rand < 0.92) {
+          // 17% chance: high animals (Eagle)
+          return SYMBOLS[1]; // 🦅
+        } else {
+          // 8% chance: Buffalo
+          return SYMBOLS[0]; // 🦬
+        }
       })
     );
 
@@ -402,14 +417,15 @@ export default function BuffaloSlotPage() {
       setShowParticles(true);
       setTimeout(() => setShowParticles(false), 3000);
 
-      const bonusSpins = scatterPositions.length === 3 ? 8 : scatterPositions.length === 4 ? 15 : 20;
+      // Reduce free spins - they're very powerful
+      const bonusSpins = scatterPositions.length === 3 ? 5 : scatterPositions.length === 4 ? 10 : 15;
       setFreeSpins((prev) => prev + bonusSpins);
       setMessage(`🎉 ${bonusSpins} FREE SPINS! 🎉`);
 
-      // Scatter pays (small immediate payout, main value is free spins)
-      const scatterMultiplier = scatterPositions.length === 5 ? 2.0 :
-                                scatterPositions.length === 4 ? 1.0 :
-                                0.5;
+      // Scatter pays (very small immediate payout, main value is free spins)
+      const scatterMultiplier = scatterPositions.length === 5 ? 1.0 :
+                                scatterPositions.length === 4 ? 0.5 :
+                                0.25;
       const scatterPay = Math.floor(bet * scatterMultiplier * RTP);
       totalWin += scatterPay;
 
