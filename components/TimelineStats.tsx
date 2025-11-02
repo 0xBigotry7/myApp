@@ -16,6 +16,12 @@ interface TimelineStatsProps {
 }
 
 export default function TimelineStats({ stats }: TimelineStatsProps) {
+  // Safely handle potentially undefined values
+  const totalMemories = stats?.totalMemories ?? 0;
+  const countriesVisited = stats?.countriesVisited ?? 0;
+  const photosUploaded = stats?.photosUploaded ?? 0;
+  const totalSpent = stats?.totalSpent ?? 0;
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 p-5 rounded-xl">
@@ -24,7 +30,7 @@ export default function TimelineStats({ stats }: TimelineStatsProps) {
           <span className="text-2xl">🌟</span>
         </div>
         <p className="text-2xl md:text-3xl font-bold text-purple-600">
-          {stats.totalMemories.toLocaleString()}
+          {totalMemories.toLocaleString()}
         </p>
       </div>
 
@@ -34,7 +40,7 @@ export default function TimelineStats({ stats }: TimelineStatsProps) {
           <span className="text-2xl">🗺️</span>
         </div>
         <p className="text-2xl md:text-3xl font-bold text-blue-600">
-          {stats.countriesVisited}
+          {countriesVisited}
         </p>
       </div>
 
@@ -44,7 +50,7 @@ export default function TimelineStats({ stats }: TimelineStatsProps) {
           <span className="text-2xl">📸</span>
         </div>
         <p className="text-2xl md:text-3xl font-bold text-pink-600">
-          {stats.photosUploaded.toLocaleString()}
+          {photosUploaded.toLocaleString()}
         </p>
       </div>
 
@@ -54,7 +60,7 @@ export default function TimelineStats({ stats }: TimelineStatsProps) {
           <span className="text-2xl">💰</span>
         </div>
         <p className="text-2xl md:text-3xl font-bold text-green-600">
-          ${(stats.totalSpent || 0).toLocaleString()}
+          ${totalSpent.toLocaleString()}
         </p>
       </div>
     </div>
