@@ -5,19 +5,30 @@ import Link from "next/link";
 
 const SYMBOLS = ["🦬", "🦅", "🐺", "🐆", "🦌", "🌅", "💰", "A", "K", "Q", "J", "10", "9"];
 
-// Authentic Buffalo slot machine payouts (coins per symbol count)
+// RTP (Return to Player) - Controls game difficulty and balance
+// Lower = harder to win (more house edge), Higher = easier to win (less house edge)
+// Casino typical: 85-96%
+// Recommended settings:
+//   0.80 = Very hard (20% house edge) - Quick losses, rare big wins
+//   0.85 = Hard (15% house edge) - Balanced challenge
+//   0.90 = Medium (10% house edge) - Fun gameplay
+//   0.95 = Easy (5% house edge) - Frequent small wins
+const RTP = 0.85;
+
+// Payout multipliers (multiplied by bet amount, then adjusted by RTP)
+// Format: [2 symbols, 3 symbols, 4 symbols, 5 symbols]
 const SYMBOL_VALUES: Record<string, number[]> = {
-  "🦬": [0, 50, 200, 250, 300],     // Buffalo: 2, 3, 4, 5 symbols
-  "🦅": [0, 20, 80, 200, 250],      // Eagle: 2, 3, 4, 5
-  "🐆": [0, 20, 80, 200, 250],      // Puma: 2, 3, 4, 5
-  "🐺": [0, 10, 40, 100, 150],      // Wolf: 2, 3, 4, 5
-  "🦌": [0, 10, 40, 100, 150],      // Deer: 2, 3, 4, 5
-  "A": [0, 0, 10, 60, 140],         // Ace: 3, 4, 5 only
-  "K": [0, 0, 10, 60, 140],         // King: 3, 4, 5 only
-  "Q": [0, 0, 5, 40, 120],          // Queen: 3, 4, 5 only
-  "J": [0, 0, 5, 40, 120],          // Jack: 3, 4, 5 only
-  "10": [0, 0, 5, 40, 120],         // 10: 3, 4, 5 only
-  "9": [0, 0, 5, 40, 120],          // 9: 3, 4, 5 only
+  "🦬": [0, 1.0, 2.5, 5.0, 12.0],   // Buffalo: 2, 3, 4, 5 symbols
+  "🦅": [0, 0.5, 1.5, 3.0, 8.0],    // Eagle: 2, 3, 4, 5
+  "🐆": [0, 0.5, 1.5, 3.0, 8.0],    // Puma: 2, 3, 4, 5
+  "🐺": [0, 0.3, 1.0, 2.0, 5.0],    // Wolf: 2, 3, 4, 5
+  "🦌": [0, 0.3, 1.0, 2.0, 5.0],    // Deer: 2, 3, 4, 5
+  "A": [0, 0, 0.5, 1.0, 3.0],       // Ace: 3, 4, 5 only
+  "K": [0, 0, 0.5, 1.0, 3.0],       // King: 3, 4, 5 only
+  "Q": [0, 0, 0.3, 0.8, 2.0],       // Queen: 3, 4, 5 only
+  "J": [0, 0, 0.3, 0.8, 2.0],       // Jack: 3, 4, 5 only
+  "10": [0, 0, 0.3, 0.8, 2.0],      // 10: 3, 4, 5 only
+  "9": [0, 0, 0.3, 0.8, 2.0],       // 9: 3, 4, 5 only
 };
 
 interface WinningLine {
@@ -394,10 +405,11 @@ export default function BuffaloSlotPage() {
       setFreeSpins((prev) => prev + bonusSpins);
       setMessage(`🎉 ${bonusSpins} FREE SPINS! 🎉`);
 
-      // Scatter pays: 800x for 5, scale down for less
-      const scatterPay = scatterPositions.length === 5 ? bet * 8 :
-                         scatterPositions.length === 4 ? bet * 3 :
-                         bet * 2;
+      // Scatter pays (adjusted for balance)
+      const scatterMultiplier = scatterPositions.length === 5 ? 5.0 :
+                                scatterPositions.length === 4 ? 2.0 :
+                                1.0;
+      const scatterPay = Math.floor(bet * scatterMultiplier * RTP);
       totalWin += scatterPay;
 
       allIndividualLines.push({
@@ -461,9 +473,15 @@ export default function BuffaloSlotPage() {
           // This creates 2×2×1 = 4 individual paths
           const paths = generateAllPaths(symbolsPerReel, consecutiveReels);
 
-          // Each individual path gets equal share of the total payout
+          // Calculate payout with RTP adjustment
+          // coinPayout is now a multiplier (e.g., 2.5x bet)
+          // Divide by number of ways to prevent 1024 ways from being too generous
           const totalWays = paths.length;
-          const totalWinForSymbol = Math.floor((coinPayout * totalWays * bet) / 40);
+          const baseWin = coinPayout * bet;
+          const adjustedWin = baseWin * RTP;
+          // Divide by a scaling factor based on total ways to balance 1024-way wins
+          const scalingFactor = Math.max(1, Math.sqrt(totalWays) / 4);
+          const totalWinForSymbol = Math.floor(adjustedWin / scalingFactor);
           const payoutPerPath = Math.floor(totalWinForSymbol / totalWays);
 
           totalWin += totalWinForSymbol;
