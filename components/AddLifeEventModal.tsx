@@ -38,11 +38,37 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
     setIsSubmitting(true);
 
     try {
-      const timestamp = new Date(`${date}T${time}`);
+      // Parse date and time components to avoid UTC conversion issues
+      const [year, month, day] = date.split('-').map(Number);
+      const [hours, minutes] = time.split(':').map(Number);
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      const timestamp = localDate.toISOString();
 
-      // For MVP, we'll store photos locally or skip photo upload
-      // In production, you'd upload to Google Drive first
+      // Upload photos to Google Drive first if any
       const photoUrls: string[] = [];
+      if (photos.length > 0) {
+        const formData = new FormData();
+        photos.forEach((photo) => {
+          formData.append("photos", photo);
+        });
+
+        const uploadResponse = await fetch("/api/upload-photo", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json();
+          photoUrls.push(...uploadData.urls);
+        } else {
+          const error = await uploadResponse.json();
+          if (error.needsAuth) {
+            alert("Please connect Google Drive in Settings first to upload photos.");
+            return;
+          }
+          throw new Error("Failed to upload photos");
+        }
+      }
 
       const eventData = {
         type,
@@ -53,7 +79,7 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
         mood: mood || undefined,
         tags: tags ? tags.split(",").map((t) => t.trim()) : [],
         isPrivate,
-        date: timestamp.toISOString(),
+        date: timestamp,
       };
 
       const response = await fetch("/api/timeline/events", {
@@ -227,12 +253,32 @@ export default function AddLifeEventModal({ onClose, onCreated }: AddLifeEventMo
               accept="image/*"
               multiple
               onChange={handlePhotoChange}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
             />
             {photos.length > 0 && (
-              <p className="text-sm text-gray-600 mt-2">
-                {photos.length} photo{photos.length > 1 ? "s" : ""} selected
-              </p>
+              <div className="mt-3">
+                <p className="text-sm text-gray-600 mb-2">
+                  {photos.length} photo{photos.length > 1 ? "s" : ""} selected
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative aspect-square">
+                      <img
+                        src={URL.createObjectURL(photo)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPhotos(photos.filter((_, i) => i !== index))}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold hover:bg-red-600 shadow-lg"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
 
