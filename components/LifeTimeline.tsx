@@ -167,39 +167,39 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {stats && <TimelineStats stats={stats} />}
 
       <div className="flex justify-end">
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95"
+          className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg sm:rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95 text-sm sm:text-base"
         >
-          <span className="text-xl">✨</span>
+          <span className="text-lg sm:text-xl">✨</span>
           <span>Add Life Event</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="mb-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="mb-3 sm:mb-4">
           <div className="relative">
             <input
               type="text"
               placeholder="Search your memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-12 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 pl-10 sm:pl-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none text-sm sm:text-base"
             />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
+            <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl">🔍</span>
             {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
             )}
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Filter by:</label>
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-3 sm:mb-4">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Filter by:</label>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {[
               { key: null, label: "🌟 All" },
               { key: "travel", label: "✈️ Travel" },
@@ -207,7 +207,7 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
               { key: "health", label: "🌸 Health" },
               { key: "life", label: "✨ Life Events" }
             ].map(({ key, label }) => (
-              <button key={key || "all"} onClick={() => setSourceFilter(key)} className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${sourceFilter === key ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+              <button key={key || "all"} onClick={() => setSourceFilter(key)} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${sourceFilter === key ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
                 {label}
               </button>
             ))}
@@ -370,23 +370,24 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
           </button>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {Object.entries(groupedItems).sort(([yearA], [yearB]) => parseInt(yearB) - parseInt(yearA)).map(([year, months]) => (
             <div key={year}>
-              <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-6 py-4 rounded-2xl shadow-lg mb-6">
+              <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl md:text-3xl font-bold">{year}</h2>
-                  <span className="text-sm md:text-base font-medium bg-white/20 px-4 py-2 rounded-full">
-                    {Object.values(months).flat().length} memories
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{year}</h2>
+                  <span className="text-xs sm:text-sm md:text-base font-medium bg-white/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full">
+                    {Object.values(months).flat().length}
+                    <span className="hidden xs:inline"> memories</span>
                   </span>
                 </div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {Object.entries(months).sort(([monthA], [monthB]) => monthB.localeCompare(monthA)).map(([monthKey, monthItems]) => (
                   <div key={monthKey}>
-                    <div className="sticky top-16 z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 sm:px-6 py-3 rounded-xl shadow-md mb-4">
+                    <div className="sticky top-12 sm:top-16 z-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl shadow-md mb-3 sm:mb-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg">
+                        <h3 className="font-bold text-base sm:text-lg">
                           {(() => {
                             // Parse monthKey as local date components to avoid UTC conversion
                             const [year, month] = monthKey.split('-').map(Number);
@@ -394,10 +395,10 @@ export default function LifeTimeline({ currentUserId, householdUsers }: LifeTime
                             return format(localDate, "MMMM yyyy");
                           })()}
                         </h3>
-                        <span className="text-xs md:text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{monthItems.length}</span>
+                        <span className="text-xs sm:text-sm font-medium bg-white/20 px-2 py-1 sm:px-3 sm:py-1 rounded-full">{monthItems.length}</span>
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {monthItems.map((item) => (
                         <TimelineItem key={item.id} item={item} onDeleted={handleEventDeleted} />
                       ))}
