@@ -27,6 +27,9 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditingTime, setIsEditingTime] = useState(false);
+  const [editedTime, setEditedTime] = useState(format(new Date(item.date), "HH:mm"));
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleDelete = async () => {
     if (!item.isEditable) return;
@@ -45,6 +48,61 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
       console.error("Error deleting:", error);
       alert("Failed to delete event");
     }
+  };
+
+  const handleTimeUpdate = async () => {
+    setIsSaving(true);
+    try {
+      const [hours, minutes] = editedTime.split(":").map(Number);
+      const newDate = new Date(item.date);
+      newDate.setHours(hours, minutes, 0, 0);
+
+      let endpoint = "";
+      if (item.source === "life_event") {
+        endpoint = `/api/timeline/events/${item.originalId}`;
+      } else if (item.source === "expense") {
+        endpoint = `/api/expenses/${item.originalId}`;
+      } else {
+        alert("Time editing not supported for this item type");
+        setIsSaving(false);
+        return;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: newDate.toISOString() }),
+      });
+
+      if (response.ok) {
+        setIsEditingTime(false);
+        router.refresh();
+      } else {
+        alert("Failed to update time");
+      }
+    } catch (error) {
+      console.error("Error updating time:", error);
+      alert("Failed to update time");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Clean up location display - extract English name from possible JSON or formatted string
+  const cleanLocationName = (location: string | undefined | null): string => {
+    if (!location) return "";
+
+    // If it looks like JSON, try to parse it
+    if (location.startsWith("{") || location.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(location);
+        return parsed.name || parsed.formatted_address || location;
+      } catch {
+        return location;
+      }
+    }
+
+    return location;
   };
 
   // Determine card style based on source
@@ -81,6 +139,8 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
     }
   };
 
+  const canEditTime = item.source === "life_event" || item.source === "expense";
+
   return (
     <div className={`rounded-2xl shadow-sm border-2 p-6 ${getCardStyle()} hover:shadow-md transition-all`}>
       {/* Header */}
@@ -90,13 +150,57 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
             <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
-              <span>{format(new Date(item.date), "h:mm a")}</span>
+              {isEditingTime ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={editedTime}
+                    onChange={(e) => setEditedTime(e.target.value)}
+                    className="px-2 py-1 border-2 border-blue-300 rounded text-sm"
+                  />
+                  <button
+                    onClick={handleTimeUpdate}
+                    disabled={isSaving}
+                    className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {isSaving ? "..." : "Save"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingTime(false);
+                      setEditedTime(format(new Date(item.date), "HH:mm"));
+                    }}
+                    className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span
+                    className={canEditTime ? "cursor-pointer hover:text-blue-600" : ""}
+                    onClick={() => canEditTime && setIsEditingTime(true)}
+                    title={canEditTime ? "Click to edit time" : ""}
+                  >
+                    {format(new Date(item.date), "h:mm a")}
+                  </span>
+                  {canEditTime && (
+                    <button
+                      onClick={() => setIsEditingTime(true)}
+                      className="text-blue-500 hover:text-blue-700 text-xs"
+                      title="Edit time"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </>
+              )}
               {item.location && (
                 <>
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <span>📍</span>
-                    {item.location}
+                    {cleanLocationName(item.location)}
                   </span>
                 </>
               )}
@@ -117,7 +221,24 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
 
         {/* Actions */}
         {item.isEditable && (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
+            {/* Edit button - only for expenses */}
+            {item.source === "expense" && (
+              <button
+                onClick={() => {
+                  // Navigate to trip page to edit
+                  if (item.metadata?.tripId) {
+                    window.location.href = `/trips/${item.metadata.tripId}`;
+                  }
+                }}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                title="Edit in trip"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -148,6 +269,7 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
             <span className="text-sm text-gray-600">{item.metadata.category}</span>
           </div>
           {item.metadata.transportationMethod && (
+<<<<<<< HEAD
             <div className="mt-2 space-y-1">
               <div className="text-sm font-medium text-blue-700">
                 🚗 {item.metadata.transportationMethod}
@@ -169,6 +291,13 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
                       <span className="break-words">{item.metadata.toLocation}</span>
                     </div>
                   )}
+=======
+            <div className="mt-2 text-sm text-blue-700">
+              🚗 {item.metadata.transportationMethod}
+              {item.metadata.fromLocation && item.metadata.toLocation && (
+                <div className="mt-1">
+                  {cleanLocationName(item.metadata.fromLocation)} → {cleanLocationName(item.metadata.toLocation)}
+>>>>>>> 38f0992 (Add edit button to timeline and fix mobile button display)
                 </div>
               )}
             </div>

@@ -172,7 +172,7 @@ export async function GET(request: Request) {
           toLocation: expense.toLocation,
         },
         user: expense.user,
-        isEditable: false,
+        isEditable: true,
       })),
 
       ...transactions.map((tx) => ({

@@ -62,6 +62,8 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
   const [editTransportationMethod, setEditTransportationMethod] = useState("");
   const [editFromLocation, setEditFromLocation] = useState("");
   const [editToLocation, setEditToLocation] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editTime, setEditTime] = useState("");
   const [deletingItem, setDeletingItem] = useState<{ type: "expense" | "post"; id: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -112,6 +114,7 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
   const startEdit = (
     type: "expense" | "post",
     id: string,
+    currentDate: Date,
     currentContent?: string,
     currentLocation?: string,
     transportationMethod?: string,
@@ -124,6 +127,8 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
     setEditTransportationMethod(transportationMethod || "");
     setEditFromLocation(fromLocation || "");
     setEditToLocation(toLocation || "");
+    setEditDate(format(currentDate, "yyyy-MM-dd"));
+    setEditTime(format(currentDate, "HH:mm"));
   };
 
   const cancelEdit = () => {
@@ -133,6 +138,8 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
     setEditTransportationMethod("");
     setEditFromLocation("");
     setEditToLocation("");
+    setEditDate("");
+    setEditTime("");
   };
 
   const handleEdit = async () => {
@@ -145,15 +152,23 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
         ? `/api/expenses/${editingItem.id}`
         : `/api/posts/${editingItem.id}`;
 
+      // Combine date and time into ISO string
+      const combinedDateTime = new Date(`${editDate}T${editTime}:00`).toISOString();
+
       const body = editingItem.type === "expense"
         ? {
+            date: combinedDateTime,
             note: editContent,
             location: editLocation,
             transportationMethod: editTransportationMethod || null,
             fromLocation: editFromLocation || null,
             toLocation: editToLocation || null
           }
-        : { content: editContent, location: editLocation };
+        : {
+            timestamp: combinedDateTime,
+            content: editContent,
+            location: editLocation
+          };
 
       // Close edit mode immediately for instant feedback
       cancelEdit();
@@ -399,11 +414,12 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                       className="bg-white rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-5 transform hover:scale-[1.01] relative group"
                     >
                       {/* Action Buttons */}
-                      <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => startEdit(
                             "expense",
                             expense.id,
+                            item.date,
                             expense.note || "",
                             expense.location || "",
                             expense.transportationMethod || "",
@@ -466,6 +482,26 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
 
                           {isEditing ? (
                             <div className="space-y-3 mt-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
+                                  <input
+                                    type="date"
+                                    value={editDate}
+                                    onChange={(e) => setEditDate(e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
+                                  <input
+                                    type="time"
+                                    value={editTime}
+                                    onChange={(e) => setEditTime(e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                  />
+                                </div>
+                              </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
                                 <textarea
@@ -621,9 +657,9 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                       className="bg-white rounded-2xl border-2 border-purple-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-5 transform hover:scale-[1.01] relative group"
                     >
                       {/* Action Buttons */}
-                      <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
                         <button
-                          onClick={() => startEdit("post", post.id, post.content || "", post.location || "")}
+                          onClick={() => startEdit("post", post.id, item.date, post.content || "", post.location || "")}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                           disabled={isDeleting}
                           title="Edit"
@@ -682,6 +718,26 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
 
                           {isEditing ? (
                             <div className="space-y-3 mt-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
+                                  <input
+                                    type="date"
+                                    value={editDate}
+                                    onChange={(e) => setEditDate(e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
+                                  <input
+                                    type="time"
+                                    value={editTime}
+                                    onChange={(e) => setEditTime(e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                  />
+                                </div>
+                              </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                                 <textarea
