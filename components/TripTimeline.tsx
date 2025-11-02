@@ -451,46 +451,6 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                       key={`expense-${expense.id}`}
                       className="bg-white rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-5 transform hover:scale-[1.01] relative group"
                     >
-                      {/* Action Buttons */}
-                      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => startEdit(
-                            "expense",
-                            expense.id,
-                            item.date,
-                            expense.note || "",
-                            expense.location || "",
-                            expense.transportationMethod || "",
-                            expense.fromLocation || "",
-                            expense.toLocation || ""
-                          )}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          disabled={isDeleting}
-                          title="Edit"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete("expense", expense.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          disabled={isDeleting}
-                          title="Delete"
-                        >
-                          {isDeleting ? (
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-
                       <div className="flex items-start gap-3 sm:gap-4">
                         {/* User badge */}
                         <div
@@ -501,9 +461,9 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 pr-16">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex-1 min-w-0">
                               <div className="font-bold text-gray-900 text-base sm:text-lg">
                                 💰 {expense.category}
                               </div>
@@ -511,9 +471,50 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                                 {badge.name} • {format(item.date, "h:mm a")}
                               </div>
                             </div>
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-xl sm:text-2xl font-bold text-indigo-600">
-                                {expense.currency} {expense.amount.toFixed(2)}
+                            <div className="flex items-center gap-1">
+                              <div className="text-right flex-shrink-0">
+                                <div className="text-lg sm:text-2xl font-bold text-indigo-600 whitespace-nowrap">
+                                  {expense.currency} {expense.amount.toFixed(2)}
+                                </div>
+                              </div>
+                              {/* Action Buttons - inline on mobile */}
+                              <div className="flex gap-1 ml-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => startEdit(
+                                    "expense",
+                                    expense.id,
+                                    item.date,
+                                    expense.note || "",
+                                    expense.location || "",
+                                    expense.transportationMethod || "",
+                                    expense.fromLocation || "",
+                                    expense.toLocation || ""
+                                  )}
+                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  disabled={isDeleting}
+                                  title="Edit"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDelete("expense", expense.id)}
+                                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                  disabled={isDeleting}
+                                  title="Delete"
+                                >
+                                  {isDeleting ? (
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                  ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  )}
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -694,37 +695,6 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                       key={`post-${post.id}`}
                       className="bg-white rounded-2xl border-2 border-purple-200 shadow-sm hover:shadow-lg transition-all p-4 sm:p-5 transform hover:scale-[1.01] relative group"
                     >
-                      {/* Action Buttons */}
-                      <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-                        <button
-                          onClick={() => startEdit("post", post.id, item.date, post.content || "", post.location || "")}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          disabled={isDeleting}
-                          title="Edit"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete("post", post.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          disabled={isDeleting}
-                          title="Delete"
-                        >
-                          {isDeleting ? (
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-
                       <div className="flex items-start gap-3 sm:gap-4">
                         {/* User badge */}
                         <div
@@ -735,22 +705,54 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 pr-16">
-                          <div className="mb-2">
-                            <div className="font-bold text-gray-900 text-base sm:text-lg">
-                              {post.type === "photo" && "📸"}
-                              {post.type === "note" && "📝"}
-                              {post.type === "checkin" && "📍"}
-                              {" "}
-                              {badge.name}
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2 flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-gray-900 text-base sm:text-lg">
+                                {post.type === "photo" && "📸"}
+                                {post.type === "note" && "📝"}
+                                {post.type === "checkin" && "📍"}
+                                {" "}
+                                {badge.name}
+                              </div>
+                              <div className="text-xs sm:text-sm text-gray-600">
+                                {format(item.date, "h:mm a")}
+                                {!isEditing && post.location && (
+                                  <span className="ml-2 bg-purple-50 px-2 py-0.5 rounded-md">
+                                    📍 {post.location}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-600">
-                              {format(item.date, "h:mm a")}
-                              {!isEditing && post.location && (
-                                <span className="ml-2 bg-purple-50 px-2 py-0.5 rounded-md">
-                                  📍 {post.location}
-                                </span>
-                              )}
+                            {/* Action Buttons - inline on mobile */}
+                            <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => startEdit("post", post.id, item.date, post.content || "", post.location || "")}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                disabled={isDeleting}
+                                title="Edit"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDelete("post", post.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                disabled={isDeleting}
+                                title="Delete"
+                              >
+                                {isDeleting ? (
+                                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                )}
+                              </button>
                             </div>
                           </div>
 
