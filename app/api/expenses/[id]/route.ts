@@ -68,7 +68,14 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { amount, category, currency, date, note, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
+    const {
+      amount, category, currency, date, note, location, receiptUrl,
+      transportationMethod, fromLocation, toLocation,
+      // Accommodation fields
+      accommodationName, accommodationType, checkInDate, checkOutDate, numberOfNights,
+      googlePlaceId, hotelAddress, hotelPhone, hotelWebsite, hotelRating, hotelPhotos,
+      latitude, longitude, confirmationNumber
+    } = body;
 
     // Parse date correctly - handle different formats
     let parsedDate: Date | undefined;
@@ -118,6 +125,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Parse accommodation dates if provided
+    let parsedCheckInDate: Date | undefined;
+    let parsedCheckOutDate: Date | undefined;
+
+    if (checkInDate !== undefined) {
+      parsedCheckInDate = checkInDate ? new Date(checkInDate) : null;
+    }
+    if (checkOutDate !== undefined) {
+      parsedCheckOutDate = checkOutDate ? new Date(checkOutDate) : null;
+    }
+
     // Update the expense
     const updatedExpense = await prisma.expense.update({
       where: { id },
@@ -132,6 +150,21 @@ export async function PATCH(
         transportationMethod: transportationMethod !== undefined ? (transportationMethod || null) : undefined,
         fromLocation: fromLocation !== undefined ? (fromLocation || null) : undefined,
         toLocation: toLocation !== undefined ? (toLocation || null) : undefined,
+        // Accommodation fields
+        accommodationName: accommodationName !== undefined ? (accommodationName || null) : undefined,
+        accommodationType: accommodationType !== undefined ? (accommodationType || null) : undefined,
+        checkInDate: parsedCheckInDate !== undefined ? parsedCheckInDate : undefined,
+        checkOutDate: parsedCheckOutDate !== undefined ? parsedCheckOutDate : undefined,
+        numberOfNights: numberOfNights !== undefined ? (numberOfNights || null) : undefined,
+        googlePlaceId: googlePlaceId !== undefined ? (googlePlaceId || null) : undefined,
+        hotelAddress: hotelAddress !== undefined ? (hotelAddress || null) : undefined,
+        hotelPhone: hotelPhone !== undefined ? (hotelPhone || null) : undefined,
+        hotelWebsite: hotelWebsite !== undefined ? (hotelWebsite || null) : undefined,
+        hotelRating: hotelRating !== undefined ? (hotelRating || null) : undefined,
+        hotelPhotos: hotelPhotos !== undefined ? hotelPhotos : undefined,
+        latitude: latitude !== undefined ? (latitude || null) : undefined,
+        longitude: longitude !== undefined ? (longitude || null) : undefined,
+        confirmationNumber: confirmationNumber !== undefined ? (confirmationNumber || null) : undefined,
       },
       include: {
         user: true,

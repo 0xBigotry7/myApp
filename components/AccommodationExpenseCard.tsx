@@ -14,11 +14,14 @@ interface AccommodationExpenseCardProps {
     checkInDate?: Date | string | null;
     checkOutDate?: Date | string | null;
     numberOfNights?: number | null;
+    googlePlaceId?: string | null;
     hotelAddress?: string | null;
     hotelPhone?: string | null;
     hotelWebsite?: string | null;
     hotelRating?: number | null;
     hotelPhotos?: string[];
+    latitude?: number | null;
+    longitude?: number | null;
     confirmationNumber?: string | null;
     note?: string | null;
     user: {
