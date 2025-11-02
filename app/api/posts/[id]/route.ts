@@ -70,14 +70,25 @@ export async function PATCH(
     const body = await request.json();
     const { content, location, timestamp } = body;
 
-    // Parse timestamp correctly if provided
+    // Parse timestamp correctly if provided - handle different formats
     let parsedTimestamp: Date | undefined;
     if (timestamp && typeof timestamp === 'string') {
       if (timestamp.includes('T') || timestamp.includes('Z')) {
+        // ISO format: use as-is
         parsedTimestamp = new Date(timestamp);
+        console.log('Received ISO timestamp:', timestamp, '→ Parsed as:', parsedTimestamp);
+      } else if (timestamp.includes(' ') && timestamp.includes(':')) {
+        // Format: "YYYY-MM-DD HH:mm" - parse as local time
+        const [datePart, timePart] = timestamp.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        parsedTimestamp = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        console.log('Received date+time:', timestamp, '→ Parsed as:', parsedTimestamp);
       } else {
+        // Just a date string - parse as local date at noon to avoid timezone issues
         const [year, month, day] = timestamp.split('-').map(Number);
         parsedTimestamp = new Date(year, month - 1, day, 12, 0, 0, 0);
+        console.log('Received date-only:', timestamp, '→ Parsed as:', parsedTimestamp);
       }
     }
 

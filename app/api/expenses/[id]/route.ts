@@ -70,16 +70,25 @@ export async function PATCH(
     const body = await request.json();
     const { amount, category, currency, date, note, location, receiptUrl, transportationMethod, fromLocation, toLocation } = body;
 
-    // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
+    // Parse date correctly - handle different formats
     let parsedDate: Date | undefined;
     if (date && typeof date === 'string') {
       if (date.includes('T') || date.includes('Z')) {
-        // Already has time info, use as-is
+        // ISO format: use as-is
         parsedDate = new Date(date);
+        console.log('Received ISO date:', date, '→ Parsed as:', parsedDate);
+      } else if (date.includes(' ') && date.includes(':')) {
+        // Format: "YYYY-MM-DD HH:mm" - parse as local time
+        const [datePart, timePart] = date.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        parsedDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+        console.log('Received date+time:', date, '→ Parsed as:', parsedDate);
       } else {
         // Just a date string - parse as local date at noon to avoid timezone issues
         const [year, month, day] = date.split('-').map(Number);
         parsedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
+        console.log('Received date-only:', date, '→ Parsed as:', parsedDate);
       }
     }
 
