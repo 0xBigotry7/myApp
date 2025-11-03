@@ -34,6 +34,9 @@ export default function EditExpenseForm({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(expense.receiptUrl);
 
+  // Filter out Accommodation from categories (use dedicated booking flow instead)
+  const availableCategories = categories.filter(cat => cat !== "Accommodation");
+
   const [formData, setFormData] = useState({
     amount: expense.amount.toString(),
     category: expense.category,
@@ -160,7 +163,7 @@ export default function EditExpenseForm({
           🏷️ {t.category}
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {categories.map((cat) => (
+          {availableCategories.map((cat) => (
             <button
               key={cat}
               type="button"

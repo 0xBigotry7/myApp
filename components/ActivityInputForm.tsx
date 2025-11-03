@@ -19,7 +19,6 @@ const ACTIVITY_CATEGORIES = [
   "🏃 Activities",
   "🛍️ Shopping",
   "🚗 Transportation",
-  "🏨 Accommodation",
   "✈️ Flight",
   "📸 Photo Op",
   "🎨 Culture",

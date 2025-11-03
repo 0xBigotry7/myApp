@@ -28,9 +28,12 @@ export default function ExpenseInputForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  // Filter out Accommodation from categories (use dedicated booking flow instead)
+  const availableCategories = categories.filter(cat => cat !== "Accommodation");
+
   const [formData, setFormData] = useState({
     amount: "",
-    category: categories[0] || "",
+    category: availableCategories[0] || "",
     date: new Date().toISOString().split("T")[0],
     time: "",
     currency: "USD",
@@ -297,7 +300,7 @@ export default function ExpenseInputForm({
                   setPreviewUrl(null);
                   setFormData({
                     amount: "",
-                    category: categories[0] || "",
+                    category: availableCategories[0] || "",
                     date: new Date().toISOString().split("T")[0],
                     time: "",
                     currency: "USD",
@@ -390,7 +393,7 @@ export default function ExpenseInputForm({
               🏷️ {t.category}
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {categories.map((cat) => (
+              {availableCategories.map((cat) => (
                 <button
                   key={cat}
                   type="button"

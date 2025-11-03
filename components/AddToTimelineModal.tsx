@@ -282,7 +282,6 @@ export default function AddToTimelineModal({ tripId, onClose }: AddToTimelineMod
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
                 >
                   <option value="Food">🍽️ Food</option>
-                  <option value="Accommodation">🏨 Accommodation</option>
                   <option value="Transportation">🚗 Transportation</option>
                   <option value="Activities">🎭 Activities</option>
                   <option value="Shopping">🛍️ Shopping</option>
