@@ -83,10 +83,16 @@ model Expense {
   note                  String?
   receiptUrl            String?
   location              String?
+
   // Transportation-specific fields
   transportationMethod  String?  // e.g., "Flight", "Train", "Bus", "Car", "Taxi", "Uber", "Boat"
   fromLocation          String?  // Start location for transportation
   toLocation            String?  // End location for transportation
+  transportationDistance Float?  // Distance in kilometers
+  transportationDuration Int?    // Duration in minutes
+  ticketReference       String?  // Booking/ticket reference
+  numberOfPassengers    Int?     // Number of passengers
+
   // Accommodation-specific fields
   accommodationName     String?  // Hotel/Airbnb name from Google Places
   accommodationType     String?  // "Hotel", "Airbnb", "Hostel", "Resort", etc.
@@ -102,6 +108,36 @@ model Expense {
   latitude              Float?   // Hotel location coordinates
   longitude             Float?   // Hotel location coordinates
   confirmationNumber    String?  // Booking confirmation number
+
+  // Food & Dining-specific fields
+  partySize             Int?     // Number of people dining
+  mealType              String?  // "Breakfast", "Lunch", "Dinner", "Snacks", "Drinks"
+  cuisineType           String?  // "Italian", "Japanese", "Mexican", etc.
+  restaurantName        String?  // Restaurant name
+  hasReservation        Boolean? // Had reservation
+
+  // Activities-specific fields
+  activityType          String?  // "Museum", "Tour", "Concert", "Theme Park", etc.
+  activityName          String?  // Name of attraction/activity
+  activityDuration      Float?   // Duration in hours
+  numberOfTickets       Int?     // Number of tickets
+  activityReference     String?  // Booking/ticket reference
+  hasGuide              Boolean? // Guided tour?
+
+  // Shopping-specific fields
+  storeName             String?  // Name of store
+  shoppingCategory      String?  // "Clothing", "Souvenirs", "Electronics", etc.
+  numberOfItems         Int?     // How many items purchased
+  hasReturnPolicy       Boolean? // Can return?
+  isGift                Boolean? // Bought as gift?
+  giftRecipient         String?  // Who is it for (if gift)
+
+  // Other category fields
+  otherSubcategory      String?  // "Tips", "Fees", "Insurance", "Medical", etc.
+
+  // Universal optional fields
+  expenseRating         Float?   // 1-5 stars rating for the experience
+
   createdAt             DateTime @default(now())
   trip                  Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
