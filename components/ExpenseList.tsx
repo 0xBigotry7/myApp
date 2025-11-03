@@ -116,7 +116,7 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
                 key={expense.id}
                 expense={expense}
                 userColor={colors}
-                onEdit={() => router.push(`/trips/${tripId}/edit-expense/${expense.id}`)}
+                onEdit={() => router.push(`/trips/${tripId}/edit-accommodation/${expense.id}`)}
                 onDelete={() => handleDelete(expense.id)}
               />
             );
