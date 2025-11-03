@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { differenceInDays, format } from "date-fns";
+import Image from "next/image";
 
 interface EditAccommodationModalProps {
   isOpen: boolean;
@@ -30,12 +31,45 @@ interface EditAccommodationModalProps {
   };
 }
 
+interface Hotel {
+  placeId: string;
+  name: string;
+  address: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  priceLevel?: number;
+  photos: Array<{ photoReference: string; width: number; height: number }>;
+  location: { lat: number; lng: number };
+}
+
+interface HotelDetails {
+  placeId: string;
+  name: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  priceLevel?: number;
+  photos: string[];
+  location: { lat: number; lng: number };
+  googleMapsUrl?: string;
+}
+
 export default function EditAccommodationModal({
   isOpen,
   onClose,
   onSave,
   expense,
 }: EditAccommodationModalProps) {
+  const [showHotelSearch, setShowHotelSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [selectedHotelDetails, setSelectedHotelDetails] = useState<HotelDetails | null>(null);
+
   const [formData, setFormData] = useState({
     checkInDate: "",
     checkOutDate: "",
@@ -64,6 +98,57 @@ export default function EditAccommodationModal({
     }
   }, [isOpen, expense]);
 
+  const searchHotels = async () => {
+    if (!searchQuery.trim()) return;
+
+    setSearching(true);
+    try {
+      const params = new URLSearchParams({
+        query: searchQuery,
+        ...(searchLocation && { location: searchLocation }),
+      });
+
+      const response = await fetch(`/api/places/search-hotels?${params}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setHotels(data.hotels || []);
+      } else {
+        alert(data.error || "Failed to search hotels");
+      }
+    } catch (error) {
+      console.error("Error searching hotels:", error);
+      alert("Failed to search hotels");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const selectHotel = async (hotel: Hotel) => {
+    setLoadingDetails(true);
+    try {
+      const response = await fetch(
+        `/api/places/hotel-details?placeId=${hotel.placeId}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setSelectedHotelDetails(data.hotel);
+        setShowHotelSearch(false);
+        setHotels([]);
+        setSearchQuery("");
+        setSearchLocation("");
+      } else {
+        alert(data.error || "Failed to load hotel details");
+      }
+    } catch (error) {
+      console.error("Error loading hotel details:", error);
+      alert("Failed to load hotel details");
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   const handleSave = () => {
     const checkIn = new Date(formData.checkInDate);
     const checkOut = new Date(formData.checkOutDate);
@@ -85,16 +170,16 @@ export default function EditAccommodationModal({
       checkInDate: checkIn.toISOString(),
       checkOutDate: checkOut.toISOString(),
       numberOfNights: nights,
-      // Keep existing hotel details
-      accommodationName: expense.accommodationName,
-      googlePlaceId: expense.googlePlaceId,
-      hotelAddress: expense.hotelAddress,
-      hotelPhone: expense.hotelPhone,
-      hotelWebsite: expense.hotelWebsite,
-      hotelRating: expense.hotelRating,
-      hotelPhotos: expense.hotelPhotos,
-      latitude: expense.latitude,
-      longitude: expense.longitude,
+      // Use selected hotel details if changed, otherwise keep existing
+      accommodationName: selectedHotelDetails?.name || expense.accommodationName,
+      googlePlaceId: selectedHotelDetails?.placeId || expense.googlePlaceId,
+      hotelAddress: selectedHotelDetails?.address || expense.hotelAddress,
+      hotelPhone: selectedHotelDetails?.phone || expense.hotelPhone,
+      hotelWebsite: selectedHotelDetails?.website || expense.hotelWebsite,
+      hotelRating: selectedHotelDetails?.rating || expense.hotelRating,
+      hotelPhotos: selectedHotelDetails?.photos || expense.hotelPhotos,
+      latitude: selectedHotelDetails?.location.lat || expense.latitude,
+      longitude: selectedHotelDetails?.location.lng || expense.longitude,
     };
 
     onSave(accommodationData);
@@ -143,24 +228,110 @@ export default function EditAccommodationModal({
               <div className="text-3xl">🏨</div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg text-gray-900">
-                  {expense.accommodationName || "Accommodation"}
+                  {selectedHotelDetails?.name || expense.accommodationName || "Accommodation"}
                 </h3>
-                {expense.hotelAddress && (
+                {(selectedHotelDetails?.address || expense.hotelAddress) && (
                   <p className="text-sm text-gray-600 mt-1">
-                    📍 {expense.hotelAddress}
+                    📍 {selectedHotelDetails?.address || expense.hotelAddress}
                   </p>
                 )}
-                {expense.hotelRating && (
+                {(selectedHotelDetails?.rating || expense.hotelRating) && (
                   <div className="flex items-center gap-1 mt-2">
                     <span className="text-yellow-500">⭐</span>
                     <span className="font-semibold text-sm">
-                      {expense.hotelRating.toFixed(1)}
+                      {(selectedHotelDetails?.rating || expense.hotelRating)?.toFixed(1)}
                     </span>
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => setShowHotelSearch(!showHotelSearch)}
+                className="px-3 py-2 bg-white text-blue-600 border-2 border-blue-300 rounded-lg hover:bg-blue-50 font-medium text-sm transition-all"
+              >
+                {showHotelSearch ? "Cancel" : "Change Hotel"}
+              </button>
             </div>
           </div>
+
+          {/* Hotel Search Section */}
+          {showHotelSearch && (
+            <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-4">
+              <h4 className="font-bold text-gray-900">Search for a different hotel</h4>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  🏨 Hotel Name
+                </label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && searchHotels()}
+                  placeholder="e.g., Hilton, Marriott"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  📍 Location (optional)
+                </label>
+                <input
+                  type="text"
+                  value={searchLocation}
+                  onChange={(e) => setSearchLocation(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && searchHotels()}
+                  placeholder="e.g., Paris, New York"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                onClick={searchHotels}
+                disabled={searching || !searchQuery.trim()}
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {searching ? "🔄 Searching..." : "🔍 Search Hotels"}
+              </button>
+
+              {/* Search Results */}
+              {hotels.length > 0 && (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <p className="text-sm font-medium text-gray-700">Select a hotel:</p>
+                  {hotels.map((hotel) => (
+                    <div
+                      key={hotel.placeId}
+                      onClick={() => selectHotel(hotel)}
+                      className="border-2 border-gray-200 rounded-lg p-3 hover:border-purple-500 hover:bg-white cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg flex items-center justify-center text-2xl">
+                          🏨
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-bold text-gray-900 truncate">{hotel.name}</h5>
+                          <p className="text-xs text-gray-600 truncate">{hotel.address}</p>
+                          {hotel.rating && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-yellow-500 text-xs">⭐</span>
+                              <span className="text-xs font-semibold">{hotel.rating.toFixed(1)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {loadingDetails && (
+                <div className="text-center py-4">
+                  <div className="text-2xl mb-2">🔄</div>
+                  <p className="text-sm text-gray-600">Loading hotel details...</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
