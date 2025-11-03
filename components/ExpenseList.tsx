@@ -5,6 +5,7 @@ import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AccommodationExpenseManager from "./AccommodationExpenseManager";
 
 interface Expense {
   id: string;
@@ -13,6 +14,21 @@ interface Expense {
   currency: string;
   date: Date;
   note: string | null;
+  // Accommodation fields
+  accommodationName?: string | null;
+  accommodationType?: string | null;
+  checkInDate?: Date | null;
+  checkOutDate?: Date | null;
+  numberOfNights?: number | null;
+  googlePlaceId?: string | null;
+  hotelAddress?: string | null;
+  hotelPhone?: string | null;
+  hotelWebsite?: string | null;
+  hotelRating?: number | null;
+  hotelPhotos?: string[];
+  latitude?: number | null;
+  longitude?: number | null;
+  confirmationNumber?: string | null;
   user: {
     name: string;
     email: string;
@@ -81,11 +97,29 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
     );
   }
 
+  // Check if expense is an accommodation
+  const isAccommodation = (expense: Expense) => {
+    return expense.category === "Accommodation" || expense.accommodationName != null;
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-semibold mb-4">{t.recentExpenses}</h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {expenses.map((expense) => {
+          // Render accommodation expenses with special card
+          if (isAccommodation(expense)) {
+            return (
+              <AccommodationExpenseManager
+                key={expense.id}
+                expense={expense}
+                canEdit={true}
+                canDelete={true}
+              />
+            );
+          }
+
+          // Render regular expenses
           const colors = getUserColor(expense.user.email);
           return (
             <div
