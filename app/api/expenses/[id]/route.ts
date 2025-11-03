@@ -126,8 +126,8 @@ export async function PATCH(
     }
 
     // Parse accommodation dates if provided
-    let parsedCheckInDate: Date | undefined;
-    let parsedCheckOutDate: Date | undefined;
+    let parsedCheckInDate: Date | null | undefined;
+    let parsedCheckOutDate: Date | null | undefined;
 
     if (checkInDate !== undefined) {
       parsedCheckInDate = checkInDate ? new Date(checkInDate) : null;
