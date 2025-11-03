@@ -9,6 +9,8 @@ import { getTranslations, translateCategory } from "@/lib/i18n";
 interface ExpenseInputFormProps {
   tripId: string;
   categories: string[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 type Mode = "ai" | "manual";
@@ -16,6 +18,8 @@ type Mode = "ai" | "manual";
 export default function ExpenseInputForm({
   tripId,
   categories,
+  onSuccess,
+  onCancel,
 }: ExpenseInputFormProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -159,8 +163,12 @@ export default function ExpenseInputForm({
       });
 
       if (response.ok) {
-        router.push(`/trips/${tripId}`);
-        router.refresh();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/trips/${tripId}`);
+          router.refresh();
+        }
       } else {
         alert("Failed to add expense");
       }
@@ -541,7 +549,7 @@ export default function ExpenseInputForm({
 
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={() => onCancel ? onCancel() : router.back()}
               className="w-full bg-white border-2 border-gray-300 text-gray-700 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 transition-all"
             >
               {t.cancel}

@@ -7,6 +7,7 @@ import ExpenseList from "./ExpenseList";
 import TripTimeline from "./TripTimeline";
 import TripTimelineWrapper from "./TripTimelineWrapper";
 import AccommodationExpenseButton from "./AccommodationExpenseButton";
+import AddExpenseButton from "./AddExpenseButton";
 import { getTranslations, translateCategory, Locale } from "@/lib/i18n";
 import Link from "next/link";
 
@@ -209,13 +210,11 @@ export default function TripPageTabs({
               tripId={trip.id}
               tripDestination={trip.destination}
             />
-            <Link
-              href={`/trips/${trip.id}/add-expense`}
-              className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg transform active:scale-95"
-            >
-              <span className="text-2xl">💰</span>
-              <span>{t.addExpense}</span>
-            </Link>
+            <AddExpenseButton
+              tripId={trip.id}
+              categories={trip.budgetCategories.map((bc: { category: string }) => bc.category)}
+              buttonText={t.addExpense}
+            />
           </div>
 
           {/* Budget & Expenses */}
