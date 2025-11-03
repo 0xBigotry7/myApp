@@ -214,6 +214,7 @@ export default function TripPageTabs({
               tripId={trip.id}
               categories={trip.budgetCategories.map((bc: { category: string }) => bc.category)}
               buttonText={t.addExpense}
+              defaultLocation={trip.destination}
             />
           </div>
 
@@ -290,6 +291,7 @@ export default function TripPageTabs({
             currentUserEmail={currentUserEmail}
             tripId={trip.id}
             categories={trip.budgetCategories.map((bc: { category: string }) => bc.category)}
+            defaultLocation={trip.destination}
           />
         </div>
       )}

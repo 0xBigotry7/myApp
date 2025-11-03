@@ -21,6 +21,7 @@ interface EditExpenseFormProps {
   categories: string[];
   onSuccess?: () => void;
   onCancel?: () => void;
+  defaultLocation?: string;
 }
 
 export default function EditExpenseForm({
@@ -29,6 +30,7 @@ export default function EditExpenseForm({
   categories,
   onSuccess,
   onCancel,
+  defaultLocation,
 }: EditExpenseFormProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -48,7 +50,7 @@ export default function EditExpenseForm({
     date: new Date(expense.date).toISOString().split("T")[0],
     time: "",
     currency: expense.currency,
-    location: expense.location || "",
+    location: expense.location || defaultLocation || "",
     note: expense.note || "",
   });
 

@@ -9,6 +9,7 @@ interface AddExpenseModalProps {
   onClose: () => void;
   tripId: string;
   categories: string[];
+  defaultLocation?: string;
 }
 
 export default function AddExpenseModal({
@@ -16,6 +17,7 @@ export default function AddExpenseModal({
   onClose,
   tripId,
   categories,
+  defaultLocation,
 }: AddExpenseModalProps) {
   const router = useRouter();
 
@@ -71,6 +73,7 @@ export default function AddExpenseModal({
             categories={categories}
             onSuccess={handleSuccess}
             onCancel={onClose}
+            defaultLocation={defaultLocation}
           />
         </div>
       </div>

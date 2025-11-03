@@ -12,6 +12,7 @@ interface ExpenseInputFormProps {
   categories: string[];
   onSuccess?: () => void;
   onCancel?: () => void;
+  defaultLocation?: string;
 }
 
 export default function ExpenseInputForm({
@@ -19,6 +20,7 @@ export default function ExpenseInputForm({
   categories,
   onSuccess,
   onCancel,
+  defaultLocation,
 }: ExpenseInputFormProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -39,7 +41,7 @@ export default function ExpenseInputForm({
     date: new Date().toISOString().split("T")[0],
     time: "",
     currency: "USD",
-    location: "",
+    location: defaultLocation || "",
     note: "",
   });
 

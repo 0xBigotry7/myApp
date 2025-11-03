@@ -19,6 +19,7 @@ interface EditExpenseModalProps {
   };
   tripId: string;
   categories: string[];
+  defaultLocation?: string;
 }
 
 export default function EditExpenseModal({
@@ -27,6 +28,7 @@ export default function EditExpenseModal({
   expense,
   tripId,
   categories,
+  defaultLocation,
 }: EditExpenseModalProps) {
   const router = useRouter();
 
@@ -83,6 +85,7 @@ export default function EditExpenseModal({
             categories={categories}
             onSuccess={handleSuccess}
             onCancel={onClose}
+            defaultLocation={defaultLocation}
           />
         </div>
       </div>

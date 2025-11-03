@@ -7,12 +7,14 @@ interface AddExpenseButtonProps {
   tripId: string;
   categories: string[];
   buttonText?: string;
+  defaultLocation?: string;
 }
 
 export default function AddExpenseButton({
   tripId,
   categories,
   buttonText = "Add Expense",
+  defaultLocation,
 }: AddExpenseButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -31,6 +33,7 @@ export default function AddExpenseButton({
         onClose={() => setIsModalOpen(false)}
         tripId={tripId}
         categories={categories}
+        defaultLocation={defaultLocation}
       />
     </>
   );

@@ -43,9 +43,10 @@ interface ExpenseListProps {
   currentUserEmail?: string;
   tripId: string;
   categories: string[];
+  defaultLocation?: string;
 }
 
-export default function ExpenseList({ expenses, currentUserEmail, tripId, categories }: ExpenseListProps) {
+export default function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLocation }: ExpenseListProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
   const router = useRouter();
@@ -183,6 +184,7 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
           expense={editingExpense}
           tripId={tripId}
           categories={categories}
+          defaultLocation={defaultLocation}
         />
       )}
     </div>
