@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
+import LocationAutocomplete from "./LocationAutocomplete";
 
 interface EditExpenseFormProps {
   expense: {
@@ -272,14 +273,11 @@ export default function EditExpenseForm({
           📍 {t.location}{" "}
           <span className="text-gray-400 font-normal">({t.optional})</span>
         </label>
-        <input
-          type="text"
+        <LocationAutocomplete
           value={formData.location}
-          onChange={(e) =>
-            setFormData({ ...formData, location: e.target.value })
-          }
-          className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400"
+          onChange={(value) => setFormData({ ...formData, location: value })}
           placeholder="e.g., Starbucks, Times Square"
+          className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400"
         />
       </div>
 

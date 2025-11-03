@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
+import LocationAutocomplete from "./LocationAutocomplete";
 
 interface ExpenseInputFormProps {
   tripId: string;
@@ -430,12 +431,11 @@ export default function ExpenseInputForm({
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           📍 Location <span className="text-gray-400 font-normal text-xs">(optional)</span>
         </label>
-        <input
-          type="text"
+        <LocationAutocomplete
           value={formData.location}
-          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-gray-400"
+          onChange={(value) => setFormData({ ...formData, location: value })}
           placeholder="e.g., Starbucks, Times Square"
+          className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-gray-400"
         />
       </div>
 
