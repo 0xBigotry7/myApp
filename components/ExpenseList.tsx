@@ -5,7 +5,7 @@ import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AccommodationExpenseManager from "./AccommodationExpenseManager";
+import AccommodationExpenseCardCompact from "./AccommodationExpenseCardCompact";
 
 interface Expense {
   id: string;
@@ -105,22 +105,24 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-semibold mb-4">{t.recentExpenses}</h3>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {expenses.map((expense) => {
-          // Render accommodation expenses with special card
+          const colors = getUserColor(expense.user.email);
+
+          // Render accommodation expenses with compact card
           if (isAccommodation(expense)) {
             return (
-              <AccommodationExpenseManager
+              <AccommodationExpenseCardCompact
                 key={expense.id}
                 expense={expense}
-                canEdit={true}
-                canDelete={true}
+                userColor={colors}
+                onEdit={() => router.push(`/trips/${tripId}/edit-expense/${expense.id}`)}
+                onDelete={() => handleDelete(expense.id)}
               />
             );
           }
 
           // Render regular expenses
-          const colors = getUserColor(expense.user.email);
           return (
             <div
               key={expense.id}
