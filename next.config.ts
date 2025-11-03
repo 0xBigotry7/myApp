@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "maps.googleapis.com",
+        pathname: "/maps/api/place/photo",
+      },
+      {
+        protocol: "https",
+        hostname: "maps.gstatic.com",
+      },
     ],
     // Disable image optimization errors for expired external URLs
     unoptimized: false,
