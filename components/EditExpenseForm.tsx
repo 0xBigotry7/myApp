@@ -18,12 +18,16 @@ interface EditExpenseFormProps {
   };
   tripId: string;
   categories: string[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export default function EditExpenseForm({
   expense,
   tripId,
   categories,
+  onSuccess,
+  onCancel,
 }: EditExpenseFormProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -117,8 +121,12 @@ export default function EditExpenseForm({
         if (selectedFile && previewUrl && previewUrl !== expense.receiptUrl) {
           URL.revokeObjectURL(previewUrl);
         }
-        router.push(`/trips/${tripId}`);
-        router.refresh();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/trips/${tripId}`);
+          router.refresh();
+        }
       } else {
         alert("Failed to update expense");
       }
@@ -349,7 +357,7 @@ export default function EditExpenseForm({
 
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => onCancel ? onCancel() : router.back()}
           className="w-full bg-white border-2 border-gray-300 text-gray-700 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 transition-all"
         >
           {t.cancel}

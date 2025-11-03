@@ -285,7 +285,12 @@ export default function TripPageTabs({
           </div>
 
           {/* Expense List - View Only */}
-          <ExpenseList expenses={trip.expenses} currentUserEmail={currentUserEmail} tripId={trip.id} />
+          <ExpenseList
+            expenses={trip.expenses}
+            currentUserEmail={currentUserEmail}
+            tripId={trip.id}
+            categories={trip.budgetCategories.map((bc: { category: string }) => bc.category)}
+          />
         </div>
       )}
     </div>

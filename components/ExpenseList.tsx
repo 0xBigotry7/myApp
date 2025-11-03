@@ -6,6 +6,7 @@ import { getTranslations, translateCategory } from "@/lib/i18n";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AccommodationExpenseCardCompact from "./AccommodationExpenseCardCompact";
+import EditExpenseModal from "./EditExpenseModal";
 
 interface Expense {
   id: string;
@@ -14,6 +15,8 @@ interface Expense {
   currency: string;
   date: Date;
   note: string | null;
+  location: string | null;
+  receiptUrl: string | null;
   // Accommodation fields
   accommodationName?: string | null;
   accommodationType?: string | null;
@@ -39,13 +42,15 @@ interface ExpenseListProps {
   expenses: Expense[];
   currentUserEmail?: string;
   tripId: string;
+  categories: string[];
 }
 
-export default function ExpenseList({ expenses, currentUserEmail, tripId }: ExpenseListProps) {
+export default function ExpenseList({ expenses, currentUserEmail, tripId, categories }: ExpenseListProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const handleDelete = async (expenseId: string) => {
     if (!confirm("Are you sure you want to delete this expense?")) {
@@ -150,7 +155,7 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
               </div>
               <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                 <button
-                  onClick={() => router.push(`/trips/${tripId}/edit-expense/${expense.id}`)}
+                  onClick={() => setEditingExpense(expense)}
                   className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all touch-manipulation md:opacity-0 md:group-hover:opacity-100"
                   title="Edit"
                 >
@@ -169,6 +174,17 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId }: Expe
           );
         })}
       </div>
+
+      {/* Edit Expense Modal */}
+      {editingExpense && !isAccommodation(editingExpense) && (
+        <EditExpenseModal
+          isOpen={true}
+          onClose={() => setEditingExpense(null)}
+          expense={editingExpense}
+          tripId={tripId}
+          categories={categories}
+        />
+      )}
     </div>
   );
 }
