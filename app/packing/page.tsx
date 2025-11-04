@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PackingDashboard from "@/components/PackingDashboard";
+import { getServerLocale } from "@/lib/locale-server";
 
 export default async function PackingPage() {
   const session = await auth();
@@ -10,6 +11,8 @@ export default async function PackingPage() {
   if (!session?.user) {
     redirect("/login");
   }
+
+  const locale = await getServerLocale();
 
   // Fetch user's luggage with items
   const luggages = await prisma.luggage.findMany({
@@ -48,6 +51,7 @@ export default async function PackingPage() {
           luggages={luggages}
           templates={templates}
           userEmail={session.user.email || ""}
+          locale={locale}
         />
       </div>
     </>

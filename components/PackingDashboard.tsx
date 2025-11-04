@@ -2,10 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import LuggageCard from "./LuggageCard";
 import AddLuggageModal from "./AddLuggageModal";
 import AddItemModal from "./AddItemModal";
 import SearchItems from "./SearchItems";
+import { getTranslations, type Locale } from "@/lib/i18n";
 
 interface PackingItem {
   id: string;
@@ -45,20 +61,29 @@ interface PackingDashboardProps {
   luggages: Luggage[];
   templates: PackingTemplate[];
   userEmail: string;
+  locale: Locale;
 }
 
 export default function PackingDashboard({
   luggages: initialLuggages,
   templates,
   userEmail,
+  locale,
 }: PackingDashboardProps) {
   const router = useRouter();
+  const t = getTranslations(locale);
   const [luggages, setLuggages] = useState(initialLuggages);
   const [showAddLuggage, setShowAddLuggage] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);
   const [selectedLuggage, setSelectedLuggage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Calculate statistics
   const totalItems = luggages.reduce((sum, l) => sum + l.items.length, 0);
@@ -73,6 +98,35 @@ export default function PackingDashboard({
     0
   );
   const packingProgress = totalItems > 0 ? (packedItems / totalItems) * 100 : 0;
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = luggages.findIndex((item) => item.id === active.id);
+      const newIndex = luggages.findIndex((item) => item.id === over.id);
+
+      const newLuggages = arrayMove(luggages, oldIndex, newIndex);
+      setLuggages(newLuggages);
+
+      // Update order in database
+      try {
+        await Promise.all(
+          newLuggages.map((luggage, index) =>
+            fetch(`/api/packing/luggage/${luggage.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ order: index }),
+            })
+          )
+        );
+      } catch (error) {
+        console.error("Error updating luggage order:", error);
+        // Revert on error
+        setLuggages(initialLuggages);
+      }
+    }
+  };
 
   const handleAddLuggage = () => {
     setShowAddLuggage(true);
@@ -110,17 +164,17 @@ export default function PackingDashboard({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">
-              🧳 Packing Helper
+              🧳 {t.packingHelper}
             </h1>
             <p className="text-gray-600 mt-1">
-              Organize your luggage for digital nomad life
+              {t.organizeYourLuggage}
             </p>
           </div>
           <button
             onClick={handleAddLuggage}
             className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
-            + Add Luggage
+            + {t.addLuggage}
           </button>
         </div>
 
@@ -130,23 +184,23 @@ export default function PackingDashboard({
             <div className="text-2xl font-bold text-violet-600">
               {luggages.length}
             </div>
-            <div className="text-sm text-gray-600">Luggage</div>
+            <div className="text-sm text-gray-600">{t.luggage}</div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
-            <div className="text-sm text-gray-600">Items</div>
+            <div className="text-sm text-gray-600">{t.items}</div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="text-2xl font-bold text-emerald-600">
               {packingProgress.toFixed(0)}%
             </div>
-            <div className="text-sm text-gray-600">Packed</div>
+            <div className="text-sm text-gray-600">{t.packed}</div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="text-2xl font-bold text-orange-600">
               {totalWeight.toFixed(1)} kg
             </div>
-            <div className="text-sm text-gray-600">Total Weight</div>
+            <div className="text-sm text-gray-600">{t.totalWeight}</div>
           </div>
         </div>
 
@@ -155,10 +209,10 @@ export default function PackingDashboard({
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-gray-700">
-                Overall Progress
+                {t.overallProgress}
               </span>
               <span className="text-sm text-gray-600">
-                {packedItems} / {totalItems} items
+                {packedItems} / {totalItems} {t.items}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
@@ -176,6 +230,7 @@ export default function PackingDashboard({
             query={searchQuery}
             onChange={setSearchQuery}
             results={searchResults}
+            locale={locale}
           />
         </div>
       </div>
@@ -185,29 +240,41 @@ export default function PackingDashboard({
         <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
           <div className="text-6xl mb-4">🧳</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            No luggage yet
+            {t.noLuggageYet}
           </h2>
           <p className="text-gray-600 mb-6">
-            Add your first luggage to start organizing your packing
+            {t.addYourFirstLuggage}
           </p>
           <button
             onClick={handleAddLuggage}
             className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
-            + Add Your First Luggage
+            + {t.addFirstLuggage}
           </button>
         </div>
       ) : (
-        <div className={viewMode === "grid" ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
-          {luggages.map((luggage) => (
-            <LuggageCard
-              key={luggage.id}
-              luggage={luggage}
-              onAddItem={() => handleAddItem(luggage.id)}
-              onRefresh={refreshData}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={luggages.map((l) => l.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {luggages.map((luggage) => (
+                <LuggageCard
+                  key={luggage.id}
+                  luggage={luggage}
+                  onAddItem={() => handleAddItem(luggage.id)}
+                  onRefresh={refreshData}
+                  locale={locale}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Modals */}
@@ -217,6 +284,7 @@ export default function PackingDashboard({
           onClose={() => setShowAddLuggage(false)}
           onSuccess={refreshData}
           existingCount={luggages.length}
+          locale={locale}
         />
       )}
 
@@ -229,6 +297,7 @@ export default function PackingDashboard({
           }}
           luggageId={selectedLuggage}
           onSuccess={refreshData}
+          locale={locale}
         />
       )}
     </div>
