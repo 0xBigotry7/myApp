@@ -366,7 +366,7 @@ export default function PackingDashboard({
               onAddItem={() => handleAddItem(luggage.id)}
               onRefresh={refreshData}
               onToggleItem={handleToggleItem}
-              onDeleteItem={handleDeleteItem}
+              onRemoveFromLuggage={(itemId) => handleMoveItem(itemId, null)}
               locale={locale}
             />
           ))}

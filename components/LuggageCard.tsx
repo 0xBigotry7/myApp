@@ -33,7 +33,7 @@ interface LuggageCardProps {
   onAddItem: () => void;
   onRefresh: () => void;
   onToggleItem: (itemId: string, isPacked: boolean) => void;
-  onDeleteItem: (itemId: string) => void;
+  onRemoveFromLuggage: (itemId: string) => void;
   locale: Locale;
 }
 
@@ -59,7 +59,7 @@ const COLOR_CLASSES: Record<string, string> = {
   black: "from-gray-700 to-gray-900",
 };
 
-export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleItem, onDeleteItem, locale }: LuggageCardProps) {
+export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleItem, onRemoveFromLuggage, locale }: LuggageCardProps) {
   const router = useRouter();
   const t = getTranslations(locale);
   const [expanded, setExpanded] = useState(false);
@@ -260,10 +260,11 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleIte
                           </span>
                         )}
                         <button
-                          onClick={() => onDeleteItem(item.id)}
-                          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity"
+                          onClick={() => onRemoveFromLuggage(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-orange-500 hover:text-orange-700 text-xs transition-opacity"
+                          title="Move to unorganized"
                         >
-                          ✕
+                          ↩
                         </button>
                       </div>
                     ))}
