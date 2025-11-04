@@ -15,6 +15,9 @@ interface PackingItem {
   weight: number | null;
   isPacked: boolean;
   notes: string | null;
+  belongsTo: string;
+  colorCode: string | null;
+  importance: string;
 }
 
 interface Luggage {
