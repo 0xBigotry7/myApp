@@ -1,34 +1,38 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getTranslations, type Locale } from "@/lib/i18n";
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   luggageId: string;
   onSuccess: () => void;
+  locale: Locale;
 }
-
-const CATEGORIES = [
-  { value: "clothing", label: "👕 Clothing", icon: "👕" },
-  { value: "electronics", label: "📱 Electronics", icon: "📱" },
-  { value: "toiletries", label: "🧴 Toiletries", icon: "🧴" },
-  { value: "documents", label: "📄 Documents", icon: "📄" },
-  { value: "medications", label: "💊 Medications", icon: "💊" },
-  { value: "accessories", label: "👓 Accessories", icon: "👓" },
-  { value: "shoes", label: "👟 Shoes", icon: "👟" },
-  { value: "books", label: "📚 Books/Reading", icon: "📚" },
-  { value: "food", label: "🍎 Food/Snacks", icon: "🍎" },
-  { value: "gear", label: "⚙️ Gear/Equipment", icon: "⚙️" },
-  { value: "other", label: "📦 Other", icon: "📦" },
-];
 
 export default function AddItemModal({
   isOpen,
   onClose,
   luggageId,
   onSuccess,
+  locale,
 }: AddItemModalProps) {
+  const t = getTranslations(locale);
+
+  const CATEGORIES = [
+    { value: "clothing", label: `👕 ${t.clothing}`, icon: "👕" },
+    { value: "electronics", label: `📱 ${t.electronics}`, icon: "📱" },
+    { value: "toiletries", label: `🧴 ${t.toiletries}`, icon: "🧴" },
+    { value: "documents", label: `📄 ${t.documents}`, icon: "📄" },
+    { value: "medications", label: `💊 ${t.medications}`, icon: "💊" },
+    { value: "accessories", label: `👓 ${t.accessories}`, icon: "👓" },
+    { value: "shoes", label: `👟 ${t.shoes}`, icon: "👟" },
+    { value: "books", label: `📚 ${t.books}`, icon: "📚" },
+    { value: "food", label: `🍎 ${t.food}`, icon: "🍎" },
+    { value: "gear", label: `⚙️ ${t.gear}`, icon: "⚙️" },
+    { value: "other", label: `📦 ${t.other}`, icon: "📦" },
+  ];
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -104,7 +108,7 @@ export default function AddItemModal({
       <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Add Item</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t.addItem}</h2>
             <button
               type="button"
               onClick={onClose}
@@ -117,7 +121,7 @@ export default function AddItemModal({
           {/* Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Item Name
+              {t.itemName}
             </label>
             <input
               type="text"
@@ -126,7 +130,7 @@ export default function AddItemModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              placeholder="e.g., Blue T-Shirt, iPhone Charger"
+              placeholder={t.itemNamePlaceholder}
               className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
@@ -134,7 +138,7 @@ export default function AddItemModal({
           {/* Category */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Category
+              {t.category}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {CATEGORIES.map((cat) => (
@@ -160,7 +164,7 @@ export default function AddItemModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Quantity
+                {t.quantity}
               </label>
               <input
                 type="number"
@@ -175,7 +179,7 @@ export default function AddItemModal({
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Weight (kg) <span className="text-gray-400 text-xs">(optional)</span>
+                {t.weight} (kg) <span className="text-gray-400 text-xs">({t.optional})</span>
               </label>
               <input
                 type="number"
@@ -193,7 +197,7 @@ export default function AddItemModal({
           {/* Notes */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Notes <span className="text-gray-400 text-xs">(optional)</span>
+              {t.notes} <span className="text-gray-400 text-xs">({t.optional})</span>
             </label>
             <textarea
               value={formData.notes}
@@ -201,7 +205,7 @@ export default function AddItemModal({
                 setFormData({ ...formData, notes: e.target.value })
               }
               rows={2}
-              placeholder="e.g., Brand: Nike, Color: Blue"
+              placeholder={t.notesPlaceholder}
               className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
             />
           </div>
@@ -218,7 +222,7 @@ export default function AddItemModal({
                 className="w-5 h-5 text-violet-600 rounded cursor-pointer"
               />
               <span className="text-sm font-semibold text-gray-700">
-                Already packed
+                {t.alreadyPacked}
               </span>
             </label>
           </div>
@@ -230,14 +234,14 @@ export default function AddItemModal({
               onClick={onClose}
               className="flex-1 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? "Adding..." : "Add Item"}
+              {loading ? t.adding : t.addItem}
             </button>
           </div>
         </form>

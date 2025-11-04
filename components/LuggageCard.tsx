@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { getTranslations, type Locale } from "@/lib/i18n";
 
 interface PackingItem {
   id: string;
@@ -28,6 +31,7 @@ interface LuggageCardProps {
   luggage: Luggage;
   onAddItem: () => void;
   onRefresh: () => void;
+  locale: Locale;
 }
 
 const LUGGAGE_ICONS: Record<string, string> = {
@@ -52,10 +56,26 @@ const COLOR_CLASSES: Record<string, string> = {
   black: "from-gray-700 to-gray-900",
 };
 
-export default function LuggageCard({ luggage, onAddItem, onRefresh }: LuggageCardProps) {
+export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: LuggageCardProps) {
   const router = useRouter();
+  const t = getTranslations(locale);
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: luggage.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const packedCount = luggage.items.filter((i) => i.isPacked).length;
   const totalCount = luggage.items.length;
@@ -127,7 +147,13 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh }: LuggageCa
   }, {} as Record<string, PackingItem[]>);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden"
+    >
       {/* Header */}
       <div className={`bg-gradient-to-r ${colorClass} p-4 text-white`}>
         <div className="flex items-start justify-between">
@@ -175,13 +201,13 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh }: LuggageCa
             onClick={() => setExpanded(!expanded)}
             className="flex-1 text-left hover:text-gray-900 transition-colors"
           >
-            <span>{expanded ? "▼" : "▶"} Items ({totalCount})</span>
+            <span>{expanded ? "▼" : "▶"} {t.items} ({totalCount})</span>
           </button>
           <button
             onClick={onAddItem}
             className="px-3 py-1 bg-violet-100 text-violet-700 rounded-lg text-xs font-semibold hover:bg-violet-200 transition-colors"
           >
-            + Add Item
+            + {t.addItem}
           </button>
         </div>
 
@@ -189,13 +215,13 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh }: LuggageCa
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {totalCount === 0 ? (
               <p className="text-center text-gray-400 py-8 text-sm">
-                No items yet. Add your first item!
+                {t.noItemsYet}
               </p>
             ) : (
               Object.entries(itemsByCategory).map(([category, items]) => (
                 <div key={category} className="border-l-2 border-gray-200 pl-3">
                   <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                    {category}
+                    {t[category as keyof typeof t] || category}
                   </div>
                   <div className="space-y-1">
                     {items.map((item) => (
