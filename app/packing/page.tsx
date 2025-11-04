@@ -26,7 +26,7 @@ export default async function PackingPage() {
     include: {
       items: {
         orderBy: {
-          createdAt: "desc",
+          order: "asc",
         },
       },
       user: {
@@ -35,6 +35,17 @@ export default async function PackingPage() {
           email: true,
         },
       },
+    },
+    orderBy: {
+      order: "asc",
+    },
+  });
+
+  // Fetch unorganized items (items without luggage)
+  const unorganizedItems = await prisma.packingItem.findMany({
+    where: {
+      userId: session.user.id,
+      luggageId: null,
     },
     orderBy: {
       order: "asc",
@@ -58,8 +69,10 @@ export default async function PackingPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6">
         <PackingDashboard
           luggages={luggages}
+          unorganizedItems={unorganizedItems}
           templates={templates}
           userEmail={session.user.email || ""}
+          userId={session.user.id}
           locale={locale}
         />
       </div>

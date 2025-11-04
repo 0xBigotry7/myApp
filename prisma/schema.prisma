@@ -37,6 +37,7 @@ model User {
   tripPosts             TripPost[]
   lifeEvents            LifeEvent[]
   luggages              Luggage[]
+  packingItems          PackingItem[]
 }
 
 model Trip {
@@ -535,7 +536,8 @@ model Luggage {
 
 model PackingItem {
   id              String    @id @default(cuid())
-  luggageId       String
+  userId          String    // Owner of the item for household filtering
+  luggageId       String?   // Optional - null means unorganized
   category        String    // "clothing", "electronics", "toiletries", "documents", "medications", "accessories", "shoes", "books", "food", "other"
   name            String    // "Blue T-Shirt", "iPhone Charger"
   quantity        Int       @default(1)
@@ -544,6 +546,7 @@ model PackingItem {
   belongsTo       String    @default("shared") // "shared", "baber", "BABER", or custom user name
   colorCode       String?   // Color coding for belongsTo (e.g., "#FF6B6B" for baber, "#4ECDC4" for BABER)
   importance      String    @default("normal") // "essential", "important", "normal", "optional"
+  order           Int       @default(0) // Display order within luggage or unorganized
   notes           String?
   photoUrl        String?   // Optional photo of the item
   tags            String[]  @default([]) // ["essential", "winter", "beach"]
@@ -551,12 +554,15 @@ model PackingItem {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  luggage         Luggage   @relation(fields: [luggageId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  luggage         Luggage?  @relation(fields: [luggageId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
   @@index([luggageId, category])
   @@index([luggageId, isPacked])
   @@index([belongsTo])
   @@index([importance])
+  @@index([userId, luggageId])
 }
 
 model PackingTemplate {

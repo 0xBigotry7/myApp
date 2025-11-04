@@ -59,15 +59,19 @@ interface PackingTemplate {
 
 interface PackingDashboardProps {
   luggages: Luggage[];
+  unorganizedItems: PackingItem[];
   templates: PackingTemplate[];
   userEmail: string;
+  userId: string;
   locale: Locale;
 }
 
 export default function PackingDashboard({
   luggages: initialLuggages,
+  unorganizedItems: initialUnorganizedItems,
   templates,
   userEmail,
+  userId,
   locale,
 }: PackingDashboardProps) {
   const router = useRouter();
@@ -288,7 +292,7 @@ export default function PackingDashboard({
         />
       )}
 
-      {showAddItem && selectedLuggage && (
+      {showAddItem && (
         <AddItemModal
           isOpen={showAddItem}
           onClose={() => {
@@ -298,6 +302,7 @@ export default function PackingDashboard({
           luggageId={selectedLuggage}
           onSuccess={refreshData}
           locale={locale}
+          userId={userId}
         />
       )}
     </div>

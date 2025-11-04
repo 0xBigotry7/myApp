@@ -6,9 +6,10 @@ import { getTranslations, type Locale } from "@/lib/i18n";
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  luggageId: string;
+  luggageId?: string | null; // Optional - null means unorganized
   onSuccess: () => void;
   locale: Locale;
+  userId: string;
 }
 
 export default function AddItemModal({
@@ -17,6 +18,7 @@ export default function AddItemModal({
   luggageId,
   onSuccess,
   locale,
+  userId,
 }: AddItemModalProps) {
   const t = getTranslations(locale);
 
@@ -84,7 +86,8 @@ export default function AddItemModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          luggageId,
+          userId,
+          luggageId: luggageId || null,
           name: formData.name,
           category: formData.category,
           quantity: parseInt(formData.quantity),
