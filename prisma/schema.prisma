@@ -543,6 +543,7 @@ model PackingItem {
   isPacked        Boolean   @default(false)
   belongsTo       String    @default("shared") // "shared", "baber", "BABER", or custom user name
   colorCode       String?   // Color coding for belongsTo (e.g., "#FF6B6B" for baber, "#4ECDC4" for BABER)
+  importance      String    @default("normal") // "essential", "important", "normal", "optional"
   notes           String?
   photoUrl        String?   // Optional photo of the item
   tags            String[]  @default([]) // ["essential", "winter", "beach"]
@@ -555,6 +556,7 @@ model PackingItem {
   @@index([luggageId, category])
   @@index([luggageId, isPacked])
   @@index([belongsTo])
+  @@index([importance])
 }
 
 model PackingTemplate {

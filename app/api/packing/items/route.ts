@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { luggageId, category, name, quantity, weight, isPacked, notes, tags, belongsTo, colorCode } = body;
+    const { luggageId, category, name, quantity, weight, isPacked, notes, tags, belongsTo, colorCode, importance } = body;
 
     // Verify luggage belongs to user or is shared
     const luggage = await prisma.luggage.findUnique({
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
         isPacked: isPacked || false,
         belongsTo: belongsTo || "shared",
         colorCode: colorCode || null,
+        importance: importance || "normal",
         notes: notes || null,
         tags: tags || [],
       },

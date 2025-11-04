@@ -42,12 +42,20 @@ export default function AddItemModal({
     notes: "",
     isPacked: false,
     belongsTo: "shared",
+    importance: "normal",
   });
 
   const BELONGS_TO_OPTIONS = [
     { value: "shared", label: t.shared, color: "#9CA3AF" }, // Gray
     { value: "baber", label: t.baber, color: "#FF6B6B" }, // Red
     { value: "BABER", label: t.BABER, color: "#4ECDC4" }, // Teal
+  ];
+
+  const IMPORTANCE_OPTIONS = [
+    { value: "essential", label: t.essential, icon: "🔴", color: "#EF4444" }, // Red
+    { value: "important", label: t.important, icon: "🟠", color: "#F59E0B" }, // Orange
+    { value: "normal", label: t.normal, icon: "🟢", color: "#10B981" }, // Green
+    { value: "optional", label: t.optionalItem, icon: "⚪", color: "#9CA3AF" }, // Gray
   ];
 
   useEffect(() => {
@@ -85,6 +93,7 @@ export default function AddItemModal({
           isPacked: formData.isPacked,
           belongsTo: formData.belongsTo,
           colorCode: selectedOption?.color,
+          importance: formData.importance,
         }),
       });
 
@@ -100,6 +109,7 @@ export default function AddItemModal({
           notes: "",
           isPacked: false,
           belongsTo: "shared",
+          importance: "normal",
         });
       } else {
         alert("Failed to add item");
@@ -242,6 +252,38 @@ export default function AddItemModal({
                     style={{ backgroundColor: option.color }}
                   />
                   {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Importance */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t.importance}
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {IMPORTANCE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, importance: option.value })
+                  }
+                  className={`px-2 py-2 rounded-xl text-xs font-semibold transition-all border-2 ${
+                    formData.importance === option.value
+                      ? "border-violet-500 shadow-lg scale-105"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      formData.importance === option.value
+                        ? `${option.color}15`
+                        : "white",
+                  }}
+                >
+                  <div className="text-xl mb-1">{option.icon}</div>
+                  <div className="text-xs">{option.label}</div>
                 </button>
               ))}
             </div>
