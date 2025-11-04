@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import LocationAutocomplete from "./LocationAutocomplete";
+import CategorySpecificFields from "./CategorySpecificFields";
 
 interface EditExpenseFormProps {
   expense: {
@@ -16,6 +17,30 @@ interface EditExpenseFormProps {
     note: string | null;
     location: string | null;
     receiptUrl: string | null;
+    // Category-specific fields
+    transportationDistance?: number | null;
+    transportationDuration?: number | null;
+    ticketReference?: string | null;
+    numberOfPassengers?: number | null;
+    partySize?: number | null;
+    mealType?: string | null;
+    cuisineType?: string | null;
+    restaurantName?: string | null;
+    hasReservation?: boolean | null;
+    activityType?: string | null;
+    activityName?: string | null;
+    activityDuration?: number | null;
+    numberOfTickets?: number | null;
+    activityReference?: string | null;
+    hasGuide?: boolean | null;
+    storeName?: string | null;
+    shoppingCategory?: string | null;
+    numberOfItems?: number | null;
+    hasReturnPolicy?: boolean | null;
+    isGift?: boolean | null;
+    giftRecipient?: string | null;
+    otherSubcategory?: string | null;
+    expenseRating?: number | null;
   };
   tripId: string;
   categories: string[];
@@ -52,6 +77,30 @@ export default function EditExpenseForm({
     currency: expense.currency,
     location: expense.location || defaultLocation || "",
     note: expense.note || "",
+    // Category-specific fields
+    transportationDistance: expense.transportationDistance ?? null,
+    transportationDuration: expense.transportationDuration ?? null,
+    ticketReference: expense.ticketReference ?? null,
+    numberOfPassengers: expense.numberOfPassengers ?? null,
+    partySize: expense.partySize ?? null,
+    mealType: expense.mealType ?? null,
+    cuisineType: expense.cuisineType ?? null,
+    restaurantName: expense.restaurantName ?? null,
+    hasReservation: expense.hasReservation ?? null,
+    activityType: expense.activityType ?? null,
+    activityName: expense.activityName ?? null,
+    activityDuration: expense.activityDuration ?? null,
+    numberOfTickets: expense.numberOfTickets ?? null,
+    activityReference: expense.activityReference ?? null,
+    hasGuide: expense.hasGuide ?? null,
+    storeName: expense.storeName ?? null,
+    shoppingCategory: expense.shoppingCategory ?? null,
+    numberOfItems: expense.numberOfItems ?? null,
+    hasReturnPolicy: expense.hasReturnPolicy ?? null,
+    isGift: expense.isGift ?? null,
+    giftRecipient: expense.giftRecipient ?? null,
+    otherSubcategory: expense.otherSubcategory ?? null,
+    expenseRating: expense.expenseRating ?? null,
   });
 
   // Determine date input type based on category
@@ -72,6 +121,10 @@ export default function EditExpenseForm({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleCategoryFieldChange = (field: string, value: any) => {
+    setFormData({ ...formData, [field]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,6 +169,30 @@ export default function EditExpenseForm({
           location: formData.location || undefined,
           note: formData.note || undefined,
           receiptUrl: receiptUrl || undefined,
+          // Category-specific fields
+          transportationDistance: formData.transportationDistance,
+          transportationDuration: formData.transportationDuration,
+          ticketReference: formData.ticketReference,
+          numberOfPassengers: formData.numberOfPassengers,
+          partySize: formData.partySize,
+          mealType: formData.mealType,
+          cuisineType: formData.cuisineType,
+          restaurantName: formData.restaurantName,
+          hasReservation: formData.hasReservation,
+          activityType: formData.activityType,
+          activityName: formData.activityName,
+          activityDuration: formData.activityDuration,
+          numberOfTickets: formData.numberOfTickets,
+          activityReference: formData.activityReference,
+          hasGuide: formData.hasGuide,
+          storeName: formData.storeName,
+          shoppingCategory: formData.shoppingCategory,
+          numberOfItems: formData.numberOfItems,
+          hasReturnPolicy: formData.hasReturnPolicy,
+          isGift: formData.isGift,
+          giftRecipient: formData.giftRecipient,
+          otherSubcategory: formData.otherSubcategory,
+          expenseRating: formData.expenseRating,
         }),
       });
 
@@ -299,6 +376,13 @@ export default function EditExpenseForm({
           placeholder="e.g., Dinner with friends"
         />
       </div>
+
+      {/* Category-Specific Fields */}
+      <CategorySpecificFields
+        category={formData.category}
+        formData={formData}
+        onChange={handleCategoryFieldChange}
+      />
 
       {/* Receipt Photo */}
       <div>

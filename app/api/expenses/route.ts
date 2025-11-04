@@ -17,7 +17,13 @@ export async function POST(request: Request) {
       // Accommodation fields
       accommodationName, accommodationType, checkInDate, checkOutDate, numberOfNights,
       googlePlaceId, hotelAddress, hotelPhone, hotelWebsite, hotelRating, hotelPhotos,
-      latitude, longitude, confirmationNumber
+      latitude, longitude, confirmationNumber,
+      // Category-specific fields
+      transportationDistance, transportationDuration, ticketReference, numberOfPassengers,
+      partySize, mealType, cuisineType, restaurantName, hasReservation,
+      activityType, activityName, activityDuration, numberOfTickets, activityReference, hasGuide,
+      storeName, shoppingCategory, numberOfItems, hasReturnPolicy, isGift, giftRecipient,
+      otherSubcategory, expenseRating
     } = body;
 
     // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
@@ -104,6 +110,30 @@ export async function POST(request: Request) {
         latitude: latitude || null,
         longitude: longitude || null,
         confirmationNumber: confirmationNumber || null,
+        // Category-specific fields
+        transportationDistance: transportationDistance ?? null,
+        transportationDuration: transportationDuration ?? null,
+        ticketReference: ticketReference ?? null,
+        numberOfPassengers: numberOfPassengers ?? null,
+        partySize: partySize ?? null,
+        mealType: mealType ?? null,
+        cuisineType: cuisineType ?? null,
+        restaurantName: restaurantName ?? null,
+        hasReservation: hasReservation ?? null,
+        activityType: activityType ?? null,
+        activityName: activityName ?? null,
+        activityDuration: activityDuration ?? null,
+        numberOfTickets: numberOfTickets ?? null,
+        activityReference: activityReference ?? null,
+        hasGuide: hasGuide ?? null,
+        storeName: storeName ?? null,
+        shoppingCategory: shoppingCategory ?? null,
+        numberOfItems: numberOfItems ?? null,
+        hasReturnPolicy: hasReturnPolicy ?? null,
+        isGift: isGift ?? null,
+        giftRecipient: giftRecipient ?? null,
+        otherSubcategory: otherSubcategory ?? null,
+        expenseRating: expenseRating ?? null,
       },
       include: {
         user: true,

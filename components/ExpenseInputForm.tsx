@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import LocationAutocomplete from "./LocationAutocomplete";
+import CategorySpecificFields from "./CategorySpecificFields";
 
 interface ExpenseInputFormProps {
   tripId: string;
@@ -43,6 +44,30 @@ export default function ExpenseInputForm({
     currency: "USD",
     location: defaultLocation || "",
     note: "",
+    // Category-specific fields (all optional)
+    transportationDistance: null as number | null,
+    transportationDuration: null as number | null,
+    ticketReference: null as string | null,
+    numberOfPassengers: null as number | null,
+    partySize: null as number | null,
+    mealType: null as string | null,
+    cuisineType: null as string | null,
+    restaurantName: null as string | null,
+    hasReservation: null as boolean | null,
+    activityType: null as string | null,
+    activityName: null as string | null,
+    activityDuration: null as number | null,
+    numberOfTickets: null as number | null,
+    activityReference: null as string | null,
+    hasGuide: null as boolean | null,
+    storeName: null as string | null,
+    shoppingCategory: null as string | null,
+    numberOfItems: null as number | null,
+    hasReturnPolicy: null as boolean | null,
+    isGift: null as boolean | null,
+    giftRecipient: null as string | null,
+    otherSubcategory: null as string | null,
+    expenseRating: null as number | null,
   });
 
   const [baseAmount, setBaseAmount] = useState("");
@@ -72,6 +97,10 @@ export default function ExpenseInputForm({
     setBaseAmount(value);
     setFormData({ ...formData, amount: value });
     setSelectedTip(null);
+  };
+
+  const handleCategoryFieldChange = (field: string, value: any) => {
+    setFormData({ ...formData, [field]: value });
   };
 
   const handleFileSelect = async (file: File) => {
@@ -157,6 +186,30 @@ export default function ExpenseInputForm({
           location: formData.location || undefined,
           note: formData.note || undefined,
           receiptUrl,
+          // Category-specific fields
+          transportationDistance: formData.transportationDistance,
+          transportationDuration: formData.transportationDuration,
+          ticketReference: formData.ticketReference,
+          numberOfPassengers: formData.numberOfPassengers,
+          partySize: formData.partySize,
+          mealType: formData.mealType,
+          cuisineType: formData.cuisineType,
+          restaurantName: formData.restaurantName,
+          hasReservation: formData.hasReservation,
+          activityType: formData.activityType,
+          activityName: formData.activityName,
+          activityDuration: formData.activityDuration,
+          numberOfTickets: formData.numberOfTickets,
+          activityReference: formData.activityReference,
+          hasGuide: formData.hasGuide,
+          storeName: formData.storeName,
+          shoppingCategory: formData.shoppingCategory,
+          numberOfItems: formData.numberOfItems,
+          hasReturnPolicy: formData.hasReturnPolicy,
+          isGift: formData.isGift,
+          giftRecipient: formData.giftRecipient,
+          otherSubcategory: formData.otherSubcategory,
+          expenseRating: formData.expenseRating,
         }),
       });
 
@@ -454,6 +507,13 @@ export default function ExpenseInputForm({
           placeholder="Add any details..."
         />
       </div>
+
+      {/* Category-Specific Fields */}
+      <CategorySpecificFields
+        category={formData.category}
+        formData={formData}
+        onChange={handleCategoryFieldChange}
+      />
 
       {/* Submit Buttons */}
       <div className="flex gap-3 pt-2">

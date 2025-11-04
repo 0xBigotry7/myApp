@@ -74,7 +74,13 @@ export async function PATCH(
       // Accommodation fields
       accommodationName, accommodationType, checkInDate, checkOutDate, numberOfNights,
       googlePlaceId, hotelAddress, hotelPhone, hotelWebsite, hotelRating, hotelPhotos,
-      latitude, longitude, confirmationNumber
+      latitude, longitude, confirmationNumber,
+      // Category-specific fields
+      transportationDistance, transportationDuration, ticketReference, numberOfPassengers,
+      partySize, mealType, cuisineType, restaurantName, hasReservation,
+      activityType, activityName, activityDuration, numberOfTickets, activityReference, hasGuide,
+      storeName, shoppingCategory, numberOfItems, hasReturnPolicy, isGift, giftRecipient,
+      otherSubcategory, expenseRating
     } = body;
 
     // Parse date correctly - handle different formats
@@ -165,6 +171,30 @@ export async function PATCH(
         latitude: latitude !== undefined ? (latitude || null) : undefined,
         longitude: longitude !== undefined ? (longitude || null) : undefined,
         confirmationNumber: confirmationNumber !== undefined ? (confirmationNumber || null) : undefined,
+        // Category-specific fields
+        transportationDistance: transportationDistance !== undefined ? transportationDistance : undefined,
+        transportationDuration: transportationDuration !== undefined ? transportationDuration : undefined,
+        ticketReference: ticketReference !== undefined ? (ticketReference || null) : undefined,
+        numberOfPassengers: numberOfPassengers !== undefined ? numberOfPassengers : undefined,
+        partySize: partySize !== undefined ? partySize : undefined,
+        mealType: mealType !== undefined ? (mealType || null) : undefined,
+        cuisineType: cuisineType !== undefined ? (cuisineType || null) : undefined,
+        restaurantName: restaurantName !== undefined ? (restaurantName || null) : undefined,
+        hasReservation: hasReservation !== undefined ? hasReservation : undefined,
+        activityType: activityType !== undefined ? (activityType || null) : undefined,
+        activityName: activityName !== undefined ? (activityName || null) : undefined,
+        activityDuration: activityDuration !== undefined ? activityDuration : undefined,
+        numberOfTickets: numberOfTickets !== undefined ? numberOfTickets : undefined,
+        activityReference: activityReference !== undefined ? (activityReference || null) : undefined,
+        hasGuide: hasGuide !== undefined ? hasGuide : undefined,
+        storeName: storeName !== undefined ? (storeName || null) : undefined,
+        shoppingCategory: shoppingCategory !== undefined ? (shoppingCategory || null) : undefined,
+        numberOfItems: numberOfItems !== undefined ? numberOfItems : undefined,
+        hasReturnPolicy: hasReturnPolicy !== undefined ? hasReturnPolicy : undefined,
+        isGift: isGift !== undefined ? isGift : undefined,
+        giftRecipient: giftRecipient !== undefined ? (giftRecipient || null) : undefined,
+        otherSubcategory: otherSubcategory !== undefined ? (otherSubcategory || null) : undefined,
+        expenseRating: expenseRating !== undefined ? expenseRating : undefined,
       },
       include: {
         user: true,
