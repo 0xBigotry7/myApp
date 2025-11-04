@@ -36,6 +36,7 @@ model User {
   travelDestinations    TravelDestination[]
   tripPosts             TripPost[]
   lifeEvents            LifeEvent[]
+  luggages              Luggage[]
 }
 
 model Trip {
@@ -505,4 +506,62 @@ model LifeEvent {
 
   @@index([userId, date])
   @@index([userId, type])
+}
+
+// ===== PACKING HELPER MODELS =====
+
+model Luggage {
+  id              String        @id @default(cuid())
+  userId          String
+  name            String        // "Main Suitcase", "Backpack", "Carry-on"
+  type            String        // "suitcase", "backpack", "duffel", "carry-on", "personal", "box", "other"
+  color           String        @default("gray") // For visual identification
+  weight          Float?        // Estimated weight in kg
+  maxWeight       Float?        // Weight limit for this bag
+  description     String?       // Additional notes
+  isActive        Boolean       @default(true) // Currently in use
+  order           Int           @default(0) // Display order
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           PackingItem[]
+
+  @@index([userId, isActive])
+  @@index([userId, order])
+}
+
+model PackingItem {
+  id              String    @id @default(cuid())
+  luggageId       String
+  category        String    // "clothing", "electronics", "toiletries", "documents", "medications", "accessories", "shoes", "books", "food", "other"
+  name            String    // "Blue T-Shirt", "iPhone Charger"
+  quantity        Int       @default(1)
+  weight          Float?    // Weight in kg per item
+  isPacked        Boolean   @default(false)
+  notes           String?
+  photoUrl        String?   // Optional photo of the item
+  tags            String[]  @default([]) // ["essential", "winter", "beach"]
+  lastUsedDate    DateTime? // Track when item was last used
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  luggage         Luggage   @relation(fields: [luggageId], references: [id], onDelete: Cascade)
+
+  @@index([luggageId, category])
+  @@index([luggageId, isPacked])
+}
+
+model PackingTemplate {
+  id              String   @id @default(cuid())
+  name            String   // "Beach Trip", "City Break", "Winter Skiing", "Digital Nomad Month"
+  description     String?
+  category        String[] @default([]) // ["vacation", "business", "adventure", "long-term"]
+  items           Json     // Array of {category, name, quantity, essential}
+  isPublic        Boolean  @default(false) // Share with household
+  useCount        Int      @default(0) // Track popularity
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isPublic])
 }
