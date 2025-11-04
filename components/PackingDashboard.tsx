@@ -383,7 +383,6 @@ export default function PackingDashboard({
           onClose={() => setShowAddLuggage(false)}
           onSuccess={handleLuggageAdded}
           existingCount={luggages.length}
-          locale={locale}
         />
       )}
 
