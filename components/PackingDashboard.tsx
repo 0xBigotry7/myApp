@@ -302,43 +302,44 @@ export default function PackingDashboard({
         </div>
       </div>
 
-      {/* Unorganized Items */}
-      <div className="mb-6">
-        <UnorganizedItems
-          items={unorganizedItems}
-          locale={locale}
-          onAddItem={() => {
-            setSelectedLuggage(null);
-            setShowAddItem(true);
-          }}
-          onDeleteItem={handleDeleteItem}
-          onToggleItem={handleToggleItem}
-        />
-      </div>
-
-      {/* Luggage Grid */}
-      {luggages.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-          <div className="text-6xl mb-4">🧳</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {t.noLuggageYet}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {t.addYourFirstLuggage}
-          </p>
-          <button
-            onClick={handleAddLuggage}
-            className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-          >
-            + {t.addFirstLuggage}
-          </button>
+      {/* Wrap everything in DndContext */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        {/* Unorganized Items */}
+        <div className="mb-6">
+          <UnorganizedItems
+            items={unorganizedItems}
+            locale={locale}
+            onAddItem={() => {
+              setSelectedLuggage(null);
+              setShowAddItem(true);
+            }}
+            onDeleteItem={handleDeleteItem}
+            onToggleItem={handleToggleItem}
+          />
         </div>
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+
+        {/* Luggage Grid */}
+        {luggages.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+            <div className="text-6xl mb-4">🧳</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {t.noLuggageYet}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {t.addYourFirstLuggage}
+            </p>
+            <button
+              onClick={handleAddLuggage}
+              className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            >
+              + {t.addFirstLuggage}
+            </button>
+          </div>
+        ) : (
           <SortableContext
             items={luggages.map((l) => l.id)}
             strategy={verticalListSortingStrategy}
@@ -355,8 +356,8 @@ export default function PackingDashboard({
               ))}
             </div>
           </SortableContext>
-        </DndContext>
-      )}
+        )}
+      </DndContext>
 
       {/* Modals */}
       {showAddLuggage && (
