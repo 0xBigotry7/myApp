@@ -20,6 +20,9 @@ interface PackingItem {
   photoUrl: string | null;
   tags: string[];
   lastUsedDate: Date | null;
+  belongsTo: string;
+  colorCode: string | null;
+  importance: string;
 }
 
 interface Luggage {
