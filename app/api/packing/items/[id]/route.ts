@@ -17,10 +17,9 @@ export async function DELETE(
     // Check ownership
     const item = await prisma.packingItem.findUnique({
       where: { id },
-      include: { luggage: true },
     });
 
-    if (!item || item.luggage.userId !== session.user.id) {
+    if (!item || item.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -56,10 +55,9 @@ export async function PATCH(
     // Check ownership
     const item = await prisma.packingItem.findUnique({
       where: { id },
-      include: { luggage: true },
     });
 
-    if (!item || item.luggage.userId !== session.user.id) {
+    if (!item || item.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
