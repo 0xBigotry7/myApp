@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -35,6 +36,8 @@ function DraggableItem({
   onDelete: () => void;
   onToggle: () => void;
 }) {
+  const [isPacked, setIsPacked] = useState(item.isPacked);
+
   const {
     attributes,
     listeners,
@@ -56,19 +59,25 @@ function DraggableItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleToggle = () => {
+    setIsPacked(!isPacked);
+    onToggle();
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
       className="inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border border-gray-200 hover:border-violet-300 transition-all group max-w-fit"
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xs touch-none">
+      <div {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xs select-none">
         ⋮⋮
       </div>
       <input
         type="checkbox"
-        checked={item.isPacked}
-        onChange={onToggle}
+        checked={isPacked}
+        onChange={handleToggle}
         className="w-3 h-3 text-violet-600 rounded cursor-pointer"
       />
       {item.importance && item.importance !== "normal" && (
@@ -87,7 +96,7 @@ function DraggableItem({
       )}
       <span
         className={`flex-1 text-xs ${
-          item.isPacked ? "line-through text-gray-400" : "text-gray-700"
+          isPacked ? "line-through text-gray-400" : "text-gray-700"
         }`}
       >
         {item.name}
