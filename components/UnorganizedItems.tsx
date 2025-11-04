@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { getTranslations, type Locale } from "@/lib/i18n";
 
 interface PackingItem {
@@ -19,65 +16,41 @@ interface PackingItem {
   notes: string | null;
 }
 
+interface Luggage {
+  id: string;
+  name: string;
+}
+
 interface UnorganizedItemsProps {
   items: PackingItem[];
+  luggages: Luggage[];
   locale: Locale;
   onAddItem: () => void;
   onDeleteItem: (itemId: string) => void;
-  onToggleItem: (itemId: string, isPacked: boolean) => void;
+  onMoveItem: (itemId: string, luggageId: string | null) => void;
 }
 
-function DraggableItem({
+function ItemCard({
   item,
-  onDelete,
-  onToggle
+  isSelected,
+  onSelect,
+  onDelete
 }: {
   item: PackingItem;
+  isSelected: boolean;
+  onSelect: () => void;
   onDelete: () => void;
-  onToggle: () => void;
 }) {
-  const [isPacked, setIsPacked] = useState(item.isPacked);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: item.id,
-    data: {
-      type: 'item',
-      item: item,
-    }
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const handleToggle = () => {
-    setIsPacked(!isPacked);
-    onToggle();
-  };
-
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className="inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border border-gray-200 hover:border-violet-300 transition-all group max-w-fit"
+      className={`inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border-2 transition-all group max-w-fit ${
+        isSelected ? "border-violet-500 bg-violet-50" : "border-gray-200 hover:border-gray-300"
+      }`}
     >
-      <div {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xs select-none">
-        ⋮⋮
-      </div>
       <input
         type="checkbox"
-        checked={isPacked}
-        onChange={handleToggle}
+        checked={isSelected}
+        onChange={onSelect}
         className="w-3 h-3 text-violet-600 rounded cursor-pointer"
       />
       {item.importance && item.importance !== "normal" && (
@@ -94,11 +67,7 @@ function DraggableItem({
           title={item.belongsTo}
         />
       )}
-      <span
-        className={`flex-1 text-xs ${
-          isPacked ? "line-through text-gray-400" : "text-gray-700"
-        }`}
-      >
+      <span className="flex-1 text-xs text-gray-700">
         {item.name}
         {item.quantity > 1 && (
           <span className="text-[10px] text-gray-500 ml-0.5">×{item.quantity}</span>
@@ -122,27 +91,42 @@ function DraggableItem({
 
 export default function UnorganizedItems({
   items,
+  luggages,
   locale,
   onAddItem,
   onDeleteItem,
-  onToggleItem,
+  onMoveItem,
 }: UnorganizedItemsProps) {
   const t = getTranslations(locale);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
 
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'unorganized',
-    data: {
-      type: 'unorganized-area',
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === items.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(items.map((i) => i.id));
     }
-  });
+  };
+
+  const handleMoveToLuggage = async (luggageId: string) => {
+    for (const itemId of selectedItems) {
+      await onMoveItem(itemId, luggageId);
+    }
+    setSelectedItems([]);
+    setShowMoveMenu(false);
+  };
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-dashed transition-all ${
-        isOver ? "border-violet-500 bg-violet-50" : "border-gray-300"
-      }`}
-    >
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-dashed border-gray-300">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -153,32 +137,67 @@ export default function UnorganizedItems({
           </h2>
           <p className="text-sm text-gray-500 mt-1">{t.itemsNotInLuggage}</p>
         </div>
-        <button
-          onClick={onAddItem}
-          className="px-4 py-2 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600 transition-colors"
-        >
-          + {t.addItem}
-        </button>
+        <div className="flex gap-2">
+          {selectedItems.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMoveMenu(!showMoveMenu)}
+                className="px-3 py-2 bg-violet-500 text-white rounded-xl text-xs font-semibold hover:bg-violet-600 transition-colors"
+              >
+                Move {selectedItems.length} to...
+              </button>
+              {showMoveMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-10 max-h-64 overflow-y-auto">
+                  {luggages.map((luggage) => (
+                    <button
+                      key={luggage.id}
+                      onClick={() => handleMoveToLuggage(luggage.id)}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-violet-50 transition-colors"
+                    >
+                      {luggage.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={onAddItem}
+            className="px-4 py-2 bg-violet-500 text-white rounded-xl text-xs font-semibold hover:bg-violet-600 transition-colors"
+          >
+            + {t.addItem}
+          </button>
+        </div>
       </div>
+
+      {items.length > 0 && (
+        <div className="mb-3">
+          <button
+            onClick={handleSelectAll}
+            className="text-xs text-violet-600 hover:text-violet-700 font-semibold"
+          >
+            {selectedItems.length === items.length ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
           <div className="text-3xl mb-1">📦</div>
-          <p className="text-xs">{t.dragItemsToOrganize}</p>
+          <p className="text-xs">No unorganized items</p>
         </div>
       ) : (
-        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-wrap gap-2">
-            {items.map((item) => (
-              <DraggableItem
-                key={item.id}
-                item={item}
-                onDelete={() => onDeleteItem(item.id)}
-                onToggle={() => onToggleItem(item.id, item.isPacked)}
-              />
-            ))}
-          </div>
-        </SortableContext>
+        <div className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.includes(item.id)}
+              onSelect={() => handleSelectItem(item.id)}
+              onDelete={() => onDeleteItem(item.id)}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

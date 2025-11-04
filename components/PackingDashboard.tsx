@@ -2,21 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import LuggageCard from "./LuggageCard";
 import AddLuggageModal from "./AddLuggageModal";
 import AddItemModal from "./AddItemModal";
@@ -84,13 +69,6 @@ export default function PackingDashboard({
   const [selectedLuggage, setSelectedLuggage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
   // Calculate statistics
   const totalItems = luggages.reduce((sum, l) => sum + l.items.length, 0);
   const packedItems = luggages.reduce(
@@ -105,67 +83,16 @@ export default function PackingDashboard({
   );
   const packingProgress = totalItems > 0 ? (packedItems / totalItems) * 100 : 0;
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) return;
-
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    // Handle item dragging (moving items between luggage or to unorganized)
-    if (activeData?.type === 'item') {
-      const itemId = active.id as string;
-      let targetLuggageId: string | null = null;
-
-      if (overData?.type === 'luggage') {
-        targetLuggageId = overData.luggageId;
-      } else if (overData?.type === 'unorganized-area') {
-        targetLuggageId = null;
-      } else {
-        return; // Invalid drop target
-      }
-
-      // Move item via API
-      try {
-        await fetch(`/api/packing/items/${itemId}/move`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ luggageId: targetLuggageId }),
-        });
-
-        // Refresh data
-        router.refresh();
-      } catch (error) {
-        console.error("Error moving item:", error);
-      }
-    }
-    // Handle luggage reordering
-    else if (active.id !== over.id && !activeData?.type) {
-      const oldIndex = luggages.findIndex((item) => item.id === active.id);
-      const newIndex = luggages.findIndex((item) => item.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newLuggages = arrayMove(luggages, oldIndex, newIndex);
-        setLuggages(newLuggages);
-
-        // Update order in database
-        try {
-          await Promise.all(
-            newLuggages.map((luggage, index) =>
-              fetch(`/api/packing/luggage/${luggage.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ order: index }),
-              })
-            )
-          );
-        } catch (error) {
-          console.error("Error updating luggage order:", error);
-          // Revert on error
-          setLuggages(initialLuggages);
-        }
-      }
+  const handleMoveItem = async (itemId: string, luggageId: string | null) => {
+    try {
+      await fetch(`/api/packing/items/${itemId}/move`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ luggageId }),
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Error moving item:", error);
     }
   };
 
@@ -302,62 +229,51 @@ export default function PackingDashboard({
         </div>
       </div>
 
-      {/* Wrap everything in DndContext */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        {/* Unorganized Items */}
-        <div className="mb-6">
-          <UnorganizedItems
-            items={unorganizedItems}
-            locale={locale}
-            onAddItem={() => {
-              setSelectedLuggage(null);
-              setShowAddItem(true);
-            }}
-            onDeleteItem={handleDeleteItem}
-            onToggleItem={handleToggleItem}
-          />
-        </div>
+      {/* Unorganized Items */}
+      <div className="mb-6">
+        <UnorganizedItems
+          items={unorganizedItems}
+          luggages={luggages}
+          locale={locale}
+          onAddItem={() => {
+            setSelectedLuggage(null);
+            setShowAddItem(true);
+          }}
+          onDeleteItem={handleDeleteItem}
+          onMoveItem={handleMoveItem}
+        />
+      </div>
 
-        {/* Luggage Grid */}
-        {luggages.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <div className="text-6xl mb-4">🧳</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {t.noLuggageYet}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {t.addYourFirstLuggage}
-            </p>
-            <button
-              onClick={handleAddLuggage}
-              className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              + {t.addFirstLuggage}
-            </button>
-          </div>
-        ) : (
-          <SortableContext
-            items={luggages.map((l) => l.id)}
-            strategy={verticalListSortingStrategy}
+      {/* Luggage Grid */}
+      {luggages.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+          <div className="text-6xl mb-4">🧳</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {t.noLuggageYet}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {t.addYourFirstLuggage}
+          </p>
+          <button
+            onClick={handleAddLuggage}
+            className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {luggages.map((luggage) => (
-                <LuggageCard
-                  key={luggage.id}
-                  luggage={luggage}
-                  onAddItem={() => handleAddItem(luggage.id)}
-                  onRefresh={refreshData}
-                  locale={locale}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        )}
-      </DndContext>
+            + {t.addFirstLuggage}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {luggages.map((luggage) => (
+            <LuggageCard
+              key={luggage.id}
+              luggage={luggage}
+              onAddItem={() => handleAddItem(luggage.id)}
+              onRefresh={refreshData}
+              locale={locale}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Modals */}
       {showAddLuggage && (
