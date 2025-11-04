@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { getTranslations, type Locale } from "@/lib/i18n";
 
@@ -70,6 +71,14 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
     transition,
     isDragging,
   } = useSortable({ id: luggage.id });
+
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `luggage-${luggage.id}`,
+    data: {
+      type: 'luggage',
+      luggageId: luggage.id,
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -151,8 +160,11 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden"
+      className={`bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden ${
+        isOver ? "ring-4 ring-violet-300" : ""
+      }`}
     >
+      <div ref={setDropRef} className="w-full h-full">
       {/* Header */}
       <div className={`bg-gradient-to-r ${colorClass} p-4 text-white`}>
         <div className="flex items-start justify-between">
@@ -290,6 +302,7 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
