@@ -61,19 +61,19 @@ function DraggableItem({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 hover:border-violet-300 transition-all group"
+      className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border border-gray-200 hover:border-violet-300 transition-all group"
     >
-      <div {...listeners} className="cursor-move text-gray-400 hover:text-gray-600">
+      <div {...listeners} className="cursor-move text-gray-400 hover:text-gray-600 text-xs">
         ⋮⋮
       </div>
       <input
         type="checkbox"
         checked={item.isPacked}
         onChange={onToggle}
-        className="w-4 h-4 text-violet-600 rounded cursor-pointer"
+        className="w-3 h-3 text-violet-600 rounded cursor-pointer"
       />
       {item.importance && item.importance !== "normal" && (
-        <span className="text-xs flex-shrink-0" title={item.importance}>
+        <span className="text-[10px] flex-shrink-0 leading-none" title={item.importance}>
           {item.importance === "essential" && "🔴"}
           {item.importance === "important" && "🟠"}
           {item.importance === "optional" && "⚪"}
@@ -81,30 +81,30 @@ function DraggableItem({
       )}
       {item.colorCode && (
         <div
-          className="w-2 h-2 rounded-full flex-shrink-0"
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: item.colorCode }}
           title={item.belongsTo}
         />
       )}
       <span
-        className={`flex-1 text-sm ${
+        className={`flex-1 text-xs ${
           item.isPacked ? "line-through text-gray-400" : "text-gray-700"
         }`}
       >
         {item.name}
         {item.quantity > 1 && (
-          <span className="text-xs text-gray-500 ml-1">×{item.quantity}</span>
+          <span className="text-[10px] text-gray-500 ml-0.5">×{item.quantity}</span>
         )}
       </span>
-      <span className="text-xs text-gray-400 capitalize">{item.category}</span>
+      <span className="text-[10px] text-gray-400 capitalize px-1.5 py-0.5 bg-gray-100 rounded">{item.category}</span>
       {item.weight && (
-        <span className="text-xs text-gray-400">
+        <span className="text-[10px] text-gray-400">
           {(item.weight * item.quantity).toFixed(1)}kg
         </span>
       )}
       <button
         onClick={onDelete}
-        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity"
+        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity ml-1"
       >
         🗑️
       </button>
@@ -154,13 +154,13 @@ export default function UnorganizedItems({
       </div>
 
       {items.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-4xl mb-2">📦</div>
-          <p className="text-sm">{t.dragItemsToOrganize}</p>
+        <div className="text-center py-8 text-gray-400">
+          <div className="text-3xl mb-1">📦</div>
+          <p className="text-xs">{t.dragItemsToOrganize}</p>
         </div>
       ) : (
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {items.map((item) => (
               <DraggableItem
                 key={item.id}
