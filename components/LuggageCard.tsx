@@ -240,6 +240,13 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
                           onChange={() => handleToggleItem(item.id, item.isPacked)}
                           className="w-4 h-4 text-violet-600 rounded cursor-pointer"
                         />
+                        {item.colorCode && (
+                          <div
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: item.colorCode }}
+                            title={item.belongsTo}
+                          />
+                        )}
                         <span
                           className={`flex-1 text-sm ${
                             item.isPacked

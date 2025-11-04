@@ -520,6 +520,7 @@ model Luggage {
   maxWeight       Float?        // Weight limit for this bag
   description     String?       // Additional notes
   isActive        Boolean       @default(true) // Currently in use
+  isShared        Boolean       @default(true) // Shared with household members
   order           Int           @default(0) // Display order
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -529,6 +530,7 @@ model Luggage {
 
   @@index([userId, isActive])
   @@index([userId, order])
+  @@index([isShared, isActive])
 }
 
 model PackingItem {
@@ -539,6 +541,8 @@ model PackingItem {
   quantity        Int       @default(1)
   weight          Float?    // Weight in kg per item
   isPacked        Boolean   @default(false)
+  belongsTo       String    @default("shared") // "shared", "baber", "BABER", or custom user name
+  colorCode       String?   // Color coding for belongsTo (e.g., "#FF6B6B" for baber, "#4ECDC4" for BABER)
   notes           String?
   photoUrl        String?   // Optional photo of the item
   tags            String[]  @default([]) // ["essential", "winter", "beach"]
@@ -550,6 +554,7 @@ model PackingItem {
 
   @@index([luggageId, category])
   @@index([luggageId, isPacked])
+  @@index([belongsTo])
 }
 
 model PackingTemplate {

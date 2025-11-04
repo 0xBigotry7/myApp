@@ -14,16 +14,25 @@ export default async function PackingPage() {
 
   const locale = await getServerLocale();
 
-  // Fetch user's luggage with items
+  // Fetch user's luggage and shared luggage with items
   const luggages = await prisma.luggage.findMany({
     where: {
-      userId: session.user.id,
+      OR: [
+        { userId: session.user.id }, // User's own luggage
+        { isShared: true }, // Shared luggage from all users
+      ],
       isActive: true,
     },
     include: {
       items: {
         orderBy: {
           createdAt: "desc",
+        },
+      },
+      user: {
+        select: {
+          name: true,
+          email: true,
         },
       },
     },

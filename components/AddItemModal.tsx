@@ -41,7 +41,14 @@ export default function AddItemModal({
     weight: "",
     notes: "",
     isPacked: false,
+    belongsTo: "shared",
   });
+
+  const BELONGS_TO_OPTIONS = [
+    { value: "shared", label: t.shared, color: "#9CA3AF" }, // Gray
+    { value: "baber", label: t.baber, color: "#FF6B6B" }, // Red
+    { value: "BABER", label: t.BABER, color: "#4ECDC4" }, // Teal
+  ];
 
   useEffect(() => {
     if (isOpen) {
@@ -61,6 +68,10 @@ export default function AddItemModal({
     setLoading(true);
 
     try {
+      const selectedOption = BELONGS_TO_OPTIONS.find(
+        (opt) => opt.value === formData.belongsTo
+      );
+
       const res = await fetch("/api/packing/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,6 +83,8 @@ export default function AddItemModal({
           weight: formData.weight ? parseFloat(formData.weight) : null,
           notes: formData.notes || null,
           isPacked: formData.isPacked,
+          belongsTo: formData.belongsTo,
+          colorCode: selectedOption?.color,
         }),
       });
 
@@ -86,6 +99,7 @@ export default function AddItemModal({
           weight: "",
           notes: "",
           isPacked: false,
+          belongsTo: "shared",
         });
       } else {
         alert("Failed to add item");
@@ -191,6 +205,45 @@ export default function AddItemModal({
                 placeholder="0.5"
                 className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
+            </div>
+          </div>
+
+          {/* Belongs To */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t.belongsTo} <span className="text-gray-400 text-xs">({t.optional})</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {BELONGS_TO_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, belongsTo: option.value })
+                  }
+                  className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all border-2 ${
+                    formData.belongsTo === option.value
+                      ? "border-violet-500 shadow-lg"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      formData.belongsTo === option.value
+                        ? `${option.color}20`
+                        : "white",
+                    color:
+                      formData.belongsTo === option.value
+                        ? option.color
+                        : "#374151",
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full mx-auto mb-1"
+                    style={{ backgroundColor: option.color }}
+                  />
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 

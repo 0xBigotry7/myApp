@@ -11,14 +11,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { luggageId, category, name, quantity, weight, isPacked, notes, tags } = body;
+    const { luggageId, category, name, quantity, weight, isPacked, notes, tags, belongsTo, colorCode } = body;
 
-    // Verify luggage belongs to user
+    // Verify luggage belongs to user or is shared
     const luggage = await prisma.luggage.findUnique({
       where: { id: luggageId },
     });
 
-    if (!luggage || luggage.userId !== session.user.id) {
+    if (!luggage || (luggage.userId !== session.user.id && !luggage.isShared)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -30,6 +30,8 @@ export async function POST(request: Request) {
         quantity: quantity || 1,
         weight: weight ? parseFloat(weight) : null,
         isPacked: isPacked || false,
+        belongsTo: belongsTo || "shared",
+        colorCode: colorCode || null,
         notes: notes || null,
         tags: tags || [],
       },
