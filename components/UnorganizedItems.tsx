@@ -60,10 +60,9 @@ function DraggableItem({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border border-gray-200 hover:border-violet-300 transition-all group"
+      className="inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border border-gray-200 hover:border-violet-300 transition-all group max-w-fit"
     >
-      <div {...listeners} className="cursor-move text-gray-400 hover:text-gray-600 text-xs">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 text-xs touch-none">
         ⋮⋮
       </div>
       <input
@@ -160,7 +159,7 @@ export default function UnorganizedItems({
         </div>
       ) : (
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1">
+          <div className="flex flex-wrap gap-2">
             {items.map((item) => (
               <DraggableItem
                 key={item.id}
