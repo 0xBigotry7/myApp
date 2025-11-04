@@ -32,6 +32,8 @@ interface LuggageCardProps {
   luggage: Luggage;
   onAddItem: () => void;
   onRefresh: () => void;
+  onToggleItem: (itemId: string, isPacked: boolean) => void;
+  onDeleteItem: (itemId: string) => void;
   locale: Locale;
 }
 
@@ -57,7 +59,7 @@ const COLOR_CLASSES: Record<string, string> = {
   black: "from-gray-700 to-gray-900",
 };
 
-export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: LuggageCardProps) {
+export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleItem, onDeleteItem, locale }: LuggageCardProps) {
   const router = useRouter();
   const t = getTranslations(locale);
   const [expanded, setExpanded] = useState(false);
@@ -97,37 +99,6 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
   const colorClass = COLOR_CLASSES[luggage.color] || COLOR_CLASSES.gray;
   const icon = LUGGAGE_ICONS[luggage.type] || LUGGAGE_ICONS.other;
 
-  const handleToggleItem = async (itemId: string, isPacked: boolean) => {
-    try {
-      const res = await fetch(`/api/packing/items/${itemId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPacked: !isPacked }),
-      });
-
-      if (res.ok) {
-        onRefresh();
-      }
-    } catch (error) {
-      console.error("Error toggling item:", error);
-    }
-  };
-
-  const handleDeleteItem = async (itemId: string) => {
-    if (!confirm("Delete this item?")) return;
-
-    try {
-      const res = await fetch(`/api/packing/items/${itemId}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        onRefresh();
-      }
-    } catch (error) {
-      console.error("Error deleting item:", error);
-    }
-  };
 
   const handleDeleteLuggage = async () => {
     if (!confirm(`Delete "${luggage.name}" and all its items?`)) return;
@@ -249,7 +220,7 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
                         <input
                           type="checkbox"
                           checked={item.isPacked}
-                          onChange={() => handleToggleItem(item.id, item.isPacked)}
+                          onChange={() => onToggleItem(item.id, item.isPacked)}
                           className="w-4 h-4 text-violet-600 rounded cursor-pointer"
                         />
                         {item.importance && item.importance !== "normal" && (
@@ -289,7 +260,7 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
                           </span>
                         )}
                         <button
-                          onClick={() => handleDeleteItem(item.id)}
+                          onClick={() => onDeleteItem(item.id)}
                           className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity"
                         >
                           ✕

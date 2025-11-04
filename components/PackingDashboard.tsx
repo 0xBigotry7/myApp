@@ -177,15 +177,31 @@ export default function PackingDashboard({
   };
 
   const handleToggleItem = async (itemId: string, isPacked: boolean) => {
+    // Optimistic update: toggle immediately in both luggage and unorganized
+    setLuggages(
+      luggages.map((l) => ({
+        ...l,
+        items: l.items.map((i) =>
+          i.id === itemId ? { ...i, isPacked: !isPacked } : i
+        ),
+      }))
+    );
+    setUnorganizedItems(
+      unorganizedItems.map((i) =>
+        i.id === itemId ? { ...i, isPacked: !isPacked } : i
+      )
+    );
+
     try {
       await fetch(`/api/packing/items/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPacked: !isPacked }),
       });
-      router.refresh();
     } catch (error) {
       console.error("Error toggling item:", error);
+      // Revert on error
+      router.refresh();
     }
   };
 
@@ -349,6 +365,8 @@ export default function PackingDashboard({
               luggage={luggage}
               onAddItem={() => handleAddItem(luggage.id)}
               onRefresh={refreshData}
+              onToggleItem={handleToggleItem}
+              onDeleteItem={handleDeleteItem}
               locale={locale}
             />
           ))}
