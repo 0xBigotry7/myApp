@@ -151,14 +151,19 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, locale }: L
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden"
     >
       {/* Header */}
       <div className={`bg-gradient-to-r ${colorClass} p-4 text-white`}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">{icon}</div>
+            <div
+              {...listeners}
+              className="text-3xl cursor-move"
+              title="Drag to reorder"
+            >
+              {icon}
+            </div>
             <div>
               <h3 className="font-bold text-lg">{luggage.name}</h3>
               <p className="text-sm opacity-90 capitalize">{luggage.type}</p>
