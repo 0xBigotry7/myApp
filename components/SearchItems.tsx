@@ -1,5 +1,7 @@
 "use client";
 
+import { getTranslations, type Locale } from "@/lib/i18n";
+
 interface SearchResult {
   id: string;
   name: string;
@@ -14,9 +16,11 @@ interface SearchItemsProps {
   query: string;
   onChange: (query: string) => void;
   results: SearchResult[];
+  locale: Locale;
 }
 
-export default function SearchItems({ query, onChange, results }: SearchItemsProps) {
+export default function SearchItems({ query, onChange, results, locale }: SearchItemsProps) {
+  const t = getTranslations(locale);
   return (
     <div className="relative">
       <div className="relative">
@@ -27,7 +31,7 @@ export default function SearchItems({ query, onChange, results }: SearchItemsPro
           type="text"
           value={query}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Search items across all luggage..."
+          placeholder={t.searchItemsAcrossLuggage}
           className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
         />
       </div>
@@ -37,12 +41,12 @@ export default function SearchItems({ query, onChange, results }: SearchItemsPro
         <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-10">
           {results.length === 0 ? (
             <div className="p-6 text-center text-gray-400">
-              No items found for "{query}"
+              {t.noItemsFound} "{query}"
             </div>
           ) : (
             <div className="p-2">
               <div className="text-xs font-semibold text-gray-500 px-3 py-2">
-                Found {results.length} item{results.length !== 1 ? "s" : ""}
+                {t.foundItems} {results.length} {t.item}{results.length !== 1 ? "s" : ""}
               </div>
               {results.map((result) => (
                 <div
