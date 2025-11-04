@@ -7,7 +7,7 @@ interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   luggageId?: string | null; // Optional - null means unorganized
-  onSuccess: () => void;
+  onSuccess: (newItem: any) => void;
   locale: Locale;
   userId: string;
 }
@@ -77,11 +77,41 @@ export default function AddItemModal({
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const selectedOption = BELONGS_TO_OPTIONS.find(
-        (opt) => opt.value === formData.belongsTo
-      );
+    const selectedOption = BELONGS_TO_OPTIONS.find(
+      (opt) => opt.value === formData.belongsTo
+    );
 
+    // Create optimistic item object
+    const optimisticItem = {
+      id: `temp-${Date.now()}`,
+      category: formData.category,
+      name: formData.name,
+      quantity: parseInt(formData.quantity),
+      weight: formData.weight ? parseFloat(formData.weight) : null,
+      isPacked: formData.isPacked,
+      belongsTo: formData.belongsTo,
+      colorCode: selectedOption?.color || null,
+      importance: formData.importance,
+      notes: formData.notes || null,
+    };
+
+    // Immediately update UI
+    onSuccess(optimisticItem);
+    onClose();
+
+    // Reset form
+    setFormData({
+      name: "",
+      category: "clothing",
+      quantity: "1",
+      weight: "",
+      notes: "",
+      isPacked: false,
+      belongsTo: "shared",
+      importance: "normal",
+    });
+
+    try {
       const res = await fetch("/api/packing/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,21 +130,7 @@ export default function AddItemModal({
         }),
       });
 
-      if (res.ok) {
-        onSuccess();
-        onClose();
-        // Reset form
-        setFormData({
-          name: "",
-          category: "clothing",
-          quantity: "1",
-          weight: "",
-          notes: "",
-          isPacked: false,
-          belongsTo: "shared",
-          importance: "normal",
-        });
-      } else {
+      if (!res.ok) {
         alert("Failed to add item");
       }
     } catch (error) {

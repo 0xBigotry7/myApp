@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 interface AddLuggageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newLuggage: any) => void;
   existingCount: number;
 }
 
@@ -64,6 +64,23 @@ export default function AddLuggageModal({
     e.preventDefault();
     setLoading(true);
 
+    // Create optimistic luggage object
+    const optimisticLuggage = {
+      id: `temp-${Date.now()}`,
+      name: formData.name,
+      type: formData.type,
+      color: formData.color,
+      weight: null,
+      maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
+      description: formData.description || null,
+      order: existingCount,
+      items: [],
+    };
+
+    // Immediately update UI
+    onSuccess(optimisticLuggage);
+    onClose();
+
     try {
       const res = await fetch("/api/packing/luggage", {
         method: "POST",
@@ -75,11 +92,9 @@ export default function AddLuggageModal({
         }),
       });
 
-      if (res.ok) {
-        onSuccess();
-        onClose();
-      } else {
+      if (!res.ok) {
         alert("Failed to add luggage");
+        // Optionally: trigger a refresh to revert optimistic update
       }
     } catch (error) {
       console.error("Error adding luggage:", error);

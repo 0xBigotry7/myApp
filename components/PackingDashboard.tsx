@@ -84,15 +84,63 @@ export default function PackingDashboard({
   const packingProgress = totalItems > 0 ? (packedItems / totalItems) * 100 : 0;
 
   const handleMoveItem = async (itemId: string, luggageId: string | null) => {
+    // Find the item in unorganized or luggage
+    let item = unorganizedItems.find((i) => i.id === itemId);
+    let sourceLuggageId: string | null = null;
+
+    if (!item) {
+      // Search in luggage
+      for (const luggage of luggages) {
+        item = luggage.items.find((i) => i.id === itemId);
+        if (item) {
+          sourceLuggageId = luggage.id;
+          break;
+        }
+      }
+    }
+
+    if (!item) return;
+
+    // Optimistic update: move item immediately
+    if (sourceLuggageId) {
+      // Move from luggage
+      setLuggages(
+        luggages.map((l) => {
+          if (l.id === sourceLuggageId) {
+            return { ...l, items: l.items.filter((i) => i.id !== itemId) };
+          }
+          if (l.id === luggageId) {
+            return { ...l, items: [...l.items, item!] };
+          }
+          return l;
+        })
+      );
+      if (!luggageId) {
+        // Moving to unorganized
+        setUnorganizedItems([...unorganizedItems, item]);
+      }
+    } else {
+      // Move from unorganized
+      setUnorganizedItems(unorganizedItems.filter((i) => i.id !== itemId));
+      if (luggageId) {
+        setLuggages(
+          luggages.map((l) =>
+            l.id === luggageId ? { ...l, items: [...l.items, item!] } : l
+          )
+        );
+      }
+    }
+
     try {
       await fetch(`/api/packing/items/${itemId}/move`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ luggageId }),
       });
-      router.refresh();
     } catch (error) {
       console.error("Error moving item:", error);
+      // Revert on error
+      router.refresh();
     }
   };
 
@@ -108,13 +156,23 @@ export default function PackingDashboard({
   const handleDeleteItem = async (itemId: string) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
 
+    // Optimistic update: remove item immediately
+    setUnorganizedItems(unorganizedItems.filter((i) => i.id !== itemId));
+    setLuggages(
+      luggages.map((l) => ({
+        ...l,
+        items: l.items.filter((i) => i.id !== itemId),
+      }))
+    );
+
     try {
       await fetch(`/api/packing/items/${itemId}`, {
         method: "DELETE",
       });
-      router.refresh();
     } catch (error) {
       console.error("Error deleting item:", error);
+      // Revert on error
+      router.refresh();
     }
   };
 
@@ -133,6 +191,28 @@ export default function PackingDashboard({
 
   const refreshData = () => {
     router.refresh();
+  };
+
+  const handleLuggageAdded = (newLuggage: any) => {
+    // Optimistic update: immediately add to UI
+    setLuggages([...luggages, newLuggage]);
+  };
+
+  const handleItemAdded = (newItem: any) => {
+    // Optimistic update: immediately add to UI
+    if (selectedLuggage) {
+      // Add to specific luggage
+      setLuggages(
+        luggages.map((l) =>
+          l.id === selectedLuggage
+            ? { ...l, items: [...l.items, newItem] }
+            : l
+        )
+      );
+    } else {
+      // Add to unorganized items
+      setUnorganizedItems([...unorganizedItems, newItem]);
+    }
   };
 
   // Search across all luggage
@@ -280,7 +360,7 @@ export default function PackingDashboard({
         <AddLuggageModal
           isOpen={showAddLuggage}
           onClose={() => setShowAddLuggage(false)}
-          onSuccess={refreshData}
+          onSuccess={handleLuggageAdded}
           existingCount={luggages.length}
           locale={locale}
         />
@@ -294,7 +374,7 @@ export default function PackingDashboard({
             setSelectedLuggage(null);
           }}
           luggageId={selectedLuggage}
-          onSuccess={refreshData}
+          onSuccess={handleItemAdded}
           locale={locale}
           userId={userId}
         />
