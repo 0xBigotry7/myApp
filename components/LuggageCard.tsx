@@ -170,21 +170,20 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh }: LuggageCa
 
       {/* Items */}
       <div className="p-4">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-3 hover:text-gray-900"
-        >
-          <span>{expanded ? "▼" : "▶"} Items ({totalCount})</span>
+        <div className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-3">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddItem();
-            }}
+            onClick={() => setExpanded(!expanded)}
+            className="flex-1 text-left hover:text-gray-900 transition-colors"
+          >
+            <span>{expanded ? "▼" : "▶"} Items ({totalCount})</span>
+          </button>
+          <button
+            onClick={onAddItem}
             className="px-3 py-1 bg-violet-100 text-violet-700 rounded-lg text-xs font-semibold hover:bg-violet-200 transition-colors"
           >
             + Add Item
           </button>
-        </button>
+        </div>
 
         {expanded && (
           <div className="space-y-3 max-h-96 overflow-y-auto">
