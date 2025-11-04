@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
 import PackingDashboard from "@/components/PackingDashboard";
 
 export default async function PackingPage() {
@@ -40,12 +41,15 @@ export default async function PackingPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6">
-      <PackingDashboard
-        luggages={luggages}
-        templates={templates}
-        userEmail={session.user.email || ""}
-      />
-    </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6">
+        <PackingDashboard
+          luggages={luggages}
+          templates={templates}
+          userEmail={session.user.email || ""}
+        />
+      </div>
+    </>
   );
 }
