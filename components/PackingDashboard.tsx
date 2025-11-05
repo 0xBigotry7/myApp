@@ -70,6 +70,7 @@ export default function PackingDashboard({
   const [showAddLuggage, setShowAddLuggage] = useState(false);
   const [showAddItem, setShowAddItem] = useState(false);
   const [selectedLuggage, setSelectedLuggage] = useState<string | null>(null);
+  const [editingLuggage, setEditingLuggage] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Calculate statistics
@@ -213,8 +214,21 @@ export default function PackingDashboard({
   };
 
   const handleLuggageAdded = (newLuggage: any) => {
-    // Optimistic update: immediately add to UI
-    setLuggages([...luggages, newLuggage]);
+    if (editingLuggage) {
+      // Update existing luggage
+      setLuggages(luggages.map((l) => (l.id === newLuggage.id ? newLuggage : l)));
+      setEditingLuggage(null);
+    } else {
+      // Add new luggage
+      setLuggages([...luggages, newLuggage]);
+    }
+    // Also refresh to get server state
+    refreshData();
+  };
+
+  const handleEditLuggage = (luggage: any) => {
+    setEditingLuggage(luggage);
+    setShowAddLuggage(true);
   };
 
   const handleItemAdded = (newItem: any) => {
@@ -242,6 +256,7 @@ export default function PackingDashboard({
             (item) =>
               item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
               item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
               item.tags.some((tag) =>
                 tag.toLowerCase().includes(searchQuery.toLowerCase())
               )
@@ -367,10 +382,12 @@ export default function PackingDashboard({
               key={luggage.id}
               luggage={luggage}
               onAddItem={() => handleAddItem(luggage.id)}
+              onEdit={() => handleEditLuggage(luggage)}
               onRefresh={refreshData}
               onToggleItem={handleToggleItem}
               onRemoveFromLuggage={(itemId) => handleMoveItem(itemId, null)}
               locale={locale}
+              userId={userId}
             />
           ))}
         </div>
@@ -380,9 +397,13 @@ export default function PackingDashboard({
       {showAddLuggage && (
         <AddLuggageModal
           isOpen={showAddLuggage}
-          onClose={() => setShowAddLuggage(false)}
+          onClose={() => {
+            setShowAddLuggage(false);
+            setEditingLuggage(null);
+          }}
           onSuccess={handleLuggageAdded}
           existingCount={luggages.length}
+          editLuggage={editingLuggage}
         />
       )}
 

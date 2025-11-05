@@ -14,13 +14,13 @@ export async function DELETE(
   }
 
   try {
-    // Check ownership
+    // Check if luggage exists (no ownership check for household sharing)
     const luggage = await prisma.luggage.findUnique({
       where: { id },
     });
 
-    if (!luggage || luggage.userId !== session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!luggage) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // Delete luggage (items will be cascade deleted)
@@ -51,35 +51,39 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { name, type, color, maxWeight, description, isActive } = body;
+    const { name, type, color, maxWeight, description, airtagName, isActive } = body;
 
-    // Check ownership
+    // Check if luggage exists (no ownership check for household sharing)
     const luggage = await prisma.luggage.findUnique({
       where: { id },
     });
 
-    if (!luggage || luggage.userId !== session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!luggage) {
+      return NextResponse.json({ error: "Not found", details: "Luggage not found" }, { status: 404 });
     }
+
+    // Build update data object, only including defined fields
+    const updateData: any = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (type !== undefined) updateData.type = type;
+    if (color !== undefined) updateData.color = color;
+    if (maxWeight !== undefined) updateData.maxWeight = maxWeight ? parseFloat(maxWeight) : null;
+    if (description !== undefined) updateData.description = description || null;
+    if (airtagName !== undefined) updateData.airtagName = airtagName || null;
+    if (isActive !== undefined) updateData.isActive = isActive;
 
     // Update luggage
     const updatedLuggage = await prisma.luggage.update({
       where: { id },
-      data: {
-        name: name !== undefined ? name : undefined,
-        type: type !== undefined ? type : undefined,
-        color: color !== undefined ? color : undefined,
-        maxWeight: maxWeight !== undefined ? (maxWeight ? parseFloat(maxWeight) : null) : undefined,
-        description: description !== undefined ? (description || null) : undefined,
-        isActive: isActive !== undefined ? isActive : undefined,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedLuggage);
   } catch (error) {
     console.error("Error updating luggage:", error);
     return NextResponse.json(
-      { error: "Failed to update luggage" },
+      { error: "Failed to update luggage", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

@@ -10,6 +10,7 @@ interface AddItemModalProps {
   onSuccess: (newItem: any) => void;
   locale: Locale;
   userId: string;
+  editItem?: any; // Item to edit (optional)
 }
 
 export default function AddItemModal({
@@ -19,26 +20,28 @@ export default function AddItemModal({
   onSuccess,
   locale,
   userId,
+  editItem,
 }: AddItemModalProps) {
   const t = getTranslations(locale);
 
   const CATEGORIES = [
-    { value: "clothing", label: `👕 ${t.clothing}`, icon: "👕" },
-    { value: "electronics", label: `📱 ${t.electronics}`, icon: "📱" },
-    { value: "toiletries", label: `🧴 ${t.toiletries}`, icon: "🧴" },
     { value: "documents", label: `📄 ${t.documents}`, icon: "📄" },
-    { value: "medications", label: `💊 ${t.medications}`, icon: "💊" },
-    { value: "accessories", label: `👓 ${t.accessories}`, icon: "👓" },
+    { value: "electronics", label: `📱 ${t.electronics}`, icon: "📱" },
+    { value: "charging", label: `🔌 ${t.charging || "充电"}`, icon: "🔌" },
+    { value: "clothing", label: `👕 ${t.clothing}`, icon: "👕" },
+    { value: "toiletries", label: `🧴 ${t.toiletries}`, icon: "🧴" },
     { value: "shoes", label: `👟 ${t.shoes}`, icon: "👟" },
-    { value: "books", label: `📚 ${t.books}`, icon: "📚" },
+    { value: "accessories", label: `👓 ${t.accessories}`, icon: "👓" },
+    { value: "bedding", label: `🛏️ ${t.bedding || "床上用品"}`, icon: "🛏️" },
+    { value: "medications", label: `💊 ${t.medications}`, icon: "💊" },
     { value: "food", label: `🍎 ${t.food}`, icon: "🍎" },
-    { value: "gear", label: `⚙️ ${t.gear}`, icon: "⚙️" },
+    { value: "gifts", label: `🎁 ${t.gifts || "礼物"}`, icon: "🎁" },
     { value: "other", label: `📦 ${t.other}`, icon: "📦" },
   ];
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    category: "clothing",
+    category: "documents",
     quantity: "1",
     weight: "",
     notes: "",
@@ -46,6 +49,34 @@ export default function AddItemModal({
     belongsTo: "shared",
     importance: "normal",
   });
+
+  // Initialize form with edit item data
+  useEffect(() => {
+    if (editItem) {
+      setFormData({
+        name: editItem.name || "",
+        category: editItem.category || "clothing",
+        quantity: String(editItem.quantity || 1),
+        weight: editItem.weight ? String(editItem.weight) : "",
+        notes: editItem.notes || "",
+        isPacked: editItem.isPacked || false,
+        belongsTo: editItem.belongsTo || "shared",
+        importance: editItem.importance || "normal",
+      });
+    } else {
+      // Reset form when not editing
+      setFormData({
+        name: "",
+        category: "documents",
+        quantity: "1",
+        weight: "",
+        notes: "",
+        isPacked: false,
+        belongsTo: "shared",
+        importance: "normal",
+      });
+    }
+  }, [editItem, isOpen]);
 
   const BELONGS_TO_OPTIONS = [
     { value: "shared", label: t.shared, color: "#9CA3AF" }, // Gray
@@ -82,7 +113,18 @@ export default function AddItemModal({
     );
 
     // Create optimistic item object
-    const optimisticItem = {
+    const optimisticItem = editItem ? {
+      ...editItem, // Preserve all existing properties
+      category: formData.category,
+      name: formData.name,
+      quantity: parseInt(formData.quantity),
+      weight: formData.weight ? parseFloat(formData.weight) : null,
+      isPacked: formData.isPacked,
+      belongsTo: formData.belongsTo,
+      colorCode: selectedOption?.color || null,
+      importance: formData.importance,
+      notes: formData.notes || null,
+    } : {
       id: `temp-${Date.now()}`,
       category: formData.category,
       name: formData.name,
@@ -93,49 +135,66 @@ export default function AddItemModal({
       colorCode: selectedOption?.color || null,
       importance: formData.importance,
       notes: formData.notes || null,
+      photoUrl: null,
+      tags: [],
+      lastUsedDate: null,
     };
 
     // Immediately update UI
     onSuccess(optimisticItem);
     onClose();
 
-    // Reset form
-    setFormData({
-      name: "",
-      category: "clothing",
-      quantity: "1",
-      weight: "",
-      notes: "",
-      isPacked: false,
-      belongsTo: "shared",
-      importance: "normal",
-    });
-
     try {
-      const res = await fetch("/api/packing/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          luggageId: luggageId || null,
-          name: formData.name,
-          category: formData.category,
-          quantity: parseInt(formData.quantity),
-          weight: formData.weight ? parseFloat(formData.weight) : null,
-          notes: formData.notes || null,
-          isPacked: formData.isPacked,
-          belongsTo: formData.belongsTo,
-          colorCode: selectedOption?.color,
-          importance: formData.importance,
-        }),
-      });
+      if (editItem) {
+        // Update existing item
+        const res = await fetch(`/api/packing/items/${editItem.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            category: formData.category,
+            quantity: parseInt(formData.quantity),
+            weight: formData.weight ? parseFloat(formData.weight) : null,
+            notes: formData.notes || null,
+            isPacked: formData.isPacked,
+            belongsTo: formData.belongsTo,
+            colorCode: selectedOption?.color,
+            importance: formData.importance,
+          }),
+        });
 
-      if (!res.ok) {
-        alert("Failed to add item");
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("Failed to update item:", errorData);
+          alert(`Failed to update item: ${errorData.details || errorData.error || "Unknown error"}`);
+        }
+      } else {
+        // Create new item
+        const res = await fetch("/api/packing/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            luggageId: luggageId || null,
+            name: formData.name,
+            category: formData.category,
+            quantity: parseInt(formData.quantity),
+            weight: formData.weight ? parseFloat(formData.weight) : null,
+            notes: formData.notes || null,
+            isPacked: formData.isPacked,
+            belongsTo: formData.belongsTo,
+            colorCode: selectedOption?.color,
+            importance: formData.importance,
+          }),
+        });
+
+        if (!res.ok) {
+          alert("Failed to add item");
+        }
       }
     } catch (error) {
-      console.error("Error adding item:", error);
-      alert("Error adding item");
+      console.error("Error saving item:", error);
+      alert("Error saving item");
     } finally {
       setLoading(false);
     }
@@ -151,7 +210,9 @@ export default function AddItemModal({
       <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">{t.addItem}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editItem ? t.editItem : t.addItem}
+            </h2>
             <button
               type="button"
               onClick={onClose}
@@ -355,7 +416,7 @@ export default function AddItemModal({
               disabled={loading}
               className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? t.adding : t.addItem}
+              {loading ? (editItem ? t.saving : t.adding) : (editItem ? t.save : t.addItem)}
             </button>
           </div>
         </form>

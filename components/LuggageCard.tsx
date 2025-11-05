@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSortable } from "@dnd-kit/sortable";
-import { useDroppable } from "@dnd-kit/core";
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useDroppable, DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { getTranslations, type Locale } from "@/lib/i18n";
+import AddItemModal from "./AddItemModal";
 
 interface PackingItem {
   id: string;
@@ -28,16 +29,19 @@ interface Luggage {
   weight: number | null;
   maxWeight: number | null;
   description: string | null;
+  airtagName?: string | null;
   items: PackingItem[];
 }
 
 interface LuggageCardProps {
   luggage: Luggage;
   onAddItem: () => void;
+  onEdit: () => void;
   onRefresh: () => void;
   onToggleItem: (itemId: string, isPacked: boolean) => void;
   onRemoveFromLuggage: (itemId: string) => void;
   locale: Locale;
+  userId: string;
 }
 
 const LUGGAGE_ICONS: Record<string, string> = {
@@ -62,11 +66,13 @@ const COLOR_CLASSES: Record<string, string> = {
   black: "from-gray-700 to-gray-900",
 };
 
-export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleItem, onRemoveFromLuggage, locale }: LuggageCardProps) {
+export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onToggleItem, onRemoveFromLuggage, locale, userId }: LuggageCardProps) {
   const router = useRouter();
   const t = getTranslations(locale);
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingItem, setEditingItem] = useState<PackingItem | null>(null);
+  const [items, setItems] = useState(luggage.items);
 
   const {
     attributes,
@@ -122,12 +128,86 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleIte
     }
   };
 
-  // Group items by category
-  const itemsByCategory = luggage.items.reduce((acc, item) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder items locally
+    const newItems = [...items];
+    const [movedItem] = newItems.splice(oldIndex, 1);
+    newItems.splice(newIndex, 0, movedItem);
+    setItems(newItems);
+
+    // Update order in the backend
+    try {
+      await fetch(`/api/packing/luggage/${luggage.id}/reorder`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemIds: newItems.map((item) => item.id),
+        }),
+      });
+    } catch (error) {
+      console.error("Error reordering items:", error);
+      // Revert on error
+      setItems(luggage.items);
+    }
+  };
+
+  const handleEditItem = (item: PackingItem) => {
+    setEditingItem(item);
+  };
+
+  const handleItemUpdated = (updatedItem: any) => {
+    // Update local state
+    setItems(items.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+    // Also refresh to get server state
+    onRefresh();
+  };
+
+  // Sync items with luggage prop when it changes
+  useEffect(() => {
+    setItems(luggage.items);
+  }, [luggage.items]);
+
+  // Category order for consistent display
+  const CATEGORY_ORDER = [
+    "documents",
+    "electronics",
+    "charging",
+    "clothing",
+    "toiletries",
+    "shoes",
+    "accessories",
+    "bedding",
+    "medications",
+    "food",
+    "gifts",
+    "other",
+  ];
+
+  // Group items by category and sort by category order
+  const itemsByCategory = items.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = [];
     acc[item.category].push(item);
     return acc;
   }, {} as Record<string, PackingItem[]>);
+
+  // Sort categories by the defined order
+  const sortedCategories = Object.keys(itemsByCategory).sort((a, b) => {
+    const indexA = CATEGORY_ORDER.indexOf(a);
+    const indexB = CATEGORY_ORDER.indexOf(b);
+    // If category not found in order, put it at the end
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
 
   return (
     <div
@@ -153,15 +233,29 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleIte
             <div>
               <h3 className="font-bold text-lg">{luggage.name}</h3>
               <p className="text-sm opacity-90 capitalize">{luggage.type}</p>
+              {luggage.airtagName && (
+                <p className="text-xs opacity-80 mt-1 flex items-center gap-1">
+                  <span>📍</span> {luggage.airtagName}
+                </p>
+              )}
             </div>
           </div>
-          <button
-            onClick={handleDeleteLuggage}
-            disabled={loading}
-            className="text-white/80 hover:text-white transition-colors"
-          >
-            🗑️
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onEdit}
+              className="text-white/80 hover:text-white transition-colors"
+              title="Edit luggage"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={handleDeleteLuggage}
+              disabled={loading}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              🗑️
+            </button>
+          </div>
         </div>
 
         {luggage.description && (
@@ -203,82 +297,155 @@ export default function LuggageCard({ luggage, onAddItem, onRefresh, onToggleIte
         </div>
 
         {expanded && (
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {totalCount === 0 ? (
-              <p className="text-center text-gray-400 py-8 text-sm">
-                {t.noItemsYet}
-              </p>
-            ) : (
-              Object.entries(itemsByCategory).map(([category, items]) => (
-                <div key={category} className="border-l-2 border-gray-200 pl-3">
-                  <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                    {t[category as keyof typeof t] || category}
-                  </div>
-                  <div className="space-y-1">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-2 group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={item.isPacked}
-                          onChange={() => onToggleItem(item.id, item.isPacked)}
-                          className="w-4 h-4 text-violet-600 rounded cursor-pointer"
-                        />
-                        {item.importance && item.importance !== "normal" && (
-                          <span
-                            className="text-xs flex-shrink-0"
-                            title={item.importance}
-                          >
-                            {item.importance === "essential" && "🔴"}
-                            {item.importance === "important" && "🟠"}
-                            {item.importance === "optional" && "⚪"}
-                          </span>
-                        )}
-                        {item.colorCode && (
-                          <div
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: item.colorCode }}
-                            title={item.belongsTo}
-                          />
-                        )}
-                        <span
-                          className={`flex-1 text-sm ${
-                            item.isPacked
-                              ? "line-through text-gray-400"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {item.name}
-                          {item.quantity > 1 && (
-                            <span className="text-xs text-gray-500 ml-1">
-                              ×{item.quantity}
-                            </span>
-                          )}
-                        </span>
-                        {item.weight && (
-                          <span className="text-xs text-gray-400">
-                            {(item.weight * item.quantity).toFixed(1)}kg
-                          </span>
-                        )}
-                        <button
-                          onClick={() => onRemoveFromLuggage(item.id)}
-                          className="opacity-0 group-hover:opacity-100 text-orange-500 hover:text-orange-700 text-xs transition-opacity"
-                          title="Move to unorganized"
-                        >
-                          ↩
-                        </button>
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {totalCount === 0 ? (
+                <p className="text-center text-gray-400 py-8 text-sm">
+                  {t.noItemsYet}
+                </p>
+              ) : (
+                sortedCategories.map((category) => {
+                  const categoryItems = itemsByCategory[category];
+                  return (
+                    <div key={category} className="border-l-2 border-gray-200 pl-3">
+                      <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                        {t[category as keyof typeof t] || category}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                      <SortableContext
+                        items={categoryItems.map((item) => item.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-1">
+                          {categoryItems.map((item) => (
+                            <SortableItem
+                              key={item.id}
+                              item={item}
+                              onToggle={() => onToggleItem(item.id, item.isPacked)}
+                              onEdit={() => handleEditItem(item)}
+                              onRemove={() => onRemoveFromLuggage(item.id)}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </DndContext>
         )}
       </div>
       </div>
+
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <AddItemModal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          luggageId={luggage.id}
+          onSuccess={handleItemUpdated}
+          locale={locale}
+          userId={userId}
+          editItem={editingItem}
+        />
+      )}
+    </div>
+  );
+}
+
+// Sortable Item Component
+interface SortableItemProps {
+  item: PackingItem;
+  onToggle: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
+}
+
+function SortableItem({ item, onToggle, onEdit, onRemove }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 group"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+      >
+        ⋮⋮
+      </div>
+      <input
+        type="checkbox"
+        checked={item.isPacked}
+        onChange={onToggle}
+        className="w-4 h-4 text-violet-600 rounded cursor-pointer"
+      />
+      {item.importance && item.importance !== "normal" && (
+        <span
+          className="text-xs flex-shrink-0"
+          title={item.importance}
+        >
+          {item.importance === "essential" && "🔴"}
+          {item.importance === "important" && "🟠"}
+          {item.importance === "optional" && "⚪"}
+        </span>
+      )}
+      {item.colorCode && (
+        <div
+          className="w-2 h-2 rounded-full flex-shrink-0"
+          style={{ backgroundColor: item.colorCode }}
+          title={item.belongsTo}
+        />
+      )}
+      <span
+        className={`flex-1 text-sm ${
+          item.isPacked
+            ? "text-gray-500"
+            : "text-gray-700"
+        }`}
+      >
+        {item.name}
+        {item.quantity > 1 && (
+          <span className="text-xs text-gray-500 ml-1">
+            ×{item.quantity}
+          </span>
+        )}
+      </span>
+      {item.weight && (
+        <span className="text-xs text-gray-400">
+          {(item.weight * item.quantity).toFixed(1)}kg
+        </span>
+      )}
+      <button
+        onClick={onEdit}
+        className="sm:opacity-0 sm:group-hover:opacity-100 text-blue-500 hover:text-blue-700 text-xs transition-opacity"
+        title="Edit item"
+      >
+        ✏️
+      </button>
+      <button
+        onClick={onRemove}
+        className="sm:opacity-0 sm:group-hover:opacity-100 text-orange-500 hover:text-orange-700 text-xs transition-opacity"
+        title="Move to unorganized"
+      >
+        ↩
+      </button>
     </div>
   );
 }

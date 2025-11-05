@@ -520,6 +520,7 @@ model Luggage {
   weight          Float?        // Estimated weight in kg
   maxWeight       Float?        // Weight limit for this bag
   description     String?       // Additional notes
+  airtagName      String?       // AirTag name for tracking
   isActive        Boolean       @default(true) // Currently in use
   isShared        Boolean       @default(true) // Shared with household members
   order           Int           @default(0) // Display order

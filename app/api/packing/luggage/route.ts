@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, type, color, maxWeight, description, order } = body;
+    const { name, type, color, maxWeight, description, airtagName, order } = body;
 
     const luggage = await prisma.luggage.create({
       data: {
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         color: color || "gray",
         maxWeight: maxWeight ? parseFloat(maxWeight) : null,
         description: description || null,
+        airtagName: airtagName || null,
         order: order || 0,
       },
     });

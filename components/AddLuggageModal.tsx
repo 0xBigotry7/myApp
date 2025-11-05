@@ -7,6 +7,7 @@ interface AddLuggageModalProps {
   onClose: () => void;
   onSuccess: (newLuggage: any) => void;
   existingCount: number;
+  editLuggage?: any; // Luggage to edit (optional)
 }
 
 const LUGGAGE_TYPES = [
@@ -36,6 +37,7 @@ export default function AddLuggageModal({
   onClose,
   onSuccess,
   existingCount,
+  editLuggage,
 }: AddLuggageModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -44,7 +46,32 @@ export default function AddLuggageModal({
     color: "blue",
     maxWeight: "",
     description: "",
+    airtagName: "",
   });
+
+  // Initialize form with edit luggage data
+  useEffect(() => {
+    if (editLuggage) {
+      setFormData({
+        name: editLuggage.name || "",
+        type: editLuggage.type || "suitcase",
+        color: editLuggage.color || "blue",
+        maxWeight: editLuggage.maxWeight ? String(editLuggage.maxWeight) : "",
+        description: editLuggage.description || "",
+        airtagName: editLuggage.airtagName || "",
+      });
+    } else {
+      // Reset form when not editing
+      setFormData({
+        name: "",
+        type: "suitcase",
+        color: "blue",
+        maxWeight: "",
+        description: "",
+        airtagName: "",
+      });
+    }
+  }, [editLuggage, isOpen]);
 
   // Prevent body scroll when modal open
   useEffect(() => {
@@ -65,7 +92,15 @@ export default function AddLuggageModal({
     setLoading(true);
 
     // Create optimistic luggage object
-    const optimisticLuggage = {
+    const optimisticLuggage = editLuggage ? {
+      ...editLuggage, // Preserve all existing properties
+      name: formData.name,
+      type: formData.type,
+      color: formData.color,
+      maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
+      description: formData.description || null,
+      airtagName: formData.airtagName || null,
+    } : {
       id: `temp-${Date.now()}`,
       name: formData.name,
       type: formData.type,
@@ -73,6 +108,7 @@ export default function AddLuggageModal({
       weight: null,
       maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
       description: formData.description || null,
+      airtagName: formData.airtagName || null,
       order: existingCount,
       items: [],
     };
@@ -82,23 +118,45 @@ export default function AddLuggageModal({
     onClose();
 
     try {
-      const res = await fetch("/api/packing/luggage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
-          order: existingCount,
-        }),
-      });
+      if (editLuggage) {
+        // Update existing luggage
+        const res = await fetch(`/api/packing/luggage/${editLuggage.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            type: formData.type,
+            color: formData.color,
+            maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
+            description: formData.description || null,
+            airtagName: formData.airtagName || null,
+          }),
+        });
 
-      if (!res.ok) {
-        alert("Failed to add luggage");
-        // Optionally: trigger a refresh to revert optimistic update
+        if (!res.ok) {
+          const errorData = await res.json();
+          alert(`Failed to update luggage: ${errorData.details || errorData.error || "Unknown error"}`);
+        }
+      } else {
+        // Create new luggage
+        const res = await fetch("/api/packing/luggage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
+            airtagName: formData.airtagName || null,
+            order: existingCount,
+          }),
+        });
+
+        if (!res.ok) {
+          alert("Failed to add luggage");
+        }
       }
     } catch (error) {
-      console.error("Error adding luggage:", error);
-      alert("Error adding luggage");
+      console.error("Error saving luggage:", error);
+      alert("Error saving luggage");
     } finally {
       setLoading(false);
     }
@@ -117,7 +175,9 @@ export default function AddLuggageModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Add Luggage</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editLuggage ? "Edit Luggage" : "Add Luggage"}
+            </h2>
             <button
               type="button"
               onClick={onClose}
@@ -226,6 +286,28 @@ export default function AddLuggageModal({
             />
           </div>
 
+          {/* AirTag Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <span className="inline-flex items-center gap-1">
+                <span className="text-base">📍</span> AirTag Name
+              </span>
+              <span className="text-gray-400 text-xs ml-1">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={formData.airtagName}
+              onChange={(e) =>
+                setFormData({ ...formData, airtagName: e.target.value })
+              }
+              placeholder="e.g., Big Red Suitcase, Travel Backpack"
+              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter the name of your AirTag for easy tracking
+            </p>
+          </div>
+
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button
@@ -240,7 +322,7 @@ export default function AddLuggageModal({
               disabled={loading}
               className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? "Adding..." : "Add Luggage"}
+              {loading ? (editLuggage ? "Saving..." : "Adding...") : (editLuggage ? "Save Changes" : "Add Luggage")}
             </button>
           </div>
         </form>
