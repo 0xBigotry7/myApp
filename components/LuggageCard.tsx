@@ -377,11 +377,18 @@ function SortableItem({ item, onToggle, onEdit, onRemove }: SortableItemProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Get background color based on belongsTo
+  const getBackgroundColor = () => {
+    if (item.belongsTo === "baber") return "bg-pink-50"; // Light pink for baber
+    if (item.belongsTo === "BABER") return "bg-blue-50"; // Light blue for BABER
+    return "bg-white"; // White for shared
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 group"
+      className={`flex items-center gap-2 group px-2 py-1 rounded-lg ${getBackgroundColor()}`}
     >
       <div
         {...attributes}
@@ -405,13 +412,6 @@ function SortableItem({ item, onToggle, onEdit, onRemove }: SortableItemProps) {
           {item.importance === "important" && "🟠"}
           {item.importance === "optional" && "⚪"}
         </span>
-      )}
-      {item.colorCode && (
-        <div
-          className="w-2 h-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: item.colorCode }}
-          title={item.belongsTo}
-        />
       )}
       <span
         className={`flex-1 text-sm ${

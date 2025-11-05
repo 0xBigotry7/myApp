@@ -41,11 +41,19 @@ function ItemCard({
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  // Get background color based on belongsTo
+  const getBackgroundColor = () => {
+    if (isSelected) return "bg-violet-50";
+    if (item.belongsTo === "baber") return "bg-pink-50"; // Light pink for baber
+    if (item.belongsTo === "BABER") return "bg-blue-50"; // Light blue for BABER
+    return "bg-white"; // White for shared
+  };
+
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded-md border-2 transition-all group max-w-fit ${
-        isSelected ? "border-violet-500 bg-violet-50" : "border-gray-200 hover:border-gray-300"
-      }`}
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border-2 transition-all group max-w-fit ${
+        isSelected ? "border-violet-500" : "border-gray-200 hover:border-gray-300"
+      } ${getBackgroundColor()}`}
     >
       <input
         type="checkbox"
@@ -59,13 +67,6 @@ function ItemCard({
           {item.importance === "important" && "🟠"}
           {item.importance === "optional" && "⚪"}
         </span>
-      )}
-      {item.colorCode && (
-        <div
-          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-          style={{ backgroundColor: item.colorCode }}
-          title={item.belongsTo}
-        />
       )}
       <span className="flex-1 text-xs text-gray-700">
         {item.name}
@@ -81,7 +82,7 @@ function ItemCard({
       )}
       <button
         onClick={onDelete}
-        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity ml-1"
+        className="sm:opacity-0 sm:group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs transition-opacity ml-1"
       >
         🗑️
       </button>
