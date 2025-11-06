@@ -190,8 +190,8 @@ export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onT
     "bedding",
     "medications",
     "food",
-    "gifts",
     "other",
+    "souvenirs",
   ];
 
   // Group items by category and sort by category order

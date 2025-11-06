@@ -37,8 +37,8 @@ export default function AddItemModal({
     { value: "bedding", label: `🛏️ ${t.bedding || "床上用品"}`, icon: "🛏️" },
     { value: "medications", label: `💊 ${t.medications}`, icon: "💊" },
     { value: "food", label: `🍎 ${t.food}`, icon: "🍎" },
-    { value: "gifts", label: `🎁 ${t.gifts || "礼物"}`, icon: "🎁" },
     { value: "other", label: `📦 ${t.other}`, icon: "📦" },
+    { value: "souvenirs", label: `🎁 ${t.souvenirs || "纪念品"}`, icon: "🎁" },
   ];
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
