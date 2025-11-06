@@ -9,7 +9,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { startingChips, smallBlind, bigBlind } = await req.json();
+    // Handle FormData from HTML form
+    const formData = await req.formData();
+    const startingChips = parseInt(formData.get("startingChips") as string) || 1000;
+    const smallBlind = parseInt(formData.get("smallBlind") as string) || 10;
+    const bigBlind = parseInt(formData.get("bigBlind") as string) || 20;
 
     // Find the other user (the opponent)
     const currentUser = await prisma.user.findUnique({
@@ -29,10 +33,10 @@ export async function POST(req: NextRequest) {
       data: {
         player1Id: session.user.id,
         player2Id: opponent.id,
-        player1Chips: startingChips || 1000,
-        player2Chips: startingChips || 1000,
-        smallBlind: smallBlind || 10,
-        bigBlind: bigBlind || 20,
+        player1Chips: startingChips,
+        player2Chips: startingChips,
+        smallBlind: smallBlind,
+        bigBlind: bigBlind,
         status: "waiting",
         dealerButton: 0, // Player 1 starts as dealer
       },
@@ -42,7 +46,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(game);
+    // Redirect to the game page
+    return NextResponse.redirect(new URL(`/poker/${game.id}`, req.url));
   } catch (error) {
     console.error("Error creating poker game:", error);
     return NextResponse.json(

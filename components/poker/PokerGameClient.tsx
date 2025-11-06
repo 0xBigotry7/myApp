@@ -9,7 +9,7 @@ import Link from "next/link";
 interface PokerGameClientProps {
   game: any;
   currentHand: any;
-  playerHoleCards: Card[] | null;
+  playerHoleCards: Card[];
   communityCards: Card[];
   isPlayer1: boolean;
   userId: string;
@@ -43,7 +43,7 @@ export default function PokerGameClient({
   const opponentBet = currentHand ? (isPlayer1 ? currentHand.player2Bet : currentHand.player1Bet) : 0;
 
   const actions = hasActiveHand
-    ? getAvailableActions(playerChips, opponentBet, playerBet, game.bigBlind)
+    ? getAvailableActions(playerChips, opponentBet, playerBet, game.bigBlind, opponentChips)
     : null;
 
   // Auto-refresh game state every 3 seconds
@@ -57,8 +57,15 @@ export default function PokerGameClient({
           if (data.hands && data.hands[0]) {
             const hand = data.hands[0];
             setCurrentHand(hand);
-            setPlayerHoleCards(hand.playerHoleCards || null);
-            setCommunityCards(JSON.parse(hand.communityCards || "[]"));
+
+            // playerHoleCards is already parsed by the API
+            setPlayerHoleCards(hand.playerHoleCards || []);
+
+            // Parse community cards if they're a string
+            const community = typeof hand.communityCards === 'string'
+              ? JSON.parse(hand.communityCards)
+              : hand.communityCards;
+            setCommunityCards(community || []);
           }
         }
       } catch (error) {
@@ -189,6 +196,22 @@ export default function PokerGameClient({
                     />
                   ))}
               </>
+            ) : game.status === "finished" ? (
+              <div className="text-white text-center py-8">
+                <div className="text-6xl mb-4">🏆</div>
+                <div className="text-3xl font-bold mb-4">
+                  {game.winnerId === userId ? "You Won!" : `${opponent.name} Wins!`}
+                </div>
+                <div className="text-xl text-green-400 mb-2">
+                  Game Over - All chips won!
+                </div>
+                <Link
+                  href="/poker"
+                  className="inline-block mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all"
+                >
+                  Back to Lobby
+                </Link>
+              </div>
             ) : (
               <div className="text-white text-center py-8">
                 <div className="text-6xl mb-4">🎴</div>
@@ -237,7 +260,7 @@ export default function PokerGameClient({
           </div>
 
           {/* Player's cards */}
-          {playerHoleCards && (
+          {playerHoleCards && playerHoleCards.length > 0 && (
             <div className="flex gap-3 justify-center mb-4">
               {playerHoleCards.map((card, i) => (
                 <PlayingCard key={i} card={card} />

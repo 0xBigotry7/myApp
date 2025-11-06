@@ -42,9 +42,14 @@ export async function GET(
     // Filter hole cards - only show player's own cards
     let filteredHand = null;
     if (currentHand) {
-      const holeCards = isPlayer1
+      const holeCardsRaw = isPlayer1
         ? currentHand.player1Cards
         : currentHand.player2Cards;
+
+      // Parse JSON cards
+      const holeCards = typeof holeCardsRaw === 'string'
+        ? JSON.parse(holeCardsRaw)
+        : holeCardsRaw;
 
       filteredHand = {
         ...currentHand,

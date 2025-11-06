@@ -41,14 +41,28 @@ export default async function PokerGamePage({
   const currentHand = game.hands[0] || null;
 
   // Filter hole cards - only show player's own cards
-  let playerHoleCards = null;
-  let communityCards = [];
+  let playerHoleCards: any[] = [];
+  let communityCards: any[] = [];
 
   if (currentHand) {
-    playerHoleCards = isPlayer1
-      ? JSON.parse(currentHand.player1Cards as string)
-      : JSON.parse(currentHand.player2Cards as string);
-    communityCards = JSON.parse(currentHand.communityCards as string);
+    try {
+      const player1Cards = typeof currentHand.player1Cards === 'string'
+        ? JSON.parse(currentHand.player1Cards)
+        : currentHand.player1Cards;
+      const player2Cards = typeof currentHand.player2Cards === 'string'
+        ? JSON.parse(currentHand.player2Cards)
+        : currentHand.player2Cards;
+      const community = typeof currentHand.communityCards === 'string'
+        ? JSON.parse(currentHand.communityCards)
+        : currentHand.communityCards;
+
+      playerHoleCards = isPlayer1 ? player1Cards : player2Cards;
+      communityCards = community;
+    } catch (e) {
+      console.error("Error parsing cards:", e);
+      playerHoleCards = [];
+      communityCards = [];
+    }
   }
 
   return (

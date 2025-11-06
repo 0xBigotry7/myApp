@@ -155,7 +155,8 @@ export function getAvailableActions(
   playerChips: number,
   currentBet: number,
   playerCurrentBet: number,
-  bigBlind: number
+  bigBlind: number,
+  opponentChips: number = Infinity
 ): {
   canCheck: boolean;
   canCall: boolean;
@@ -169,8 +170,12 @@ export function getAvailableActions(
   const canCheck = needToCall === 0;
   const canCall = needToCall > 0 && needToCall <= playerChips;
   const minRaise = getMinRaise(currentBet, bigBlind);
-  const canRaise = playerChips >= minRaise;
-  const canAllIn = playerChips > 0;
+
+  // Cannot raise if opponent is all-in (has 0 chips)
+  const opponentIsAllIn = opponentChips === 0;
+  const canRaise = playerChips >= minRaise && !opponentIsAllIn;
+
+  const canAllIn = playerChips > 0 && !opponentIsAllIn;
 
   return {
     canCheck,

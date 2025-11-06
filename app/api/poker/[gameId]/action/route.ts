@@ -45,12 +45,15 @@ export async function POST(
     const opponentBet = isPlayer1 ? currentHand.player2Bet : currentHand.player1Bet;
 
     let newPlayerChips = playerChips;
+    let newOpponentChips = opponentChips;
     let newPlayerBet = playerBet;
+    let newOpponentBet = opponentBet;
     let newPot = currentHand.pot;
     let nextRound = currentHand.currentRound;
     let newCommunityCards = JSON.parse(currentHand.communityCards as string) as Card[];
     let handCompleted = false;
     let winnerId: string | null = null;
+    let roundAdvanced = false;
 
     // Process action
     if (action === "fold") {
@@ -67,6 +70,7 @@ export async function POST(
         nextRound = getNextRound(currentHand.currentRound);
         if (nextRound) {
           newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
+          roundAdvanced = true;
         } else {
           // Showdown
           handCompleted = true;
@@ -87,12 +91,20 @@ export async function POST(
       newPlayerBet += callAmount;
       newPot += callAmount;
 
-      // Move to next round
-      nextRound = getNextRound(currentHand.currentRound);
-      if (nextRound) {
-        newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
-      } else {
-        // Showdown
+      // Check if either player is all-in after this call
+      const playerAllIn = newPlayerChips === 0;
+      const opponentAllIn = opponentChips === 0;
+
+      // If either player is all-in, deal all remaining community cards and go to showdown
+      if (playerAllIn || opponentAllIn) {
+        // Deal all remaining community cards at once
+        while (newCommunityCards.length < 5) {
+          const round = newCommunityCards.length === 0 ? "flop" :
+                       newCommunityCards.length === 3 ? "turn" : "river";
+          newCommunityCards = dealCommunityCards(round, newCommunityCards);
+        }
+
+        // Go directly to showdown
         handCompleted = true;
         const result = determineWinner(
           JSON.parse(currentHand.player1Cards as string),
@@ -100,6 +112,23 @@ export async function POST(
           newCommunityCards
         );
         winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+        nextRound = "showdown";
+      } else {
+        // Move to next round normally
+        nextRound = getNextRound(currentHand.currentRound);
+        if (nextRound) {
+          newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
+          roundAdvanced = true;
+        } else {
+          // Showdown
+          handCompleted = true;
+          const result = determineWinner(
+            JSON.parse(currentHand.player1Cards as string),
+            JSON.parse(currentHand.player2Cards as string),
+            newCommunityCards
+          );
+          winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+        }
       }
     } else if (action === "raise" || action === "all_in") {
       const raiseAmount = action === "all_in" ? playerChips : amount;
@@ -109,6 +138,47 @@ export async function POST(
       newPlayerChips -= raiseAmount;
       newPlayerBet += raiseAmount;
       newPot += raiseAmount;
+
+      // If player went all-in and opponent has no chips left to call
+      if (newPlayerChips === 0 && opponentChips < (newPlayerBet - opponentBet)) {
+        // Opponent can't match the all-in, deal remaining cards and go to showdown
+        while (newCommunityCards.length < 5) {
+          const round = newCommunityCards.length === 0 ? "flop" :
+                       newCommunityCards.length === 3 ? "turn" : "river";
+          newCommunityCards = dealCommunityCards(round, newCommunityCards);
+        }
+        handCompleted = true;
+        const result = determineWinner(
+          JSON.parse(currentHand.player1Cards as string),
+          JSON.parse(currentHand.player2Cards as string),
+          newCommunityCards
+        );
+        winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+        nextRound = "showdown";
+      }
+      // If opponent was already all-in and player now covers that all-in
+      else if (opponentChips === 0 && newPlayerBet >= opponentBet) {
+        // Both players all-in, deal remaining cards and go to showdown
+        while (newCommunityCards.length < 5) {
+          const round = newCommunityCards.length === 0 ? "flop" :
+                       newCommunityCards.length === 3 ? "turn" : "river";
+          newCommunityCards = dealCommunityCards(round, newCommunityCards);
+        }
+        handCompleted = true;
+        const result = determineWinner(
+          JSON.parse(currentHand.player1Cards as string),
+          JSON.parse(currentHand.player2Cards as string),
+          newCommunityCards
+        );
+        winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+        nextRound = "showdown";
+      }
+    }
+
+    // If advancing to next round, reset bets to 0 (they're already in the pot)
+    if (roundAdvanced) {
+      newPlayerBet = 0;
+      newOpponentBet = 0;
     }
 
     // Update hand
@@ -123,8 +193,8 @@ export async function POST(
     await prisma.pokerHand.update({
       where: { id: currentHand.id },
       data: {
-        player1Bet: isPlayer1 ? newPlayerBet : opponentBet,
-        player2Bet: isPlayer1 ? opponentBet : newPlayerBet,
+        player1Bet: isPlayer1 ? newPlayerBet : newOpponentBet,
+        player2Bet: isPlayer1 ? newOpponentBet : newPlayerBet,
         pot: newPot,
         communityCards: JSON.stringify(newCommunityCards),
         currentRound: nextRound || currentHand.currentRound,
@@ -136,18 +206,67 @@ export async function POST(
       },
     });
 
+    // Award pot to winner if hand is completed
+    let finalPlayer1Chips = isPlayer1 ? newPlayerChips : newOpponentChips;
+    let finalPlayer2Chips = isPlayer1 ? newOpponentChips : newPlayerChips;
+    let finalPot = newPot;
+
+    if (handCompleted && winnerId) {
+      if (winnerId === game.player1Id) {
+        finalPlayer1Chips += newPot;
+      } else {
+        finalPlayer2Chips += newPot;
+      }
+      finalPot = 0; // Reset pot after awarding
+    }
+
+    // Check if a player has lost all their chips (game over)
+    let gameOver = false;
+    let gameWinnerId: string | null = null;
+    if (finalPlayer1Chips === 0) {
+      gameOver = true;
+      gameWinnerId = game.player2Id;
+    } else if (finalPlayer2Chips === 0) {
+      gameOver = true;
+      gameWinnerId = game.player1Id;
+    }
+
+    // Determine next player's turn
+    // If game is over or hand is completed, no turn
+    // If a player has no chips, they can't act - skip their turn or end hand
+    let nextTurn: string | null = null;
+    if (!handCompleted && !gameOver) {
+      const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
+      const nextPlayerChips = isPlayer1 ? finalPlayer2Chips : finalPlayer1Chips;
+
+      // Only give turn to opponent if they have chips to act with
+      if (nextPlayerChips > 0) {
+        nextTurn = opponentId;
+      } else {
+        // Opponent has no chips, they can't act - hand should be completed
+        // This shouldn't happen if logic above is correct, but just in case
+        nextTurn = null;
+      }
+    }
+
     // Update game
     const updatedGame = await prisma.pokerGame.update({
       where: { id: gameId },
       data: {
-        player1Chips: isPlayer1 ? newPlayerChips : opponentChips,
-        player2Chips: isPlayer1 ? opponentChips : newPlayerChips,
-        pot: newPot,
+        player1Chips: finalPlayer1Chips,
+        player2Chips: finalPlayer2Chips,
+        pot: finalPot,
         currentRound: nextRound || currentHand.currentRound,
-        currentTurn: handCompleted ? null : (isPlayer1 ? game.player2Id : game.player1Id),
+        currentTurn: nextTurn,
         ...(handCompleted && {
-          status: "completed",
-          winnerId,
+          status: gameOver ? "finished" : "completed",
+          winnerId: gameOver ? gameWinnerId : winnerId,
+          winAmount: newPot,
+        }),
+        // If game is over, mark it as finished
+        ...(gameOver && !handCompleted && {
+          status: "finished",
+          winnerId: gameWinnerId,
         }),
       },
     });
