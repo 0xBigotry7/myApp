@@ -38,6 +38,8 @@ model User {
   lifeEvents            LifeEvent[]
   luggages              Luggage[]
   packingItems          PackingItem[]
+  pokerGamesAsPlayer1   PokerGame[]           @relation("PokerPlayer1")
+  pokerGamesAsPlayer2   PokerGame[]           @relation("PokerPlayer2")
 }
 
 model Trip {
@@ -578,4 +580,53 @@ model PackingTemplate {
   updatedAt       DateTime @updatedAt
 
   @@index([isPublic])
+}
+
+// Poker Game Models
+model PokerGame {
+  id            String      @id @default(cuid())
+  player1Id     String
+  player2Id     String
+  player1       User        @relation("PokerPlayer1", fields: [player1Id], references: [id])
+  player2       User        @relation("PokerPlayer2", fields: [player2Id], references: [id])
+  status        String      @default("waiting") // "waiting", "active", "completed"
+  currentRound  String      @default("preflop") // "preflop", "flop", "turn", "river", "showdown"
+  currentTurn   String?     // userId whose turn it is
+  pot           Int         @default(0)
+  player1Chips  Int         @default(1000)
+  player2Chips  Int         @default(1000)
+  smallBlind    Int         @default(10)
+  bigBlind      Int         @default(20)
+  dealerButton  Int         @default(0) // 0 = player1, 1 = player2
+  winnerId      String?
+  winAmount     Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  hands         PokerHand[]
+
+  @@index([player1Id])
+  @@index([player2Id])
+  @@index([status])
+}
+
+model PokerHand {
+  id              String     @id @default(cuid())
+  gameId          String
+  game            PokerGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  handNumber      Int
+  dealerPosition  Int        // 0 or 1
+  communityCards  Json       @default("[]") // [{suit: "hearts", rank: "A"}]
+  player1Cards    Json       @default("[]") // Hole cards
+  player2Cards    Json       @default("[]") // Hole cards
+  player1Bet      Int        @default(0)
+  player2Bet      Int        @default(0)
+  pot             Int        @default(0)
+  currentRound    String     @default("preflop")
+  winnerId        String?
+  winningHand     String?    // "Royal Flush", "Straight", etc.
+  actions         Json       @default("[]") // [{playerId, action, amount, timestamp}]
+  createdAt       DateTime   @default(now())
+  completedAt     DateTime?
+
+  @@index([gameId])
 }

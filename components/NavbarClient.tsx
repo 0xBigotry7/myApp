@@ -24,6 +24,7 @@ export default function NavbarClient({ user }: NavbarClientProps) {
     { href: "/packing", label: `🧳 Packing` },
     { href: "/map", label: `🗺️ Travel Map` },
     { href: "/expenses", label: `💸 Expenses` },
+    { href: "/poker", label: `🃏 Poker` },
     // { href: "/finance", label: `💰 ${t.finance}` },
     { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
     { href: "/health", label: `🌸 ${t.health}` },
