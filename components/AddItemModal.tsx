@@ -45,7 +45,6 @@ export default function AddItemModal({
     name: "",
     category: "documents",
     quantity: "1",
-    weight: "",
     notes: "",
     isPacked: false,
     belongsTo: "shared",
@@ -59,7 +58,6 @@ export default function AddItemModal({
         name: editItem.name || "",
         category: editItem.category || "clothing",
         quantity: String(editItem.quantity || 1),
-        weight: editItem.weight ? String(editItem.weight) : "",
         notes: editItem.notes || "",
         isPacked: editItem.isPacked || false,
         belongsTo: editItem.belongsTo || "shared",
@@ -71,7 +69,6 @@ export default function AddItemModal({
         name: "",
         category: "documents",
         quantity: "1",
-        weight: "",
         notes: "",
         isPacked: false,
         belongsTo: "shared",
@@ -120,7 +117,6 @@ export default function AddItemModal({
       category: formData.category,
       name: formData.name,
       quantity: parseInt(formData.quantity),
-      weight: formData.weight ? parseFloat(formData.weight) : null,
       isPacked: formData.isPacked,
       belongsTo: formData.belongsTo,
       colorCode: selectedOption?.color || null,
@@ -131,7 +127,6 @@ export default function AddItemModal({
       category: formData.category,
       name: formData.name,
       quantity: parseInt(formData.quantity),
-      weight: formData.weight ? parseFloat(formData.weight) : null,
       isPacked: formData.isPacked,
       belongsTo: formData.belongsTo,
       colorCode: selectedOption?.color || null,
@@ -156,7 +151,6 @@ export default function AddItemModal({
             name: formData.name,
             category: formData.category,
             quantity: parseInt(formData.quantity),
-            weight: formData.weight ? parseFloat(formData.weight) : null,
             notes: formData.notes || null,
             isPacked: formData.isPacked,
             belongsTo: formData.belongsTo,
@@ -181,7 +175,6 @@ export default function AddItemModal({
             name: formData.name,
             category: formData.category,
             quantity: parseInt(formData.quantity),
-            weight: formData.weight ? parseFloat(formData.weight) : null,
             notes: formData.notes || null,
             isPacked: formData.isPacked,
             belongsTo: formData.belongsTo,
@@ -266,38 +259,21 @@ export default function AddItemModal({
             </div>
           </div>
 
-          {/* Quantity & Weight */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.quantity}
-              </label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={formData.quantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, quantity: e.target.value })
-                }
-                className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.weight} (kg) <span className="text-gray-400 text-xs">({t.optional})</span>
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.weight}
-                onChange={(e) =>
-                  setFormData({ ...formData, weight: e.target.value })
-                }
-                placeholder="0.5"
-                className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
+          {/* Quantity */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {t.quantity}
+            </label>
+            <input
+              type="number"
+              required
+              min="1"
+              value={formData.quantity}
+              onChange={(e) =>
+                setFormData({ ...formData, quantity: e.target.value })
+              }
+              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+            />
           </div>
 
           {/* Belongs To */}

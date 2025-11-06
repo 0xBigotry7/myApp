@@ -100,10 +100,6 @@ export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onT
   const packedCount = luggage.items.filter((i) => i.isPacked).length;
   const totalCount = luggage.items.length;
   const progress = totalCount > 0 ? (packedCount / totalCount) * 100 : 0;
-  const totalWeight = luggage.items.reduce(
-    (sum, item) => sum + ((item.weight || 0) * item.quantity),
-    0
-  );
 
   const colorClass = COLOR_CLASSES[luggage.color] || COLOR_CLASSES.gray;
   const icon = LUGGAGE_ICONS[luggage.type] || LUGGAGE_ICONS.other;
@@ -268,9 +264,9 @@ export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onT
         <div className="mt-3">
           <div className="flex items-center justify-between text-sm mb-1">
             <span>
-              {packedCount} / {totalCount} items
+              {packedCount} / {totalCount} items packed
             </span>
-            <span>{totalWeight.toFixed(1)} kg</span>
+            <span>{progress.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-white/30 rounded-full h-2">
             <div
@@ -429,11 +425,6 @@ function SortableItem({ item, onToggle, onEdit, onRemove }: SortableItemProps) {
           </span>
         )}
       </span>
-      {item.weight && (
-        <span className="text-xs text-gray-400">
-          {(item.weight * item.quantity).toFixed(1)}kg
-        </span>
-      )}
       <button
         onClick={onEdit}
         className="sm:opacity-0 sm:group-hover:opacity-100 text-blue-500 hover:text-blue-700 text-xs transition-opacity"

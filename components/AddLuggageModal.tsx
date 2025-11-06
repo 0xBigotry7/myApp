@@ -44,7 +44,6 @@ export default function AddLuggageModal({
     name: "",
     type: "suitcase",
     color: "blue",
-    maxWeight: "",
     description: "",
     airtagName: "",
   });
@@ -56,7 +55,6 @@ export default function AddLuggageModal({
         name: editLuggage.name || "",
         type: editLuggage.type || "suitcase",
         color: editLuggage.color || "blue",
-        maxWeight: editLuggage.maxWeight ? String(editLuggage.maxWeight) : "",
         description: editLuggage.description || "",
         airtagName: editLuggage.airtagName || "",
       });
@@ -66,7 +64,6 @@ export default function AddLuggageModal({
         name: "",
         type: "suitcase",
         color: "blue",
-        maxWeight: "",
         description: "",
         airtagName: "",
       });
@@ -97,7 +94,6 @@ export default function AddLuggageModal({
       name: formData.name,
       type: formData.type,
       color: formData.color,
-      maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
       description: formData.description || null,
       airtagName: formData.airtagName || null,
     } : {
@@ -105,8 +101,6 @@ export default function AddLuggageModal({
       name: formData.name,
       type: formData.type,
       color: formData.color,
-      weight: null,
-      maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
       description: formData.description || null,
       airtagName: formData.airtagName || null,
       order: existingCount,
@@ -127,7 +121,6 @@ export default function AddLuggageModal({
             name: formData.name,
             type: formData.type,
             color: formData.color,
-            maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
             description: formData.description || null,
             airtagName: formData.airtagName || null,
           }),
@@ -144,7 +137,6 @@ export default function AddLuggageModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...formData,
-            maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : null,
             airtagName: formData.airtagName || null,
             order: existingCount,
           }),
@@ -251,23 +243,6 @@ export default function AddLuggageModal({
                 />
               ))}
             </div>
-          </div>
-
-          {/* Max Weight */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Weight Limit (kg) <span className="text-gray-400 text-xs">(optional)</span>
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.maxWeight}
-              onChange={(e) =>
-                setFormData({ ...formData, maxWeight: e.target.value })
-              }
-              placeholder="e.g., 23"
-              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
           </div>
 
           {/* Description */}

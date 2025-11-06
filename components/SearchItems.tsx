@@ -61,7 +61,7 @@ export default function SearchItems({ query, onChange, results, locale }: Search
                           backgroundColor: result.luggageColor === "black" ? "#1f2937" : undefined
                         }}
                       />
-                      <span className={`font-semibold text-sm ${result.isPacked ? "line-through text-gray-400" : "text-gray-900"}`}>
+                      <span className={`font-semibold text-sm ${result.isPacked ? "text-gray-500" : "text-gray-900"}`}>
                         {result.name}
                       </span>
                       {result.quantity > 1 && (

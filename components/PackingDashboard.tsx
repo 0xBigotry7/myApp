@@ -79,12 +79,6 @@ export default function PackingDashboard({
     (sum, l) => sum + l.items.filter((i) => i.isPacked).length,
     0
   );
-  const totalWeight = luggages.reduce(
-    (sum, l) =>
-      sum +
-      l.items.reduce((itemSum, i) => itemSum + ((i.weight || 0) * i.quantity), 0),
-    0
-  );
   const packingProgress = totalItems > 0 ? (packedItems / totalItems) * 100 : 0;
 
   const handleMoveItem = async (itemId: string, luggageId: string | null) => {
@@ -274,9 +268,6 @@ export default function PackingDashboard({
             <h1 className="text-4xl font-bold text-gray-900">
               🧳 {t.packingHelper}
             </h1>
-            <p className="text-gray-600 mt-1">
-              {t.organizeYourLuggage}
-            </p>
           </div>
           <button
             onClick={handleAddLuggage}
@@ -285,52 +276,6 @@ export default function PackingDashboard({
             + {t.addLuggage}
           </button>
         </div>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="text-2xl font-bold text-violet-600">
-              {luggages.length}
-            </div>
-            <div className="text-sm text-gray-600">{t.luggage}</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
-            <div className="text-sm text-gray-600">{t.items}</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="text-2xl font-bold text-emerald-600">
-              {packingProgress.toFixed(0)}%
-            </div>
-            <div className="text-sm text-gray-600">{t.packed}</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="text-2xl font-bold text-orange-600">
-              {totalWeight.toFixed(1)} kg
-            </div>
-            <div className="text-sm text-gray-600">{t.totalWeight}</div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        {totalItems > 0 && (
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-700">
-                {t.overallProgress}
-              </span>
-              <span className="text-sm text-gray-600">
-                {packedItems} / {totalItems} {t.items}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-emerald-500 to-green-600 h-3 rounded-full transition-all"
-                style={{ width: `${packingProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Search */}
         <div className="mt-6">
@@ -390,6 +335,38 @@ export default function PackingDashboard({
               userId={userId}
             />
           ))}
+        </div>
+      )}
+
+      {/* Compact Stats at Bottom */}
+      {totalItems > 0 && (
+        <div className="mt-8 bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-6">
+              <span className="text-gray-600">
+                <span className="font-semibold text-violet-600">{luggages.length}</span> {t.luggage}
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600">
+                <span className="font-semibold text-blue-600">{totalItems}</span> {t.items}
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600">
+                <span className="font-semibold text-emerald-600">{packedItems}</span> packed
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 h-2 rounded-full transition-all"
+                  style={{ width: `${packingProgress}%` }}
+                />
+              </div>
+              <span className="font-semibold text-emerald-600 min-w-[3rem] text-right">
+                {packingProgress.toFixed(0)}%
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
