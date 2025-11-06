@@ -35,6 +35,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "maps.gstatic.com",
       },
+      {
+        protocol: "https",
+        hostname: "**.blob.vercel-storage.com",
+      },
     ],
     // Disable image optimization errors for expired external URLs
     unoptimized: false,

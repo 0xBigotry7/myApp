@@ -24,10 +24,10 @@ export default function NavbarClient({ user }: NavbarClientProps) {
     { href: "/packing", label: `🧳 Packing` },
     { href: "/map", label: `🗺️ Travel Map` },
     { href: "/expenses", label: `💸 Expenses` },
-    { href: "/finance", label: `💰 ${t.finance}` },
+    // { href: "/finance", label: `💰 ${t.finance}` },
     { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
     { href: "/health", label: `🌸 ${t.health}` },
-    { href: "/transactions", label: `📊 ${t.transactions}` },
+    // { href: "/transactions", label: `📊 ${t.transactions}` },
   ];
 
   const userInitial =

@@ -121,48 +121,71 @@ async function generateDestinationImage(destination: string): Promise<string> {
 }
 
 async function main() {
-  console.log("Finding trips with expired image URLs...\n");
+  console.log("Finding trips with broken or missing image URLs...\n");
 
-  // Find all trips with oaidalleapiprodscus.blob.core.windows.net URLs
+  // Find all trips with expired/local/missing images
   const trips = await prisma.trip.findMany({
     where: {
       OR: [
+        // Expired DALL-E URLs
         { destinationImageUrl: { contains: "oaidalleapiprodscus.blob.core.windows.net" } },
         { budgetImageUrl: { contains: "oaidalleapiprodscus.blob.core.windows.net" } },
         { itineraryImageUrl: { contains: "oaidalleapiprodscus.blob.core.windows.net" } },
         { expensesImageUrl: { contains: "oaidalleapiprodscus.blob.core.windows.net" } },
+        // Local file paths
+        { destinationImageUrl: { contains: "localhost" } },
+        { budgetImageUrl: { contains: "localhost" } },
+        { itineraryImageUrl: { contains: "localhost" } },
+        { expensesImageUrl: { contains: "localhost" } },
+        // Images that are not yet in Vercel Blob
+        {
+          AND: [
+            { destinationImageUrl: { not: null } },
+            { destinationImageUrl: { not: { contains: "blob.vercel-storage.com" } } },
+          ]
+        },
       ],
     },
   });
 
-  console.log(`Found ${trips.length} trip(s) with expired images.\n`);
+  console.log(`Found ${trips.length} trip(s) with images to fix.\n`);
 
   for (const trip of trips) {
     console.log(`\n=== Processing Trip: ${trip.name} (${trip.destination}) ===`);
 
     const updates: any = {};
 
-    // Regenerate destination image if expired
-    if (trip.destinationImageUrl?.includes("oaidalleapiprodscus.blob.core.windows.net")) {
-      console.log("  ⚠ Destination image expired, regenerating...");
+    // Check if image needs regeneration (expired, local, or not in Vercel Blob)
+    const needsRegeneration = (url: string | null) => {
+      if (!url) return false;
+      return (
+        url.includes("oaidalleapiprodscus.blob.core.windows.net") ||
+        url.includes("localhost") ||
+        !url.includes("blob.vercel-storage.com")
+      );
+    };
+
+    // Regenerate destination image if needed
+    if (trip.destinationImageUrl && needsRegeneration(trip.destinationImageUrl)) {
+      console.log("  ⚠ Destination image needs fixing, regenerating...");
       updates.destinationImageUrl = await generateDestinationImage(trip.destination);
     }
 
-    // Regenerate budget image if expired
-    if (trip.budgetImageUrl?.includes("oaidalleapiprodscus.blob.core.windows.net")) {
-      console.log("  ⚠ Budget image expired, regenerating...");
+    // Regenerate budget image if needed
+    if (trip.budgetImageUrl && needsRegeneration(trip.budgetImageUrl)) {
+      console.log("  ⚠ Budget image needs fixing, regenerating...");
       updates.budgetImageUrl = await generateThemeImage("budget", trip.destination);
     }
 
-    // Regenerate itinerary image if expired
-    if (trip.itineraryImageUrl?.includes("oaidalleapiprodscus.blob.core.windows.net")) {
-      console.log("  ⚠ Itinerary image expired, regenerating...");
+    // Regenerate itinerary image if needed
+    if (trip.itineraryImageUrl && needsRegeneration(trip.itineraryImageUrl)) {
+      console.log("  ⚠ Itinerary image needs fixing, regenerating...");
       updates.itineraryImageUrl = await generateThemeImage("itinerary", trip.destination);
     }
 
-    // Regenerate expenses image if expired
-    if (trip.expensesImageUrl?.includes("oaidalleapiprodscus.blob.core.windows.net")) {
-      console.log("  ⚠ Expenses image expired, regenerating...");
+    // Regenerate expenses image if needed
+    if (trip.expensesImageUrl && needsRegeneration(trip.expensesImageUrl)) {
+      console.log("  ⚠ Expenses image needs fixing, regenerating...");
       updates.expensesImageUrl = await generateThemeImage("expenses", trip.destination);
     }
 
@@ -177,7 +200,7 @@ async function main() {
     }
   }
 
-  console.log("\n\n✅ All expired images have been regenerated!\n");
+  console.log("\n\n✅ All broken images have been regenerated and stored in Vercel Blob!\n");
 }
 
 main()
