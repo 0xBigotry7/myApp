@@ -49,7 +49,7 @@ export async function POST(
     let newPlayerBet = playerBet;
     let newOpponentBet = opponentBet;
     let newPot = currentHand.pot;
-    let nextRound = currentHand.currentRound;
+    let nextRound: string | null = currentHand.currentRound;
     let newCommunityCards = JSON.parse(currentHand.communityCards as string) as Card[];
     let handCompleted = false;
     let winnerId: string | null = null;
