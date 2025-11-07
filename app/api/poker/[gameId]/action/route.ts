@@ -236,16 +236,37 @@ export async function POST(
     // If a player has no chips, they can't act - skip their turn or end hand
     let nextTurn: string | null = null;
     if (!handCompleted && !gameOver) {
-      const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
-      const nextPlayerChips = isPlayer1 ? finalPlayer2Chips : finalPlayer1Chips;
+      // In heads-up poker:
+      // - Preflop: Button/Small Blind acts first
+      // - Post-flop: Big Blind (non-button) acts first
 
-      // Only give turn to opponent if they have chips to act with
-      if (nextPlayerChips > 0) {
-        nextTurn = opponentId;
+      // Find who has the button
+      const buttonPlayerId = game.dealerButton === 0 ? game.player1Id : game.player2Id;
+      const nonButtonPlayerId = game.dealerButton === 0 ? game.player2Id : game.player1Id;
+
+      // Determine who should act based on round advancement
+      if (roundAdvanced) {
+        // Moving to a new round (flop/turn/river) - non-button acts first
+        const nonButtonChips = nonButtonPlayerId === game.player1Id ? finalPlayer1Chips : finalPlayer2Chips;
+        if (nonButtonChips > 0) {
+          nextTurn = nonButtonPlayerId;
+        } else {
+          // Non-button has no chips, button acts
+          const buttonChips = buttonPlayerId === game.player1Id ? finalPlayer1Chips : finalPlayer2Chips;
+          nextTurn = buttonChips > 0 ? buttonPlayerId : null;
+        }
       } else {
-        // Opponent has no chips, they can't act - hand should be completed
-        // This shouldn't happen if logic above is correct, but just in case
-        nextTurn = null;
+        // Same round, just alternate turns
+        const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
+        const nextPlayerChips = isPlayer1 ? finalPlayer2Chips : finalPlayer1Chips;
+
+        // Only give turn to opponent if they have chips to act with
+        if (nextPlayerChips > 0) {
+          nextTurn = opponentId;
+        } else {
+          // Opponent has no chips, they can't act - hand should be completed
+          nextTurn = null;
+        }
       }
     }
 

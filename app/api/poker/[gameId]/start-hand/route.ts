@@ -55,6 +55,9 @@ export async function POST(
     const player1InitialBet = smallBlindPlayer === game.player1Id ? game.smallBlind : game.bigBlind;
     const player2InitialBet = smallBlindPlayer === game.player2Id ? game.smallBlind : game.bigBlind;
 
+    // Rotate dealer button for next hand (alternates between 0 and 1)
+    const newDealerButton = dealerPosition === 0 ? 1 : 0;
+
     // Update game chips
     const updatedGame = await prisma.pokerGame.update({
       where: { id: gameId },
@@ -66,6 +69,8 @@ export async function POST(
         currentRound: "preflop",
         // In heads-up, button acts first preflop, so set turn to button player
         currentTurn: dealerPosition === 0 ? game.player1Id : game.player2Id,
+        // Rotate dealer button for next hand
+        dealerButton: newDealerButton,
       },
     });
 
