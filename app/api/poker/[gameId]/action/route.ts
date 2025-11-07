@@ -53,6 +53,7 @@ export async function POST(
     let newCommunityCards = JSON.parse(currentHand.communityCards as string) as Card[];
     let handCompleted = false;
     let winnerId: string | null = null;
+    let winningHandDesc: string | null = null;
     let roundAdvanced = false;
 
     // Process action
@@ -65,8 +66,17 @@ export async function POST(
       if (playerBet !== opponentBet) {
         return NextResponse.json({ error: "Cannot check" }, { status: 400 });
       }
-      // Move to next round if both players have acted
-      if (playerBet === opponentBet) {
+
+      // Check if opponent's last action was also check (both players checking closes the round)
+      const actions = JSON.parse(currentHand.actions as string) as any[];
+      const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
+
+      // Find opponent's last action in this betting round
+      const lastAction = actions.length > 0 ? actions[actions.length - 1] : null;
+      const opponentJustChecked = lastAction?.playerId === opponentId && lastAction?.action === "check";
+
+      if (opponentJustChecked) {
+        // Both players checked, move to next round
         nextRound = getNextRound(currentHand.currentRound);
         if (nextRound) {
           newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
@@ -80,8 +90,10 @@ export async function POST(
             newCommunityCards
           );
           winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          winningHandDesc = result.winningHand;
         }
       }
+      // Otherwise, just pass turn to opponent (first check)
     } else if (action === "call") {
       const callAmount = opponentBet - playerBet;
       if (callAmount > playerChips) {
@@ -112,6 +124,7 @@ export async function POST(
           newCommunityCards
         );
         winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+        winningHandDesc = result.winningHand;
         nextRound = "showdown";
       } else {
         // Move to next round normally
@@ -128,6 +141,7 @@ export async function POST(
             newCommunityCards
           );
           winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          winningHandDesc = result.winningHand;
         }
       }
     } else if (action === "raise" || action === "all_in") {
@@ -190,6 +204,7 @@ export async function POST(
         actions: JSON.stringify(actions),
         ...(handCompleted && {
           winnerId,
+          winningHand: winningHandDesc,
           completedAt: new Date(),
         }),
       },
@@ -268,15 +283,13 @@ export async function POST(
         pot: finalPot,
         currentRound: nextRound || currentHand.currentRound,
         currentTurn: nextTurn,
-        ...(handCompleted && {
-          status: gameOver ? "finished" : "completed",
-          winnerId: gameOver ? gameWinnerId : winnerId,
-          winAmount: newPot,
+        ...(handCompleted && !gameOver && {
+          status: "waiting", // Hand completed, waiting for next hand
         }),
-        // If game is over, mark it as finished
-        ...(gameOver && !handCompleted && {
+        ...(gameOver && {
           status: "finished",
           winnerId: gameWinnerId,
+          winAmount: newPot,
         }),
       },
     });

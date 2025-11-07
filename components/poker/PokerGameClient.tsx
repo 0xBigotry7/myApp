@@ -227,6 +227,29 @@ export default function PokerGameClient({
             )}
           </div>
 
+          {/* Hand Result - Show when hand is completed but game continues */}
+          {currentHand && currentHand.completedAt && game.status !== "finished" && (
+            <div className="text-center mb-4">
+              <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 px-6 py-4 rounded-xl shadow-lg mx-auto max-w-md">
+                <div className="text-2xl font-bold mb-2">
+                  {currentHand.winnerId === userId ? "🎉 You Won!" : `${opponent.name} Wins`}
+                </div>
+                {currentHand.winningHand && (
+                  <div className="text-lg font-semibold mb-3">
+                    {currentHand.winningHand}
+                  </div>
+                )}
+                <button
+                  onClick={handleStartHand}
+                  disabled={loading}
+                  className="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-bold disabled:opacity-50 transition-all"
+                >
+                  {loading ? "Starting..." : "Next Hand"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Game Status */}
           {hasActiveHand && (
             <div className="text-center mb-4">
