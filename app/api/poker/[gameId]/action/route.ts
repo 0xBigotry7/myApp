@@ -139,40 +139,29 @@ export async function POST(
       newPlayerBet += raiseAmount;
       newPot += raiseAmount;
 
-      // If player went all-in and opponent has no chips left to call
-      if (newPlayerChips === 0 && opponentChips < (newPlayerBet - opponentBet)) {
-        // Opponent can't match the all-in, deal remaining cards and go to showdown
-        while (newCommunityCards.length < 5) {
-          const round = newCommunityCards.length === 0 ? "flop" :
-                       newCommunityCards.length === 3 ? "turn" : "river";
-          newCommunityCards = dealCommunityCards(round, newCommunityCards);
+      // Raise/all-in doesn't automatically advance the round
+      // Opponent needs to act (call/fold/raise)
+      // Only exception: if opponent was already all-in and can't act
+      if (opponentChips === 0) {
+        // Opponent already all-in, can't act anymore
+        // If player matched or exceeded opponent's bet, go to showdown
+        if (newPlayerBet >= opponentBet) {
+          while (newCommunityCards.length < 5) {
+            const round = newCommunityCards.length === 0 ? "flop" :
+                         newCommunityCards.length === 3 ? "turn" : "river";
+            newCommunityCards = dealCommunityCards(round, newCommunityCards);
+          }
+          handCompleted = true;
+          const result = determineWinner(
+            JSON.parse(currentHand.player1Cards as string),
+            JSON.parse(currentHand.player2Cards as string),
+            newCommunityCards
+          );
+          winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          nextRound = "showdown";
         }
-        handCompleted = true;
-        const result = determineWinner(
-          JSON.parse(currentHand.player1Cards as string),
-          JSON.parse(currentHand.player2Cards as string),
-          newCommunityCards
-        );
-        winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
-        nextRound = "showdown";
       }
-      // If opponent was already all-in and player now covers that all-in
-      else if (opponentChips === 0 && newPlayerBet >= opponentBet) {
-        // Both players all-in, deal remaining cards and go to showdown
-        while (newCommunityCards.length < 5) {
-          const round = newCommunityCards.length === 0 ? "flop" :
-                       newCommunityCards.length === 3 ? "turn" : "river";
-          newCommunityCards = dealCommunityCards(round, newCommunityCards);
-        }
-        handCompleted = true;
-        const result = determineWinner(
-          JSON.parse(currentHand.player1Cards as string),
-          JSON.parse(currentHand.player2Cards as string),
-          newCommunityCards
-        );
-        winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
-        nextRound = "showdown";
-      }
+      // Otherwise, turn goes to opponent to respond to the raise/all-in
     }
 
     // If advancing to next round, reset bets to 0 (they're already in the pot)
