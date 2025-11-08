@@ -30,37 +30,33 @@ export default async function PokerLobby() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                🃏 Texas Hold'em Poker
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 bg-clip-text text-transparent mb-3 flex items-center gap-3">
+                <span className="text-6xl">🃏</span>
+                Texas Hold'em
               </h1>
-              <p className="text-gray-600">Heads-up poker between baber and BABER</p>
+              <p className="text-gray-300 text-lg">Heads-up poker showdown</p>
             </div>
-            <form action="/api/poker/create" method="POST">
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-              >
-                + New Game
-              </button>
-            </form>
           </div>
 
           {/* Game Configuration */}
-          <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Game Settings</h2>
-            <form action="/api/poker/create" method="POST" className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 shadow-2xl mb-8 border-2 border-yellow-600">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+              <span className="text-3xl">⚙️</span>
+              New Game Settings
+            </h2>
+            <form action="/api/poker/create" method="POST" className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Starting Chips
+                  <label className="block text-sm font-bold text-yellow-400 mb-3">
+                    💰 Starting Chips
                   </label>
                   <select
                     name="startingChips"
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-5 py-3 bg-gray-700 text-white border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 font-semibold text-lg"
                     defaultValue="1000"
                   >
                     <option value="500">500</option>
@@ -70,12 +66,12 @@ export default async function PokerLobby() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Small Blind
+                  <label className="block text-sm font-bold text-yellow-400 mb-3">
+                    🎯 Small Blind
                   </label>
                   <select
                     name="smallBlind"
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-5 py-3 bg-gray-700 text-white border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 font-semibold text-lg"
                     defaultValue="10"
                   >
                     <option value="5">5</option>
@@ -85,12 +81,12 @@ export default async function PokerLobby() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Big Blind
+                  <label className="block text-sm font-bold text-yellow-400 mb-3">
+                    🎲 Big Blind
                   </label>
                   <select
                     name="bigBlind"
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-5 py-3 bg-gray-700 text-white border-2 border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 font-semibold text-lg"
                     defaultValue="20"
                   >
                     <option value="10">10</option>
@@ -102,50 +98,83 @@ export default async function PokerLobby() {
               </div>
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="w-full px-8 py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-500 hover:via-emerald-500 hover:to-green-500 text-white rounded-xl font-bold text-xl shadow-2xl transform hover:scale-105 transition-all border-2 border-green-400"
               >
-                Create Game
+                <span className="text-2xl mr-2">🎴</span>
+                Create New Game
               </button>
             </form>
           </div>
 
           {/* Games List */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Games</h2>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 shadow-2xl border-2 border-gray-700">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+              <span className="text-3xl">🎮</span>
+              Your Games
+            </h2>
             {games.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-6xl mb-4">🎴</div>
-                <p>No games yet. Create your first game!</p>
+              <div className="text-center py-16 text-gray-400">
+                <div className="text-8xl mb-6">🎴</div>
+                <p className="text-xl font-semibold">No games yet. Create your first game!</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {games.map((game) => {
                   const isPlayer1 = game.player1Id === session.user.id;
                   const opponent = isPlayer1 ? game.player2 : game.player1;
                   const chips = isPlayer1 ? game.player1Chips : game.player2Chips;
+                  const opponentChips = isPlayer1 ? game.player2Chips : game.player1Chips;
+
+                  const statusColors = {
+                    active: "bg-green-500",
+                    waiting: "bg-yellow-500",
+                    finished: "bg-red-500",
+                  };
+
+                  const statusEmojis = {
+                    active: "🔥",
+                    waiting: "⏸️",
+                    finished: "🏆",
+                  };
 
                   return (
                     <Link
                       key={game.id}
                       href={`/poker/${game.id}`}
-                      className="block p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:shadow-md transition-all"
+                      className="block p-6 bg-gradient-to-br from-gray-700 to-gray-800 border-2 border-gray-600 rounded-xl hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 transform hover:scale-102 transition-all"
                     >
                       <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            vs {opponent.name}
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                            {opponent.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="text-sm text-gray-600">
-                            Status: <span className="capitalize">{game.status}</span>
+                          <div>
+                            <div className="font-bold text-white text-xl mb-1">
+                              vs {opponent.name}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className={`${statusColors[game.status as keyof typeof statusColors]} px-3 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1`}>
+                                <span>{statusEmojis[game.status as keyof typeof statusEmojis]}</span>
+                                <span className="capitalize">{game.status}</span>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Blinds: {game.smallBlind}/{game.bigBlind}
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-green-600">
-                            {chips.toLocaleString()} chips
+                          <div className="text-2xl font-bold text-yellow-400 mb-1">
+                            {chips.toLocaleString()}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            Blinds: {game.smallBlind}/{game.bigBlind}
+                          <div className="text-sm text-gray-400">
+                            Your chips
                           </div>
+                          {game.status === "finished" && game.winnerId && (
+                            <div className={`mt-2 px-3 py-1 rounded-lg ${game.winnerId === session.user.id ? 'bg-green-600' : 'bg-red-600'} text-white text-xs font-bold`}>
+                              {game.winnerId === session.user.id ? '🎉 Winner!' : 'Lost'}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Link>
