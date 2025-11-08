@@ -122,7 +122,7 @@ export async function POST(
         while (newCommunityCards.length < 5) {
           const round = newCommunityCards.length === 0 ? "flop" :
                        newCommunityCards.length === 3 ? "turn" : "river";
-          newCommunityCards = dealCommunityCards(round, newCommunityCards);
+          newCommunityCards = dealCommunityCards(round, newCommunityCards, player1HoleCards, player2HoleCards);
         }
 
         // Go directly to showdown
