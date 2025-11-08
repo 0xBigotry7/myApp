@@ -44,6 +44,10 @@ export async function POST(
     const playerBet = isPlayer1 ? currentHand.player1Bet : currentHand.player2Bet;
     const opponentBet = isPlayer1 ? currentHand.player2Bet : currentHand.player1Bet;
 
+    // Parse hole cards for deck validation
+    const player1HoleCards = JSON.parse(currentHand.player1Cards as string) as Card[];
+    const player2HoleCards = JSON.parse(currentHand.player2Cards as string) as Card[];
+
     let newPlayerChips = playerChips;
     let newOpponentChips = opponentChips;
     let newPlayerBet = playerBet;
@@ -79,17 +83,22 @@ export async function POST(
         // Both players checked, move to next round
         nextRound = getNextRound(currentHand.currentRound);
         if (nextRound) {
-          newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
+          newCommunityCards = dealCommunityCards(nextRound, newCommunityCards, player1HoleCards, player2HoleCards);
           roundAdvanced = true;
         } else {
           // Showdown
           handCompleted = true;
           const result = determineWinner(
-            JSON.parse(currentHand.player1Cards as string),
-            JSON.parse(currentHand.player2Cards as string),
+            player1HoleCards,
+            player2HoleCards,
             newCommunityCards
           );
-          winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          if (result.winner === "tie") {
+            // Split pot - both players get half
+            winnerId = null;
+          } else {
+            winnerId = result.winner === "player1" ? game.player1Id : game.player2Id;
+          }
           winningHandDesc = result.winningHand;
         }
       }
@@ -130,17 +139,22 @@ export async function POST(
         // Move to next round normally
         nextRound = getNextRound(currentHand.currentRound);
         if (nextRound) {
-          newCommunityCards = dealCommunityCards(nextRound, newCommunityCards);
+          newCommunityCards = dealCommunityCards(nextRound, newCommunityCards, player1HoleCards, player2HoleCards);
           roundAdvanced = true;
         } else {
           // Showdown
           handCompleted = true;
           const result = determineWinner(
-            JSON.parse(currentHand.player1Cards as string),
-            JSON.parse(currentHand.player2Cards as string),
+            player1HoleCards,
+            player2HoleCards,
             newCommunityCards
           );
-          winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          if (result.winner === "tie") {
+            // Split pot - both players get half
+            winnerId = null;
+          } else {
+            winnerId = result.winner === "player1" ? game.player1Id : game.player2Id;
+          }
           winningHandDesc = result.winningHand;
         }
       }
@@ -163,7 +177,7 @@ export async function POST(
           while (newCommunityCards.length < 5) {
             const round = newCommunityCards.length === 0 ? "flop" :
                          newCommunityCards.length === 3 ? "turn" : "river";
-            newCommunityCards = dealCommunityCards(round, newCommunityCards);
+            newCommunityCards = dealCommunityCards(round, newCommunityCards, player1HoleCards, player2HoleCards);
           }
           handCompleted = true;
           const result = determineWinner(
@@ -215,11 +229,27 @@ export async function POST(
     let finalPlayer2Chips = isPlayer1 ? newOpponentChips : newPlayerChips;
     let finalPot = newPot;
 
-    if (handCompleted && winnerId) {
-      if (winnerId === game.player1Id) {
-        finalPlayer1Chips += newPot;
+    if (handCompleted) {
+      if (winnerId) {
+        // Single winner gets entire pot
+        if (winnerId === game.player1Id) {
+          finalPlayer1Chips += newPot;
+        } else {
+          finalPlayer2Chips += newPot;
+        }
       } else {
-        finalPlayer2Chips += newPot;
+        // Tie - split pot
+        const halfPot = Math.floor(newPot / 2);
+        finalPlayer1Chips += halfPot;
+        finalPlayer2Chips += halfPot;
+        // If odd chip, give it to a random player (standard poker rule)
+        if (newPot % 2 === 1) {
+          if (Math.random() < 0.5) {
+            finalPlayer1Chips += 1;
+          } else {
+            finalPlayer2Chips += 1;
+          }
+        }
       }
       finalPot = 0; // Reset pot after awarding
     }
@@ -310,13 +340,20 @@ function getNextRound(current: string): string | null {
   return currentIndex < rounds.length - 1 ? rounds[currentIndex + 1] : null;
 }
 
-function dealCommunityCards(round: string, existing: Card[]): Card[] {
+function dealCommunityCards(
+  round: string,
+  existing: Card[],
+  player1Hole: Card[],
+  player2Hole: Card[]
+): Card[] {
   let deck = createDeck();
   deck = shuffleDeck(deck);
 
-  // Remove existing community cards from deck
+  // Remove hole cards and existing community cards from deck
   deck = deck.filter(card =>
-    !existing.some(c => c.suit === card.suit && c.rank === card.rank)
+    !existing.some(c => c.suit === card.suit && c.rank === card.rank) &&
+    !player1Hole.some(c => c.suit === card.suit && c.rank === card.rank) &&
+    !player2Hole.some(c => c.suit === card.suit && c.rank === card.rank)
   );
 
   if (round === "flop") {
