@@ -72,16 +72,10 @@ export async function POST(
         return NextResponse.json({ error: "Cannot check" }, { status: 400 });
       }
 
-      // Check if opponent's last action was also check (both players checking closes the round)
-      const actions = JSON.parse(currentHand.actions as string) as any[];
-      const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
-
-      // Find opponent's last action in this betting round
-      const lastAction = actions.length > 0 ? actions[actions.length - 1] : null;
-      const opponentJustChecked = lastAction?.playerId === opponentId && lastAction?.action === "check";
-
-      if (opponentJustChecked) {
-        // Both players checked, move to next round
+      // Check if opponent has chips to act
+      // If opponent is all-in (0 chips), automatically advance since they can't check back
+      if (opponentChips === 0) {
+        // Opponent can't act, auto-advance round
         nextRound = getNextRound(currentHand.currentRound);
         if (nextRound) {
           newCommunityCards = dealCommunityCards(nextRound, newCommunityCards, player1HoleCards, player2HoleCards);
@@ -95,15 +89,46 @@ export async function POST(
             newCommunityCards
           );
           if (result.winner === "tie") {
-            // Split pot - both players get half
             winnerId = null;
           } else {
             winnerId = result.winner === "player1" ? game.player1Id : game.player2Id;
           }
           winningHandDesc = result.winningHand;
         }
+      } else {
+        // Opponent has chips, check if they also just checked
+        const actions = JSON.parse(currentHand.actions as string) as any[];
+        const opponentId = isPlayer1 ? game.player2Id : game.player1Id;
+
+        // Find opponent's last action in this betting round
+        const lastAction = actions.length > 0 ? actions[actions.length - 1] : null;
+        const opponentJustChecked = lastAction?.playerId === opponentId && lastAction?.action === "check";
+
+        if (opponentJustChecked) {
+          // Both players checked, move to next round
+          nextRound = getNextRound(currentHand.currentRound);
+          if (nextRound) {
+            newCommunityCards = dealCommunityCards(nextRound, newCommunityCards, player1HoleCards, player2HoleCards);
+            roundAdvanced = true;
+          } else {
+            // Showdown
+            handCompleted = true;
+            const result = determineWinner(
+              player1HoleCards,
+              player2HoleCards,
+              newCommunityCards
+            );
+            if (result.winner === "tie") {
+              // Split pot - both players get half
+              winnerId = null;
+            } else {
+              winnerId = result.winner === "player1" ? game.player1Id : game.player2Id;
+            }
+            winningHandDesc = result.winningHand;
+          }
+        }
+        // Otherwise, just pass turn to opponent (first check)
       }
-      // Otherwise, just pass turn to opponent (first check)
     } else if (action === "call") {
       let callAmount = opponentBet - playerBet;
 
@@ -211,6 +236,7 @@ export async function POST(
             newCommunityCards
           );
           winnerId = result.winner === "player1" ? game.player1Id : result.winner === "player2" ? game.player2Id : null;
+          winningHandDesc = result.winningHand;
           nextRound = "showdown";
         }
       }
@@ -282,12 +308,15 @@ export async function POST(
     // Check if a player has lost all their chips (game over)
     let gameOver = false;
     let gameWinnerId: string | null = null;
+    let totalWinnings = 0;
     if (finalPlayer1Chips === 0) {
       gameOver = true;
       gameWinnerId = game.player2Id;
+      totalWinnings = finalPlayer2Chips;
     } else if (finalPlayer2Chips === 0) {
       gameOver = true;
       gameWinnerId = game.player1Id;
+      totalWinnings = finalPlayer1Chips;
     }
 
     // Determine next player's turn
@@ -344,7 +373,7 @@ export async function POST(
         ...(gameOver && {
           status: "finished",
           winnerId: gameWinnerId,
-          winAmount: newPot,
+          winAmount: totalWinnings,
         }),
       },
     });
