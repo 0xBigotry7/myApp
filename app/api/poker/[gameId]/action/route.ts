@@ -65,6 +65,7 @@ export async function POST(
       // Opponent wins
       handCompleted = true;
       winnerId = isPlayer1 ? game.player2Id : game.player1Id;
+      winningHandDesc = "Opponent folded";
     } else if (action === "check") {
       // Can only check if bets are equal
       if (playerBet !== opponentBet) {
@@ -104,10 +105,19 @@ export async function POST(
       }
       // Otherwise, just pass turn to opponent (first check)
     } else if (action === "call") {
-      const callAmount = opponentBet - playerBet;
-      if (callAmount > playerChips) {
+      let callAmount = opponentBet - playerBet;
+
+      // If opponent is all-in and we have more chips, only match what they can cover
+      if (opponentChips === 0 && callAmount > playerChips) {
+        // This shouldn't happen, but safety check
         return NextResponse.json({ error: "Not enough chips" }, { status: 400 });
       }
+
+      // Cannot call more than you have
+      if (callAmount > playerChips) {
+        callAmount = playerChips; // This makes it an all-in call
+      }
+
       newPlayerChips -= callAmount;
       newPlayerBet += callAmount;
       newPot += callAmount;
@@ -160,9 +170,24 @@ export async function POST(
       }
     } else if (action === "raise" || action === "all_in") {
       const raiseAmount = action === "all_in" ? playerChips : amount;
+
+      // Validate raise amount
       if (raiseAmount > playerChips) {
         return NextResponse.json({ error: "Not enough chips" }, { status: 400 });
       }
+
+      // For raises (not all-in), validate minimum raise
+      if (action === "raise") {
+        const callAmount = opponentBet - playerBet;
+        const minRaise = callAmount + game.bigBlind; // Minimum raise is call + big blind
+
+        if (raiseAmount < minRaise && raiseAmount < playerChips) {
+          return NextResponse.json({
+            error: `Minimum raise is ${minRaise}`
+          }, { status: 400 });
+        }
+      }
+
       newPlayerChips -= raiseAmount;
       newPlayerBet += raiseAmount;
       newPot += raiseAmount;

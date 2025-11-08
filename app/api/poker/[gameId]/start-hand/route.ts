@@ -51,9 +51,23 @@ export async function POST(
     const smallBlindPlayer = dealerPosition === 0 ? game.player1Id : game.player2Id;
     const bigBlindPlayer = dealerPosition === 0 ? game.player2Id : game.player1Id;
 
-    // Set initial bets (blinds)
-    const player1InitialBet = smallBlindPlayer === game.player1Id ? game.smallBlind : game.bigBlind;
-    const player2InitialBet = smallBlindPlayer === game.player2Id ? game.smallBlind : game.bigBlind;
+    // Set initial bets (blinds) - handle cases where player doesn't have enough
+    const player1InitialBet = Math.min(
+      smallBlindPlayer === game.player1Id ? game.smallBlind : game.bigBlind,
+      game.player1Chips
+    );
+    const player2InitialBet = Math.min(
+      smallBlindPlayer === game.player2Id ? game.smallBlind : game.bigBlind,
+      game.player2Chips
+    );
+
+    // Check if either player can't post blinds (game should be over)
+    if (game.player1Chips === 0 || game.player2Chips === 0) {
+      return NextResponse.json(
+        { error: "A player has no chips left" },
+        { status: 400 }
+      );
+    }
 
     // Rotate dealer button for next hand (alternates between 0 and 1)
     const newDealerButton = dealerPosition === 0 ? 1 : 0;
