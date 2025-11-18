@@ -38,11 +38,12 @@ export async function POST(request: NextRequest) {
     // If no API key, use fallback rates
     if (!API_KEY) {
       const fallbackRates: Record<string, Record<string, number>> = {
-        USD: { EUR: 0.92, GBP: 0.79, JPY: 149.5, THB: 34.5 },
-        EUR: { USD: 1.09, GBP: 0.86, JPY: 162.5, THB: 37.5 },
-        GBP: { USD: 1.27, EUR: 1.16, JPY: 189.2, THB: 43.8 },
-        JPY: { USD: 0.0067, EUR: 0.0062, GBP: 0.0053, THB: 0.23 },
-        THB: { USD: 0.029, EUR: 0.027, GBP: 0.023, JPY: 4.33 },
+        USD: { EUR: 0.92, GBP: 0.79, JPY: 149.5, THB: 34.5, CNY: 7.24 },
+        EUR: { USD: 1.09, GBP: 0.86, JPY: 162.5, THB: 37.5, CNY: 7.88 },
+        GBP: { USD: 1.27, EUR: 1.16, JPY: 189.2, THB: 43.8, CNY: 9.19 },
+        JPY: { USD: 0.0067, EUR: 0.0062, GBP: 0.0053, THB: 0.23, CNY: 0.048 },
+        THB: { USD: 0.029, EUR: 0.027, GBP: 0.023, JPY: 4.33, CNY: 0.21 },
+        CNY: { USD: 0.138, EUR: 0.127, GBP: 0.109, JPY: 20.65, THB: 4.76 },
       };
 
       const rate = fallbackRates[from]?.[to] || 1;
@@ -101,11 +102,12 @@ export async function GET(request: NextRequest) {
     // If no API key, return fallback rates
     if (!API_KEY) {
       const fallbackRates: Record<string, any> = {
-        USD: { EUR: 0.92, GBP: 0.79, JPY: 149.5, THB: 34.5, USD: 1 },
-        EUR: { USD: 1.09, GBP: 0.86, JPY: 162.5, THB: 37.5, EUR: 1 },
-        GBP: { USD: 1.27, EUR: 1.16, JPY: 189.2, THB: 43.8, GBP: 1 },
-        JPY: { USD: 0.0067, EUR: 0.0062, GBP: 0.0053, THB: 0.23, JPY: 1 },
-        THB: { USD: 0.029, EUR: 0.027, GBP: 0.023, JPY: 4.33, THB: 1 },
+        USD: { EUR: 0.92, GBP: 0.79, JPY: 149.5, THB: 34.5, CNY: 7.24, USD: 1 },
+        EUR: { USD: 1.09, GBP: 0.86, JPY: 162.5, THB: 37.5, CNY: 7.88, EUR: 1 },
+        GBP: { USD: 1.27, EUR: 1.16, JPY: 189.2, THB: 43.8, CNY: 9.19, GBP: 1 },
+        JPY: { USD: 0.0067, EUR: 0.0062, GBP: 0.0053, THB: 0.23, CNY: 0.048, JPY: 1 },
+        THB: { USD: 0.029, EUR: 0.027, GBP: 0.023, JPY: 4.33, CNY: 0.21, THB: 1 },
+        CNY: { USD: 0.138, EUR: 0.127, GBP: 0.109, JPY: 20.65, THB: 4.76, CNY: 1 },
       };
 
       return NextResponse.json({
