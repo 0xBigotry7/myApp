@@ -449,6 +449,7 @@ export default function AccommodationBookingModal({
                     <option value="GBP">🇬🇧 GBP (£)</option>
                     <option value="JPY">🇯🇵 JPY (¥)</option>
                     <option value="CNY">🇨🇳 CNY (¥)</option>
+                    <option value="THB">🇹🇭 THB (฿)</option>
                   </select>
                 </div>
               </div>
