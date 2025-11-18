@@ -44,6 +44,7 @@ export default function AccommodationExpenseCard({
       GBP: "£",
       JPY: "¥",
       CNY: "¥",
+      THB: "฿",
     };
     return symbols[currency] || currency;
   };

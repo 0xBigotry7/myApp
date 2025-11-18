@@ -67,6 +67,18 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
   const [deletingItem, setDeletingItem] = useState<{ type: "expense" | "post"; id: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const getCurrencySymbol = (currency: string) => {
+    const symbols: Record<string, string> = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      JPY: "¥",
+      CNY: "¥",
+      THB: "฿",
+    };
+    return symbols[currency] || "$";
+  };
+
   const toggleImageExpand = (imageId: string) => {
     setExpandedImages((prev) => ({
       ...prev,
@@ -474,7 +486,7 @@ export default function TripTimeline({ expenses, posts, users }: TripTimelinePro
                             <div className="flex items-center gap-1">
                               <div className="text-right flex-shrink-0">
                                 <div className="text-lg sm:text-2xl font-bold text-indigo-600 whitespace-nowrap">
-                                  {expense.currency} {expense.amount.toFixed(2)}
+                                  {getCurrencySymbol(expense.currency)}{expense.amount.toFixed(2)}
                                 </div>
                               </div>
                               {/* Action Buttons - inline on mobile */}

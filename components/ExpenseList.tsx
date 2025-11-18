@@ -53,6 +53,18 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
+  const getCurrencySymbol = (currency: string) => {
+    const symbols: Record<string, string> = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      JPY: "¥",
+      CNY: "¥",
+      THB: "฿",
+    };
+    return symbols[currency] || "$";
+  };
+
   const handleDelete = async (expenseId: string) => {
     if (!confirm("Are you sure you want to delete this expense?")) {
       return;
@@ -137,7 +149,7 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
               <div className="flex-1 min-w-0 mr-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-base sm:text-lg whitespace-nowrap">
-                    ${expense.amount.toFixed(2)}
+                    {getCurrencySymbol(expense.currency)}{expense.amount.toFixed(2)}
                   </span>
                   <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg font-medium ${colors.badge} truncate`}>
                     {translateCategory(expense.category, locale)}
