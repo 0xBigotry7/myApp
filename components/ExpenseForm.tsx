@@ -163,6 +163,7 @@ export default function ExpenseForm({ tripId, categories }: ExpenseFormProps) {
                 <option value="EUR">🇪🇺 EUR (€)</option>
                 <option value="GBP">🇬🇧 GBP (£)</option>
                 <option value="JPY">🇯🇵 JPY (¥)</option>
+                <option value="THB">🇹🇭 THB (฿)</option>
               </select>
             </div>
           </div>
