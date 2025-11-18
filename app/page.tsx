@@ -33,8 +33,24 @@ export default async function Dashboard() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Currency conversion rates to USD
+  const conversionRates: Record<string, number> = {
+    USD: 1,
+    EUR: 1.09,
+    GBP: 1.27,
+    JPY: 0.0067,
+    CNY: 0.138,
+    THB: 0.029,
+  };
+
+  // Helper function to convert any currency to USD
+  const convertToUSD = (amount: number, currency: string): number => {
+    const rate = conversionRates[currency] || 1;
+    return amount * rate;
+  };
+
   const tripsWithStats = trips.map((trip) => {
-    const totalSpent = trip.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalSpent = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
     const remaining = trip.totalBudget - totalSpent;
     const percentUsed = (totalSpent / trip.totalBudget) * 100;
 
