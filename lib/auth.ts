@@ -11,32 +11,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("Authorize called with:", { email: credentials?.email });
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials");
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          });
+          
+          if (!user) {
+            console.log("User not found:", credentials.email);
+            return null;
+          }
 
-        if (!user) {
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+          
+          if (!isPasswordValid) {
+             console.log("Invalid password for user:", credentials.email);
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error("Error in authorize:", error);
           return null;
         }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
       },
     }),
   ],
@@ -50,14 +60,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id as string;
       }
       return session;
     },
   },
+  secret: process.env.AUTH_SECRET,
 });

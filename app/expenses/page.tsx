@@ -45,16 +45,17 @@ export default async function ExpensesPage() {
     },
   });
 
-  // Get recent transactions (last 30 days, ONLY non-trip-related)
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // Get recent transactions (last 90 days)
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
+  // Fetch ONLY non-trip transactions to avoid duplication/incorrect amounts
   const transactions = await prisma.transaction.findMany({
     where: {
       userId: session.user.id,
-      isTripRelated: false, // ONLY show regular expenses, not trip expenses
+      isTripRelated: false, 
       date: {
-        gte: thirtyDaysAgo,
+        gte: ninetyDaysAgo,
       },
     },
     include: {
@@ -63,7 +64,35 @@ export default async function ExpensesPage() {
     orderBy: {
       date: "desc",
     },
-    take: 50,
+    take: 200,
+  });
+
+  // Fetch trip expenses (which have correct currency info)
+  const expenses = await prisma.expense.findMany({
+    where: {
+      userId: session.user.id,
+      date: {
+        gte: ninetyDaysAgo,
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+  });
+
+  // Get trips for context
+  const trips = await prisma.trip.findMany({
+    where: {
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
+    },
+    select: {
+      id: true,
+      name: true,
+      destination: true,
+    }
   });
 
   // Get recurring transactions
@@ -80,13 +109,15 @@ export default async function ExpensesPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8">
+      <div className="min-h-screen bg-zinc-50 bg-dot-pattern">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <ExpensesClient
             budget={budget ? JSON.parse(JSON.stringify(budget)) : null}
             accounts={JSON.parse(JSON.stringify(accounts))}
             transactions={JSON.parse(JSON.stringify(transactions))}
+            expenses={JSON.parse(JSON.stringify(expenses))}
             recurringTransactions={JSON.parse(JSON.stringify(recurringTransactions))}
+            trips={JSON.parse(JSON.stringify(trips))}
             currentMonth={currentMonth}
             currentYear={currentYear}
           />

@@ -60,51 +60,53 @@ export default async function Dashboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          {/* Travel Trips Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
+      <main className="min-h-screen bg-zinc-50 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row justify-between items-end gap-6 mb-12">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 leading-tight">
-                ✈️ {t.myTrips}
+              <h1 className="text-4xl font-bold tracking-tight text-zinc-900 mb-2">
+                My Trips
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base">{t.planTrackManage}</p>
+              <p className="text-zinc-500 text-lg max-w-2xl">
+                Manage your adventures, track expenses, and plan your next journey.
+              </p>
             </div>
             <Link
               href="/trips/new"
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-blue-pink px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-8 py-3 text-sm font-medium text-white transition-all hover:bg-zinc-800 hover:shadow-lg active:scale-95"
             >
-              <span className="text-xl">+</span>
+              <span className="text-xl leading-none mb-0.5">+</span>
               {t.planTrip}
             </Link>
           </div>
 
+          {/* Content Section */}
           {tripsWithStats.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-200">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-5xl">✈️</span>
+            <div className="flex flex-col items-center justify-center py-32 px-4 bg-white rounded-3xl border border-zinc-100 shadow-sm text-center">
+              <div className="w-24 h-24 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
+                <span className="text-5xl opacity-50">✈️</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.noTripsYet}</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              <h3 className="text-2xl font-bold text-zinc-900 mb-3">{t.noTripsYet}</h3>
+              <p className="text-zinc-500 mb-8 max-w-md mx-auto text-lg leading-relaxed">
                 {t.startPlanningAdventure}
               </p>
               <Link
                 href="/trips/new"
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-blue-pink px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-8 py-3 text-base font-medium text-white transition-all hover:bg-zinc-800 hover:shadow-lg active:scale-95"
               >
-                <span className="text-xl">+</span>
                 {t.createFirstTrip}
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {tripsWithStats.map((trip) => (
                 <TripCard key={trip.id} trip={trip} />
               ))}
             </div>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

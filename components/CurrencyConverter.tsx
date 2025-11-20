@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowRightLeft, RefreshCw, TrendingUp, Wallet } from "lucide-react";
 
 interface ExchangeRates {
   [key: string]: number;
@@ -64,15 +65,15 @@ export default function CurrencyConverter() {
         if (response.ok) {
           const data = await response.json();
           setRates(data.rates);
-          setLastUpdated(new Date().toLocaleTimeString());
+          setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         } else {
           setRates(fallbackRates);
-          setLastUpdated("Offline rates");
+          setLastUpdated("Offline");
         }
       } catch (error) {
         console.error("Failed to fetch rates:", error);
         setRates(fallbackRates);
-        setLastUpdated("Offline rates");
+        setLastUpdated("Offline");
       } finally {
         setLoading(false);
       }
@@ -94,136 +95,146 @@ export default function CurrencyConverter() {
   };
 
   return (
-    <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-2.5 md:p-6">
-      {/* Header */}
-      <div className="mb-2 md:mb-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg md:text-2xl font-bold text-gray-900">
-            💱 Converter
-          </h2>
-          {lastUpdated && (
-            <span className="text-[9px] md:text-xs text-gray-500">
-              {lastUpdated}
-            </span>
-          )}
+    <div className="max-w-md mx-auto">
+      <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden relative">
+        {/* Decorative background blob */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl -z-10 opacity-50 translate-x-1/3 -translate-y-1/3" />
+        
+        {/* Header */}
+        <div className="p-8 pb-0">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-zinc-900 flex items-center gap-2">
+                <Wallet className="w-6 h-6 text-zinc-900" />
+                Currency
+              </h2>
+              <p className="text-sm text-zinc-500 mt-1">Real-time exchange rates</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 rounded-full border border-zinc-100">
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`} />
+              <span className="text-xs font-medium text-zinc-500">
+                {loading ? "Updating..." : lastUpdated}
+              </span>
+            </div>
+          </div>
+
+          {/* Input Section */}
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider ml-1">Amount</label>
+            <div className="relative group">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-medium text-xl">
+                {currencies.find(c => c.code === fromCurrency)?.symbol}
+              </span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full pl-10 pr-4 py-4 text-4xl font-bold text-zinc-900 bg-transparent border-b-2 border-zinc-100 focus:border-zinc-900 outline-none transition-all placeholder:text-zinc-200"
+                placeholder="0"
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Amount Input */}
-      <div className="mb-2 md:mb-3">
-        <input
-          type="number"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 md:py-2.5 text-base md:text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          placeholder="1000"
-        />
-      </div>
-
-      {/* From Currency - Quick Select */}
-      <div className="mb-1.5 md:mb-2">
-        <label className="block text-[10px] md:text-xs font-semibold text-gray-600 mb-1">From</label>
-        <div className="grid grid-cols-5 gap-1 md:gap-1.5 mb-1.5 md:mb-2">
-          {popularCurrencies.map((curr) => (
-            <button
-              key={curr}
-              onClick={() => setFromCurrency(curr)}
-              className={`py-1.5 md:py-2 rounded-md text-[11px] md:text-xs font-bold transition-all active:scale-95 ${
-                fromCurrency === curr
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 active:bg-gray-200"
-              }`}
+        {/* Converter Body */}
+        <div className="p-6 space-y-4">
+          {/* From Currency */}
+          <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 transition-colors hover:border-zinc-200">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-bold text-zinc-400 uppercase">From</span>
+              <span className="text-xs font-bold text-zinc-900">1 {fromCurrency} = {(rates[toCurrency] || 0).toFixed(4)} {toCurrency}</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
+              {popularCurrencies.map((curr) => (
+                <button
+                  key={curr}
+                  onClick={() => setFromCurrency(curr)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                    fromCurrency === curr
+                      ? "bg-zinc-900 text-white shadow-md"
+                      : "bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300"
+                  }`}
+                >
+                  {curr}
+                </button>
+              ))}
+            </div>
+            <select
+              value={fromCurrency}
+              onChange={(e) => setFromCurrency(e.target.value)}
+              className="w-full mt-2 p-3 bg-white border border-zinc-200 rounded-xl text-sm font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 appearance-none cursor-pointer"
             >
-              {curr}
-            </button>
-          ))}
-        </div>
-        <select
-          value={fromCurrency}
-          onChange={(e) => setFromCurrency(e.target.value)}
-          className="w-full px-2 md:px-2.5 py-1.5 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-        >
-          {currencies.map((currency) => (
-            <option key={currency.code} value={currency.code}>
-              {currency.code} - {currency.name}
-            </option>
-          ))}
-        </select>
-      </div>
+              {currencies.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.code} - {currency.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Swap Button */}
-      <div className="flex justify-center my-1.5 md:my-2">
-        <button
-          onClick={handleSwap}
-          className="p-1.5 rounded-full bg-blue-100 active:bg-blue-300 transition-colors"
-          title="Swap currencies"
-        >
-          <svg
-            className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-            />
-          </svg>
-        </button>
-      </div>
+          {/* Swap Button */}
+          <div className="relative h-4">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              <button
+                onClick={handleSwap}
+                className="p-3 rounded-full bg-zinc-900 text-white shadow-lg hover:scale-110 active:scale-95 transition-all"
+              >
+                <ArrowRightLeft className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="absolute top-1/2 w-full h-px bg-zinc-100 -translate-y-1/2" />
+          </div>
 
-      {/* To Currency - Quick Select */}
-      <div className="mb-2 md:mb-3">
-        <label className="block text-[10px] md:text-xs font-semibold text-gray-600 mb-1">To</label>
-        <div className="grid grid-cols-5 gap-1 md:gap-1.5 mb-1.5 md:mb-2">
-          {popularCurrencies.map((curr) => (
-            <button
-              key={curr}
-              onClick={() => setToCurrency(curr)}
-              className={`py-1.5 md:py-2 rounded-md text-[11px] md:text-xs font-bold transition-all active:scale-95 ${
-                toCurrency === curr
-                  ? "bg-green-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 active:bg-gray-200"
-              }`}
-            >
-              {curr}
-            </button>
-          ))}
-        </div>
-        <select
-          value={toCurrency}
-          onChange={(e) => setToCurrency(e.target.value)}
-          className="w-full px-2 md:px-2.5 py-1.5 md:py-2 text-xs md:text-sm border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-        >
-          {currencies.map((currency) => (
-            <option key={currency.code} value={currency.code}>
-              {currency.code} - {currency.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          {/* To Currency */}
+          <div className="bg-zinc-900 p-5 rounded-2xl text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xs font-bold text-zinc-400 uppercase">To</span>
+                <div className="flex gap-2">
+                  {popularCurrencies.slice(0, 3).map((curr) => (
+                    <button
+                      key={curr}
+                      onClick={() => setToCurrency(curr)}
+                      className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                        toCurrency === curr
+                          ? "bg-white text-zinc-900"
+                          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                      }`}
+                    >
+                      {curr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-2xl font-medium text-zinc-400">
+                  {currencies.find(c => c.code === toCurrency)?.symbol}
+                </span>
+                <span className="text-5xl font-bold tracking-tight">
+                  {convertedAmount.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
 
-      {/* Result */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2.5 md:p-4 border-2 border-blue-200">
-        <div className="text-[10px] md:text-xs text-gray-600 mb-0.5">Result</div>
-        <div className="text-xl md:text-3xl font-bold text-blue-600 break-all">
-          {loading ? (
-            <span className="text-base md:text-lg">Loading...</span>
-          ) : (
-            <>
-              {currencies.find((c) => c.code === toCurrency)?.symbol}
-              {convertedAmount.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </>
-          )}
-        </div>
-        <div className="text-[10px] md:text-xs text-gray-600 mt-0.5 md:mt-1">
-          1 {fromCurrency} = {(rates[toCurrency] || 0).toFixed(4)} {toCurrency}
+              <select
+                value={toCurrency}
+                onChange={(e) => setToCurrency(e.target.value)}
+                className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-xl text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer hover:bg-zinc-700 transition-colors"
+              >
+                {currencies.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.code} - {currency.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>

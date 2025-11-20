@@ -29,265 +29,49 @@ const TRIP_PRESETS = {
 
 const POPULAR_DESTINATIONS = [
   // Americas
-  "New York, USA",
-  "Los Angeles, USA",
-  "San Francisco, USA",
-  "Miami, USA",
-  "Las Vegas, USA",
-  "Chicago, USA",
-  "Boston, USA",
-  "Seattle, USA",
-  "New Orleans, USA",
-  "Austin, USA",
-  "San Diego, USA",
-  "Honolulu, Hawaii, USA",
-  "Anchorage, Alaska, USA",
-  "Cancun, Mexico",
-  "Mexico City, Mexico",
-  "Playa del Carmen, Mexico",
-  "Cabo San Lucas, Mexico",
-  "Tulum, Mexico",
-  "Puerto Vallarta, Mexico",
-  "Guadalajara, Mexico",
-  "San Juan, Puerto Rico",
-  "Ponce, Puerto Rico",
-  "Vieques, Puerto Rico",
-  "Culebra, Puerto Rico",
-  "Rio de Janeiro, Brazil",
-  "São Paulo, Brazil",
-  "Buenos Aires, Argentina",
-  "Lima, Peru",
-  "Cusco, Peru",
-  "Machu Picchu, Peru",
-  "Cartagena, Colombia",
-  "Bogotá, Colombia",
-  "Medellín, Colombia",
-  "Quito, Ecuador",
-  "Galápagos Islands, Ecuador",
-  "Santiago, Chile",
-  "Valparaíso, Chile",
-  "Patagonia, Argentina",
-  "Havana, Cuba",
-  "Varadero, Cuba",
-  "Nassau, Bahamas",
-  "Montego Bay, Jamaica",
-  "Barbados",
-  "Aruba",
-  "St. Lucia",
-  "Turks and Caicos",
-  "Dominican Republic",
-  "Costa Rica",
-  "Panama City, Panama",
-  "Toronto, Canada",
-  "Vancouver, Canada",
-  "Montreal, Canada",
-  "Banff, Canada",
-  "Quebec City, Canada",
+  "New York, USA", "Los Angeles, USA", "San Francisco, USA", "Miami, USA", "Las Vegas, USA", "Chicago, USA", "Boston, USA", "Seattle, USA", "New Orleans, USA", "Austin, USA",
+  "San Diego, USA", "Honolulu, Hawaii, USA", "Anchorage, Alaska, USA", "Cancun, Mexico", "Mexico City, Mexico", "Playa del Carmen, Mexico", "Cabo San Lucas, Mexico", "Tulum, Mexico",
+  "Puerto Vallarta, Mexico", "Guadalajara, Mexico", "San Juan, Puerto Rico", "Ponce, Puerto Rico", "Vieques, Puerto Rico", "Culebra, Puerto Rico", "Rio de Janeiro, Brazil",
+  "São Paulo, Brazil", "Buenos Aires, Argentina", "Lima, Peru", "Cusco, Peru", "Machu Picchu, Peru", "Cartagena, Colombia", "Bogotá, Colombia", "Medellín, Colombia",
+  "Quito, Ecuador", "Galápagos Islands, Ecuador", "Santiago, Chile", "Valparaíso, Chile", "Patagonia, Argentina", "Havana, Cuba", "Varadero, Cuba", "Nassau, Bahamas",
+  "Montego Bay, Jamaica", "Barbados", "Aruba", "St. Lucia", "Turks and Caicos", "Dominican Republic", "Costa Rica", "Panama City, Panama", "Toronto, Canada",
+  "Vancouver, Canada", "Montreal, Canada", "Banff, Canada", "Quebec City, Canada",
 
   // Europe
-  "London, UK",
-  "Edinburgh, Scotland",
-  "Dublin, Ireland",
-  "Paris, France",
-  "Nice, France",
-  "Lyon, France",
-  "Bordeaux, France",
-  "French Riviera, France",
-  "Marseille, France",
-  "Rome, Italy",
-  "Venice, Italy",
-  "Florence, Italy",
-  "Milan, Italy",
-  "Naples, Italy",
-  "Amalfi Coast, Italy",
-  "Cinque Terre, Italy",
-  "Sicily, Italy",
-  "Barcelona, Spain",
-  "Madrid, Spain",
-  "Seville, Spain",
-  "Valencia, Spain",
-  "Granada, Spain",
-  "Ibiza, Spain",
-  "Mallorca, Spain",
-  "San Sebastian, Spain",
-  "Bilbao, Spain",
-  "Lisbon, Portugal",
-  "Porto, Portugal",
-  "Algarve, Portugal",
-  "Madeira, Portugal",
-  "Azores, Portugal",
-  "Amsterdam, Netherlands",
-  "Brussels, Belgium",
-  "Bruges, Belgium",
-  "Berlin, Germany",
-  "Munich, Germany",
-  "Hamburg, Germany",
-  "Frankfurt, Germany",
-  "Cologne, Germany",
-  "Vienna, Austria",
-  "Salzburg, Austria",
-  "Innsbruck, Austria",
-  "Zurich, Switzerland",
-  "Geneva, Switzerland",
-  "Interlaken, Switzerland",
-  "Lucerne, Switzerland",
-  "Zermatt, Switzerland",
-  "Prague, Czech Republic",
-  "Budapest, Hungary",
-  "Krakow, Poland",
-  "Warsaw, Poland",
-  "Bucharest, Romania",
-  "Sofia, Bulgaria",
-  "Athens, Greece",
-  "Santorini, Greece",
-  "Mykonos, Greece",
-  "Crete, Greece",
-  "Rhodes, Greece",
-  "Corfu, Greece",
-  "Istanbul, Turkey",
-  "Cappadocia, Turkey",
-  "Antalya, Turkey",
-  "Bodrum, Turkey",
-  "Copenhagen, Denmark",
-  "Stockholm, Sweden",
-  "Oslo, Norway",
-  "Bergen, Norway",
-  "Helsinki, Finland",
-  "Reykjavik, Iceland",
-  "Tallinn, Estonia",
-  "Riga, Latvia",
-  "Vilnius, Lithuania",
-  "Moscow, Russia",
-  "St. Petersburg, Russia",
-  "Zagreb, Croatia",
-  "Dubrovnik, Croatia",
-  "Split, Croatia",
-  "Ljubljana, Slovenia",
-  "Belgrade, Serbia",
+  "London, UK", "Edinburgh, Scotland", "Dublin, Ireland", "Paris, France", "Nice, France", "Lyon, France", "Bordeaux, France", "French Riviera, France", "Marseille, France",
+  "Rome, Italy", "Venice, Italy", "Florence, Italy", "Milan, Italy", "Naples, Italy", "Amalfi Coast, Italy", "Cinque Terre, Italy", "Sicily, Italy", "Barcelona, Spain",
+  "Madrid, Spain", "Seville, Spain", "Valencia, Spain", "Granada, Spain", "Ibiza, Spain", "Mallorca, Spain", "San Sebastian, Spain", "Bilbao, Spain", "Lisbon, Portugal",
+  "Porto, Portugal", "Algarve, Portugal", "Madeira, Portugal", "Azores, Portugal", "Amsterdam, Netherlands", "Brussels, Belgium", "Bruges, Belgium", "Berlin, Germany",
+  "Munich, Germany", "Hamburg, Germany", "Frankfurt, Germany", "Cologne, Germany", "Vienna, Austria", "Salzburg, Austria", "Innsbruck, Austria", "Zurich, Switzerland",
+  "Geneva, Switzerland", "Interlaken, Switzerland", "Lucerne, Switzerland", "Zermatt, Switzerland", "Prague, Czech Republic", "Budapest, Hungary", "Krakow, Poland",
+  "Warsaw, Poland", "Bucharest, Romania", "Sofia, Bulgaria", "Athens, Greece", "Santorini, Greece", "Mykonos, Greece", "Crete, Greece", "Rhodes, Greece", "Corfu, Greece",
+  "Istanbul, Turkey", "Cappadocia, Turkey", "Antalya, Turkey", "Bodrum, Turkey", "Copenhagen, Denmark", "Stockholm, Sweden", "Oslo, Norway", "Bergen, Norway", "Helsinki, Finland",
+  "Reykjavik, Iceland", "Tallinn, Estonia", "Riga, Latvia", "Vilnius, Lithuania", "Moscow, Russia", "St. Petersburg, Russia", "Zagreb, Croatia", "Dubrovnik, Croatia",
+  "Split, Croatia", "Ljubljana, Slovenia", "Belgrade, Serbia",
 
   // Asia
-  "Tokyo, Japan",
-  "Kyoto, Japan",
-  "Osaka, Japan",
-  "Hiroshima, Japan",
-  "Sapporo, Japan",
-  "Nara, Japan",
-  "Hakone, Japan",
-  "Seoul, South Korea",
-  "Busan, South Korea",
-  "Jeju Island, South Korea",
-  "Beijing, China",
-  "Shanghai, China",
-  "Hong Kong",
-  "Macau",
-  "Taipei, Taiwan",
-  "Bangkok, Thailand",
-  "Chiang Mai, Thailand",
-  "Phuket, Thailand",
-  "Krabi, Thailand",
-  "Koh Samui, Thailand",
-  "Pattaya, Thailand",
-  "Hanoi, Vietnam",
-  "Ho Chi Minh City, Vietnam",
-  "Hoi An, Vietnam",
-  "Halong Bay, Vietnam",
-  "Da Nang, Vietnam",
-  "Singapore",
-  "Kuala Lumpur, Malaysia",
-  "Penang, Malaysia",
-  "Langkawi, Malaysia",
-  "Bali, Indonesia",
-  "Jakarta, Indonesia",
-  "Yogyakarta, Indonesia",
-  "Lombok, Indonesia",
-  "Manila, Philippines",
-  "Boracay, Philippines",
-  "Cebu, Philippines",
-  "Palawan, Philippines",
-  "Siem Reap, Cambodia",
-  "Phnom Penh, Cambodia",
-  "Luang Prabang, Laos",
-  "Vientiane, Laos",
-  "Yangon, Myanmar",
-  "Bagan, Myanmar",
-  "Kathmandu, Nepal",
-  "Pokhara, Nepal",
-  "New Delhi, India",
-  "Mumbai, India",
-  "Jaipur, India",
-  "Agra, India",
-  "Goa, India",
-  "Kerala, India",
-  "Varanasi, India",
-  "Udaipur, India",
-  "Colombo, Sri Lanka",
-  "Kandy, Sri Lanka",
-  "Dhaka, Bangladesh",
-  "Maldives",
+  "Tokyo, Japan", "Kyoto, Japan", "Osaka, Japan", "Hiroshima, Japan", "Sapporo, Japan", "Nara, Japan", "Hakone, Japan", "Seoul, South Korea", "Busan, South Korea",
+  "Jeju Island, South Korea", "Beijing, China", "Shanghai, China", "Hong Kong", "Macau", "Taipei, Taiwan", "Bangkok, Thailand", "Chiang Mai, Thailand", "Phuket, Thailand",
+  "Krabi, Thailand", "Koh Samui, Thailand", "Pattaya, Thailand", "Hanoi, Vietnam", "Ho Chi Minh City, Vietnam", "Hoi An, Vietnam", "Halong Bay, Vietnam", "Da Nang, Vietnam",
+  "Singapore", "Kuala Lumpur, Malaysia", "Penang, Malaysia", "Langkawi, Malaysia", "Bali, Indonesia", "Jakarta, Indonesia", "Yogyakarta, Indonesia", "Lombok, Indonesia",
+  "Manila, Philippines", "Boracay, Philippines", "Cebu, Philippines", "Palawan, Philippines", "Siem Reap, Cambodia", "Phnom Penh, Cambodia", "Luang Prabang, Laos",
+  "Vientiane, Laos", "Yangon, Myanmar", "Bagan, Myanmar", "Kathmandu, Nepal", "Pokhara, Nepal", "New Delhi, India", "Mumbai, India", "Jaipur, India", "Agra, India",
+  "Goa, India", "Kerala, India", "Varanasi, India", "Udaipur, India", "Colombo, Sri Lanka", "Kandy, Sri Lanka", "Dhaka, Bangladesh", "Maldives",
 
   // Middle East
-  "Dubai, UAE",
-  "Abu Dhabi, UAE",
-  "Doha, Qatar",
-  "Muscat, Oman",
-  "Tel Aviv, Israel",
-  "Jerusalem, Israel",
-  "Amman, Jordan",
-  "Petra, Jordan",
-  "Dead Sea, Jordan",
-  "Beirut, Lebanon",
-  "Marrakech, Morocco",
-  "Casablanca, Morocco",
-  "Fez, Morocco",
-  "Tangier, Morocco",
-  "Cairo, Egypt",
-  "Alexandria, Egypt",
-  "Luxor, Egypt",
-  "Sharm El Sheikh, Egypt",
-  "Tunis, Tunisia",
+  "Dubai, UAE", "Abu Dhabi, UAE", "Doha, Qatar", "Muscat, Oman", "Tel Aviv, Israel", "Jerusalem, Israel", "Amman, Jordan", "Petra, Jordan", "Dead Sea, Jordan",
+  "Beirut, Lebanon", "Marrakech, Morocco", "Casablanca, Morocco", "Fez, Morocco", "Tangier, Morocco", "Cairo, Egypt", "Alexandria, Egypt", "Luxor, Egypt",
+  "Sharm El Sheikh, Egypt", "Tunis, Tunisia",
 
   // Africa
-  "Cape Town, South Africa",
-  "Johannesburg, South Africa",
-  "Durban, South Africa",
-  "Kruger National Park, South Africa",
-  "Nairobi, Kenya",
-  "Mombasa, Kenya",
-  "Zanzibar, Tanzania",
-  "Dar es Salaam, Tanzania",
-  "Serengeti, Tanzania",
-  "Addis Ababa, Ethiopia",
-  "Accra, Ghana",
-  "Lagos, Nigeria",
-  "Dakar, Senegal",
-  "Marrakesh, Morocco",
-  "Victoria Falls, Zimbabwe",
-  "Livingstone, Zambia",
-  "Mauritius",
-  "Seychelles",
-  "Madagascar",
+  "Cape Town, South Africa", "Johannesburg, South Africa", "Durban, South Africa", "Kruger National Park, South Africa", "Nairobi, Kenya", "Mombasa, Kenya",
+  "Zanzibar, Tanzania", "Dar es Salaam, Tanzania", "Serengeti, Tanzania", "Addis Ababa, Ethiopia", "Accra, Ghana", "Lagos, Nigeria", "Dakar, Senegal", "Marrakesh, Morocco",
+  "Victoria Falls, Zimbabwe", "Livingstone, Zambia", "Mauritius", "Seychelles", "Madagascar",
 
   // Oceania
-  "Sydney, Australia",
-  "Melbourne, Australia",
-  "Brisbane, Australia",
-  "Perth, Australia",
-  "Gold Coast, Australia",
-  "Cairns, Australia",
-  "Great Barrier Reef, Australia",
-  "Adelaide, Australia",
-  "Hobart, Australia",
-  "Auckland, New Zealand",
-  "Wellington, New Zealand",
-  "Queenstown, New Zealand",
-  "Christchurch, New Zealand",
-  "Rotorua, New Zealand",
-  "Fiji",
-  "Tahiti, French Polynesia",
-  "Bora Bora, French Polynesia",
-  "Cook Islands",
-  "Samoa",
-  "Guam",
+  "Sydney, Australia", "Melbourne, Australia", "Brisbane, Australia", "Perth, Australia", "Gold Coast, Australia", "Cairns, Australia", "Great Barrier Reef, Australia",
+  "Adelaide, Australia", "Hobart, Australia", "Auckland, New Zealand", "Wellington, New Zealand", "Queenstown, New Zealand", "Christchurch, New Zealand",
+  "Rotorua, New Zealand", "Fiji", "Tahiti, French Polynesia", "Bora Bora, French Polynesia", "Cook Islands", "Samoa", "Guam",
 ];
 
 interface DestinationSuggestion {
@@ -560,20 +344,20 @@ export default function NewTripPage() {
   const remainingPercentage = 100 - totalPercentage;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-zinc-50 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Plan New Trip</h1>
-              <p className="text-gray-600">Create your perfect travel budget in 3 easy steps</p>
+              <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">Plan New Trip</h1>
+              <p className="text-zinc-500 text-lg">Create your perfect travel budget in 3 easy steps</p>
             </div>
             <button
               type="button"
               onClick={handleGetSuggestions}
               disabled={loadingSuggestions}
-              className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50"
+              className="hidden md:inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
             >
               <span className="text-xl">✨</span>
               {loadingSuggestions ? "Loading..." : "AI Suggestions"}
@@ -581,7 +365,7 @@ export default function NewTripPage() {
           </div>
 
           {/* Progress Steps */}
-          <div className="grid grid-cols-3 gap-0 mt-6">
+          <div className="grid grid-cols-3 gap-0 mt-8 max-w-2xl mx-auto">
             {[
               { num: 1, label: "Trip Details" },
               { num: 2, label: "Budget" },
@@ -590,25 +374,25 @@ export default function NewTripPage() {
               <div key={s.num} className="flex flex-col items-center">
                 <div className="flex items-center w-full">
                   {idx > 0 && (
-                    <div className={`flex-1 h-1 rounded ${
-                      step > idx ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'
+                    <div className={`flex-1 h-0.5 rounded ${
+                      step > idx ? 'bg-zinc-900' : 'bg-zinc-200'
                     }`} />
                   )}
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all mx-2 ${
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all mx-2 border-2 ${
                     step >= s.num
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-gray-200 text-gray-500'
+                      ? 'bg-zinc-900 border-zinc-900 text-white'
+                      : 'bg-white border-zinc-200 text-zinc-400'
                   }`}>
                     {s.num}
                   </div>
                   {idx < 2 && (
-                    <div className={`flex-1 h-1 rounded ${
-                      step > s.num ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-gray-200'
+                    <div className={`flex-1 h-0.5 rounded ${
+                      step > s.num ? 'bg-zinc-900' : 'bg-zinc-200'
                     }`} />
                   )}
                 </div>
-                <span className={`mt-2 text-sm text-center ${
-                  step >= s.num ? 'text-indigo-600 font-medium' : 'text-gray-500'
+                <span className={`mt-2 text-sm font-medium ${
+                  step >= s.num ? 'text-zinc-900' : 'text-zinc-400'
                 }`}>
                   {s.label}
                 </span>
@@ -619,12 +403,12 @@ export default function NewTripPage() {
 
         {/* AI Suggestions */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 mb-8 shadow-sm">
+          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 mb-8 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">✨ AI Destination Suggestions</h2>
+              <h2 className="text-xl font-bold text-zinc-900">✨ AI Destination Suggestions</h2>
               <button
                 onClick={() => setShowSuggestions(false)}
-                className="text-gray-500 hover:text-gray-700 p-2"
+                className="text-zinc-500 hover:text-zinc-700 p-2"
               >
                 ✕
               </button>
@@ -634,13 +418,13 @@ export default function NewTripPage() {
                 <div
                   key={index}
                   onClick={() => handleSelectSuggestion(suggestion)}
-                  className="bg-white p-4 rounded-xl border border-purple-200 hover:border-purple-400 hover:shadow-md cursor-pointer transition-all group"
+                  className="bg-white p-4 rounded-xl border border-zinc-200 hover:border-zinc-400 hover:shadow-md cursor-pointer transition-all group"
                 >
-                  <h3 className="font-bold text-lg text-gray-900 group-hover:text-purple-600 transition-colors">
+                  <h3 className="font-bold text-lg text-zinc-900 group-hover:text-zinc-700 transition-colors">
                     {suggestion.destination}
                   </h3>
-                  <p className="text-gray-600 text-sm mt-1 line-clamp-2">{suggestion.reason}</p>
-                  <p className="font-bold text-purple-600 text-lg mt-2">${suggestion.estimatedBudget.toLocaleString()}</p>
+                  <p className="text-zinc-500 text-sm mt-1 line-clamp-2">{suggestion.reason}</p>
+                  <p className="font-bold text-zinc-900 text-lg mt-2">${suggestion.estimatedBudget.toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -650,11 +434,11 @@ export default function NewTripPage() {
         <form onSubmit={handleSubmit}>
           {/* Step 1: Trip Details */}
           {step === 1 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8 space-y-6">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    What should we call this trip? <span className="text-gray-400 font-normal">(optional)</span>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
+                    What should we call this trip? <span className="text-zinc-400 font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -666,11 +450,11 @@ export default function NewTripPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
                     Where are you starting from?
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10">✈️</div>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">✈️</div>
                     <input
                       type="text"
                       required
@@ -687,21 +471,21 @@ export default function NewTripPage() {
                           }
                         }
                       }}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="input-field pl-12 text-lg"
                       placeholder="e.g., New York, USA"
                       autoComplete="off"
                     />
                     {showStartingFrom && filteredStartingFrom.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
                         {filteredStartingFrom.map((dest, idx) => (
                           <button
                             key={idx}
                             type="button"
                             onClick={() => selectStartingFrom(dest)}
-                            className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 transition-colors flex items-center gap-3 border-b border-zinc-100 last:border-b-0"
                           >
-                            <span className="text-xl">✈️</span>
-                            <span className="text-gray-900">{dest}</span>
+                            <span className="text-xl opacity-50">✈️</span>
+                            <span className="text-zinc-900">{dest}</span>
                           </button>
                         ))}
                       </div>
@@ -710,11 +494,11 @@ export default function NewTripPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
                     Where are you heading?
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10">📍</div>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">📍</div>
                     <input
                       type="text"
                       required
@@ -731,21 +515,21 @@ export default function NewTripPage() {
                           }
                         }
                       }}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-gray-400"
+                      className="input-field pl-12 text-lg"
                       placeholder="e.g., Paris, France"
                       autoComplete="off"
                     />
                     {showDestinations && filteredDestinations.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
                         {filteredDestinations.map((dest, idx) => (
                           <button
                             key={idx}
                             type="button"
                             onClick={() => selectDestination(dest)}
-                            className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 transition-colors flex items-center gap-3 border-b border-zinc-100 last:border-b-0"
                           >
-                            <span className="text-xl">📍</span>
-                            <span className="text-gray-900">{dest}</span>
+                            <span className="text-xl opacity-50">📍</span>
+                            <span className="text-zinc-900">{dest}</span>
                           </button>
                         ))}
                       </div>
@@ -762,18 +546,18 @@ export default function NewTripPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Duration (days)
                     </label>
                     <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10">⏱️</div>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">⏱️</div>
                       <input
                         type="number"
                         required
                         min="1"
                         value={formData.duration}
                         onChange={(e) => handleDurationChange(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-gray-400"
+                        className="input-field pl-12"
                         placeholder="e.g., 7"
                       />
                     </div>
@@ -781,9 +565,9 @@ export default function NewTripPage() {
                 </div>
 
                 {formData.endDate && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-sm text-indigo-900">
-                      <span className="text-lg">✓</span>
+                  <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-sm text-zinc-900">
+                      <span className="text-lg text-green-500">✓</span>
                       <span className="font-medium">
                         Your trip will end on {new Date(formData.endDate).toLocaleDateString('en-US', {
                           weekday: 'long',
@@ -802,7 +586,7 @@ export default function NewTripPage() {
                   type="button"
                   onClick={handleStep1Next}
                   disabled={!formData.startingFrom || !formData.destination || !formData.startDate || !formData.duration || !formData.endDate}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50"
+                  className="bg-zinc-900 text-white px-8 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
                 >
                   Next Step →
                 </button>
@@ -814,17 +598,17 @@ export default function NewTripPage() {
           {step === 2 && (
             <div className="space-y-6">
               {loadingBudgetOptions ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-16">
+                <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-16">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin text-5xl">✨</div>
-                    <p className="text-lg text-gray-600">Generating personalized budget options for your trip...</p>
+                    <div className="animate-spin text-4xl">✨</div>
+                    <p className="text-lg text-zinc-600">Generating personalized budget options for your trip...</p>
                   </div>
                 </div>
               ) : budgetOptions.length > 0 ? (
                 <>
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Choose Your Budget Level</h3>
-                    <p className="text-gray-600 text-sm">
+                  <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+                    <h3 className="text-xl font-bold text-zinc-900 mb-2">Choose Your Budget Level</h3>
+                    <p className="text-zinc-500 text-sm">
                       Based on {formData.destination} for {formData.duration} days (2 travelers)
                     </p>
                   </div>
@@ -846,10 +630,10 @@ export default function NewTripPage() {
                         <div
                           key={option.level}
                           onClick={() => selectBudgetOption(option)}
-                          className={`bg-white rounded-2xl shadow-sm border-2 cursor-pointer transition-all hover:shadow-lg overflow-hidden ${
+                          className={`bg-white rounded-2xl shadow-sm border-2 cursor-pointer transition-all hover:shadow-md overflow-hidden ${
                             selectedBudgetOption?.level === option.level
-                              ? 'border-indigo-600 ring-2 ring-indigo-200'
-                              : 'border-gray-200 hover:border-indigo-300'
+                              ? 'border-zinc-900 ring-1 ring-zinc-900'
+                              : 'border-zinc-200 hover:border-zinc-300'
                           }`}
                         >
                           <div className="p-6 space-y-4">
@@ -860,16 +644,16 @@ export default function NewTripPage() {
                                 {option.level === 'balanced' && '⭐'}
                                 {option.level === 'luxury' && '💎'}
                               </div>
-                              <h4 className="text-2xl font-bold text-gray-900 capitalize">{option.level}</h4>
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{option.description}</p>
+                              <h4 className="text-2xl font-bold text-zinc-900 capitalize">{option.level}</h4>
+                              <p className="text-sm text-zinc-500 mt-1 line-clamp-2">{option.description}</p>
                             </div>
 
                             {/* Price */}
-                            <div className="text-center py-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
-                              <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            <div className="text-center py-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                              <div className="text-3xl font-bold text-zinc-900">
                                 ${option.totalBudget.toLocaleString()}
                               </div>
-                              <div className="text-sm text-gray-600 mt-1">
+                              <div className="text-sm text-zinc-500 mt-1">
                                 ${option.perPersonPerDay.toFixed(0)}/person/day
                               </div>
                             </div>
@@ -901,33 +685,33 @@ export default function NewTripPage() {
 
                             {/* Detailed Breakdown */}
                             <details className="group">
-                              <summary className="cursor-pointer text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center justify-between py-2">
+                              <summary className="cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 flex items-center justify-between py-2">
                                 <span>📊 Detailed Breakdown</span>
-                                <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                                <span className="text-zinc-400 group-open:rotate-180 transition-transform">▼</span>
                               </summary>
                               <div className="mt-3 space-y-3 text-xs">
                                 {/* Flights */}
-                                <div className="bg-blue-50 rounded-lg p-3">
-                                  <div className="font-semibold text-blue-900 mb-1">✈️ Flights (${option.breakdown.flights.toLocaleString()})</div>
-                                  <div className="text-blue-700 space-y-1">
+                                <div className="bg-zinc-50 rounded-lg p-3">
+                                  <div className="font-semibold text-zinc-900 mb-1">✈️ Flights (${option.breakdown.flights.toLocaleString()})</div>
+                                  <div className="text-zinc-600 space-y-1">
                                     <div>• Tickets: ${option.detailedBreakdown.flights.economy.toLocaleString()}</div>
                                     <div>• Baggage: ${option.detailedBreakdown.flights.bags.toLocaleString()}</div>
                                   </div>
                                 </div>
 
                                 {/* Accommodation */}
-                                <div className="bg-green-50 rounded-lg p-3">
-                                  <div className="font-semibold text-green-900 mb-1">🏨 Accommodation (${option.breakdown.accommodation.toLocaleString()})</div>
-                                  <div className="text-green-700 space-y-1">
+                                <div className="bg-zinc-50 rounded-lg p-3">
+                                  <div className="font-semibold text-zinc-900 mb-1">🏨 Accommodation (${option.breakdown.accommodation.toLocaleString()})</div>
+                                  <div className="text-zinc-600 space-y-1">
                                     <div>• {option.detailedBreakdown.accommodation.type}</div>
                                     <div>• ${option.detailedBreakdown.accommodation.perNight.toLocaleString()}/night</div>
                                   </div>
                                 </div>
 
                                 {/* Food */}
-                                <div className="bg-orange-50 rounded-lg p-3">
-                                  <div className="font-semibold text-orange-900 mb-1">🍽️ Food (${option.breakdown.food.toLocaleString()})</div>
-                                  <div className="text-orange-700 space-y-1">
+                                <div className="bg-zinc-50 rounded-lg p-3">
+                                  <div className="font-semibold text-zinc-900 mb-1">🍽️ Food (${option.breakdown.food.toLocaleString()})</div>
+                                  <div className="text-zinc-600 space-y-1">
                                     <div>• Breakfast: ${option.detailedBreakdown.food.breakfast.toLocaleString()}</div>
                                     <div>• Lunch: ${option.detailedBreakdown.food.lunch.toLocaleString()}</div>
                                     <div>• Dinner: ${option.detailedBreakdown.food.dinner.toLocaleString()}</div>
@@ -936,9 +720,9 @@ export default function NewTripPage() {
                                 </div>
 
                                 {/* Activities */}
-                                <div className="bg-pink-50 rounded-lg p-3">
-                                  <div className="font-semibold text-pink-900 mb-1">🎭 Activities (${option.breakdown.activities.toLocaleString()})</div>
-                                  <div className="text-pink-700 space-y-1">
+                                <div className="bg-zinc-50 rounded-lg p-3">
+                                  <div className="font-semibold text-zinc-900 mb-1">🎭 Activities (${option.breakdown.activities.toLocaleString()})</div>
+                                  <div className="text-zinc-600 space-y-1">
                                     <div>• Attractions: ${option.detailedBreakdown.activities.attractions.toLocaleString()}</div>
                                     <div>• Tours: ${option.detailedBreakdown.activities.tours.toLocaleString()}</div>
                                     <div>• Experiences: ${option.detailedBreakdown.activities.experiences.toLocaleString()}</div>
@@ -949,7 +733,7 @@ export default function NewTripPage() {
 
                             {/* Highlights */}
                             {option.highlights && option.highlights.length > 0 && (
-                              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                              <div className="bg-green-50 border border-green-100 rounded-lg p-3">
                                 <div className="text-sm font-semibold text-green-900 mb-2">✨ Highlights</div>
                                 <ul className="text-xs text-green-700 space-y-1">
                                   {option.highlights.slice(0, 2).map((highlight, idx) => (
@@ -961,7 +745,7 @@ export default function NewTripPage() {
 
                             {/* Savings Tips */}
                             {option.savings && option.savings.tips.length > 0 && (
-                              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3">
                                 <div className="text-sm font-semibold text-yellow-900 mb-1">💡 Save ${option.savings.amount}</div>
                                 <ul className="text-xs text-yellow-700 space-y-1">
                                   {option.savings.tips.slice(0, 2).map((tip, idx) => (
@@ -972,24 +756,24 @@ export default function NewTripPage() {
                             )}
 
                             {/* Currency Conversions */}
-                            <div className="pt-3 border-t border-gray-200 grid grid-cols-3 gap-2 text-xs">
+                            <div className="pt-3 border-t border-zinc-100 grid grid-cols-3 gap-2 text-xs">
                               <div className="text-center">
-                                <div className="text-gray-500">USD</div>
-                                <div className="font-bold text-gray-900">${(option.currency.usd/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500">USD</div>
+                                <div className="font-bold text-zinc-900">${(option.currency.usd/1000).toFixed(1)}k</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-gray-500">{option.currency.local.code}</div>
-                                <div className="font-bold text-gray-900">{(option.currency.local.amount/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500">{option.currency.local.code}</div>
+                                <div className="font-bold text-zinc-900">{(option.currency.local.amount/1000).toFixed(1)}k</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-gray-500">CNY</div>
-                                <div className="font-bold text-gray-900">¥{(option.currency.cny/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500">CNY</div>
+                                <div className="font-bold text-zinc-900">¥{(option.currency.cny/1000).toFixed(1)}k</div>
                               </div>
                             </div>
 
                             {/* Selection indicator */}
                             {selectedBudgetOption?.level === option.level && (
-                              <div className="text-center py-2 bg-indigo-600 text-white rounded-lg font-semibold">
+                              <div className="text-center py-2 bg-zinc-900 text-white rounded-lg font-semibold text-sm">
                                 ✓ Selected
                               </div>
                             )}
@@ -999,12 +783,12 @@ export default function NewTripPage() {
                     })}
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
                     <div className="flex gap-4">
                       <button
                         type="button"
                         onClick={() => setStep(1)}
-                        className="flex-1 bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition-all font-medium"
+                        className="flex-1 bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
                       >
                         ← Back
                       </button>
@@ -1012,7 +796,7 @@ export default function NewTripPage() {
                         type="button"
                         onClick={() => setStep(3)}
                         disabled={!selectedBudgetOption}
-                        className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50"
+                        className="flex-1 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
                       >
                         Next Step →
                       </button>
@@ -1020,13 +804,13 @@ export default function NewTripPage() {
                   </div>
                 </>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                  <p className="text-gray-600 text-center">Unable to generate budget options. Please go back and try again.</p>
+                <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8">
+                  <p className="text-zinc-600 text-center">Unable to generate budget options. Please go back and try again.</p>
                   <div className="flex justify-center mt-6">
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition-all font-medium"
+                      className="bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
                     >
                       ← Back
                     </button>
@@ -1040,24 +824,24 @@ export default function NewTripPage() {
           {step === 3 && (
             <div className="space-y-6">
               {/* Header Summary */}
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 p-6">
+              <div className="bg-zinc-900 rounded-2xl p-6 text-white">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">Fine-tune Your Budget</h3>
-                    <p className="text-sm text-gray-600">Adjust category allocations with the sliders below</p>
+                    <h3 className="text-xl font-bold mb-1">Fine-tune Your Budget</h3>
+                    <p className="text-sm text-zinc-400">Adjust category allocations with the sliders below</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold">
                       ${isNaN(totalBudget) ? 0 : totalBudget.toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-600">Total Budget</div>
+                    <div className="text-sm text-zinc-400">Total Budget</div>
                   </div>
                 </div>
               </div>
 
               {/* Presets */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">⚡ Quick Presets - Choose Your Travel Style</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+                <h3 className="font-semibold text-zinc-900 mb-4">⚡ Quick Presets - Choose Your Travel Style</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   {[
                     { key: 'foodie', label: 'Foodie', icon: '🍜', desc: '45% food' },
@@ -1071,11 +855,11 @@ export default function NewTripPage() {
                       key={preset.key}
                       type="button"
                       onClick={() => applyPreset(preset.key as keyof typeof TRIP_PRESETS)}
-                      className="px-3 py-4 rounded-xl border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-medium text-sm flex flex-col items-center gap-2 group"
+                      className="px-3 py-4 rounded-xl border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-50 transition-all font-medium text-sm flex flex-col items-center gap-2 group"
                     >
                       <span className="text-3xl group-hover:scale-110 transition-transform">{preset.icon}</span>
-                      <span className="font-semibold text-gray-900">{preset.label}</span>
-                      <span className="text-xs text-gray-500">{preset.desc}</span>
+                      <span className="font-semibold text-zinc-900">{preset.label}</span>
+                      <span className="text-xs text-zinc-500">{preset.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -1084,9 +868,9 @@ export default function NewTripPage() {
               {/* Budget Allocation */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Left: Sliders */}
-                <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-                    <h3 className="font-semibold text-gray-900 text-lg">📊 Category Breakdown</h3>
+                    <h3 className="font-semibold text-zinc-900 text-lg">📊 Category Breakdown</h3>
                     <div className={`text-sm font-semibold px-4 py-2 rounded-full ${
                       Math.abs(remainingPercentage) < 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                     }`}>
@@ -1099,19 +883,19 @@ export default function NewTripPage() {
                       const percentage = budgetPercentages[cat.name] || 0;
                       const amount = (totalBudget * percentage) / 100;
                       return (
-                        <div key={cat.name} className="p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={cat.name} className="p-4 rounded-xl hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-100">
                           <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                                <span className="text-2xl">{cat.icon}</span>
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-100 text-lg">
+                                <span>{cat.icon}</span>
                               </div>
                               <div>
-                                <div className="font-semibold text-gray-900">{cat.name}</div>
-                                <div className="text-xs text-gray-500">{percentage.toFixed(1)}% of budget</div>
+                                <div className="font-semibold text-zinc-900">{cat.name}</div>
+                                <div className="text-xs text-zinc-500">{percentage.toFixed(1)}% of budget</div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-bold text-lg text-gray-900">
+                              <div className="font-bold text-lg text-zinc-900">
                                 ${isNaN(amount) ? 0 : amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </div>
                             </div>
@@ -1123,7 +907,7 @@ export default function NewTripPage() {
                             step="0.5"
                             value={percentage}
                             onChange={(e) => handlePercentageChange(cat.name, parseFloat(e.target.value))}
-                            className="w-full h-3 rounded-full appearance-none cursor-pointer"
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer bg-zinc-200 accent-zinc-900"
                             style={{
                               background: `linear-gradient(to right, ${cat.color} 0%, ${cat.color} ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
                             }}
@@ -1135,12 +919,12 @@ export default function NewTripPage() {
                 </div>
 
                 {/* Right: Visual Preview */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 text-lg">💰 Budget Preview</h3>
+                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 h-fit sticky top-24">
+                  <h3 className="font-semibold text-zinc-900 mb-4 text-lg">💰 Budget Preview</h3>
 
                   {/* Stacked Bar Chart */}
                   <div className="mb-6">
-                    <div className="h-12 rounded-xl overflow-hidden flex">
+                    <div className="h-12 rounded-xl overflow-hidden flex w-full bg-zinc-100">
                       {CATEGORIES.map((cat) => {
                         const percentage = budgetPercentages[cat.name] || 0;
                         if (percentage === 0 || isNaN(percentage)) return null;
@@ -1151,7 +935,7 @@ export default function NewTripPage() {
                               width: `${percentage}%`,
                               backgroundColor: cat.color
                             }}
-                            className="relative group transition-all hover:opacity-80"
+                            className="relative group transition-all hover:opacity-90"
                             title={`${cat.name}: ${percentage.toFixed(1)}%`}
                           />
                         );
@@ -1161,9 +945,9 @@ export default function NewTripPage() {
 
                   {/* Summary */}
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total Budget</span>
-                      <span className="font-bold text-gray-900">${isNaN(totalBudget) ? 0 : totalBudget.toLocaleString()}</span>
+                    <div className="flex justify-between text-sm pb-2 border-b border-zinc-100">
+                      <span className="text-zinc-500">Total Budget</span>
+                      <span className="font-bold text-zinc-900">${isNaN(totalBudget) ? 0 : totalBudget.toLocaleString()}</span>
                     </div>
                     {CATEGORIES.map((cat) => {
                       const percentage = budgetPercentages[cat.name] || 0;
@@ -1176,9 +960,9 @@ export default function NewTripPage() {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: cat.color }}
                             />
-                            <span className="text-gray-600">{cat.name}</span>
+                            <span className="text-zinc-600">{cat.name}</span>
                           </div>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-medium text-zinc-900">
                             ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </span>
                         </div>
@@ -1189,25 +973,25 @@ export default function NewTripPage() {
               </div>
 
               {/* Actions */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
                 <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="flex-1 bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition-all font-medium"
+                    className="flex-1 bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
                   >
                     ← Back
                   </button>
                   <button
                     type="submit"
                     disabled={loading || Math.abs(remainingPercentage) > 5}
-                    className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50"
+                    className="flex-1 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
                   >
                     {loading ? "Creating..." : "Create Trip 🎉"}
                   </button>
                 </div>
                 {Math.abs(remainingPercentage) > 5 && (
-                  <p className="text-sm text-yellow-600 mt-3 text-center">
+                  <p className="text-sm text-yellow-600 mt-3 text-center bg-yellow-50 py-2 rounded-lg">
                     💡 Adjust sliders to reach 100% allocation (currently {(100 - remainingPercentage).toFixed(0)}%)
                   </p>
                 )}

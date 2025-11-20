@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { X, Check, Briefcase, Backpack, ShoppingBag, Package, Gift, Luggage } from "lucide-react";
 
 interface AddLuggageModalProps {
   isOpen: boolean;
@@ -11,25 +12,25 @@ interface AddLuggageModalProps {
 }
 
 const LUGGAGE_TYPES = [
-  { value: "suitcase", label: "🧳 Suitcase", icon: "🧳" },
-  { value: "backpack", label: "🎒 Backpack", icon: "🎒" },
-  { value: "duffel", label: "👜 Duffel Bag", icon: "👜" },
-  { value: "carry-on", label: "💼 Carry-on", icon: "💼" },
-  { value: "personal", label: "👝 Personal Item", icon: "👝" },
-  { value: "box", label: "📦 Box/Container", icon: "📦" },
-  { value: "other", label: "🎁 Other", icon: "🎁" },
+  { value: "suitcase", label: "Suitcase", icon: Luggage },
+  { value: "backpack", label: "Backpack", icon: Backpack },
+  { value: "duffel", label: "Duffel Bag", icon: ShoppingBag },
+  { value: "carry-on", label: "Carry-on", icon: Briefcase },
+  { value: "personal", label: "Personal Item", icon: ShoppingBag },
+  { value: "box", label: "Box", icon: Package },
+  { value: "other", label: "Other", icon: Gift },
 ];
 
 const COLORS = [
-  { value: "red", label: "Red", bg: "bg-red-500" },
-  { value: "blue", label: "Blue", bg: "bg-blue-500" },
-  { value: "green", label: "Green", bg: "bg-green-500" },
-  { value: "yellow", label: "Yellow", bg: "bg-yellow-500" },
-  { value: "purple", label: "Purple", bg: "bg-purple-500" },
-  { value: "pink", label: "Pink", bg: "bg-pink-500" },
-  { value: "orange", label: "Orange", bg: "bg-orange-500" },
-  { value: "gray", label: "Gray", bg: "bg-gray-500" },
-  { value: "black", label: "Black", bg: "bg-gray-900" },
+  { value: "black", label: "Black", bg: "bg-zinc-900", ring: "ring-zinc-900" },
+  { value: "gray", label: "Gray", bg: "bg-zinc-500", ring: "ring-zinc-500" },
+  { value: "red", label: "Red", bg: "bg-red-500", ring: "ring-red-500" },
+  { value: "blue", label: "Blue", bg: "bg-blue-500", ring: "ring-blue-500" },
+  { value: "green", label: "Green", bg: "bg-emerald-500", ring: "ring-emerald-500" },
+  { value: "yellow", label: "Yellow", bg: "bg-amber-400", ring: "ring-amber-400" },
+  { value: "purple", label: "Purple", bg: "bg-purple-500", ring: "ring-purple-500" },
+  { value: "pink", label: "Pink", bg: "bg-pink-500", ring: "ring-pink-500" },
+  { value: "orange", label: "Orange", bg: "bg-orange-500", ring: "ring-orange-500" },
 ];
 
 export default function AddLuggageModal({
@@ -43,7 +44,7 @@ export default function AddLuggageModal({
   const [formData, setFormData] = useState({
     name: "",
     type: "suitcase",
-    color: "blue",
+    color: "black",
     description: "",
     airtagName: "",
   });
@@ -54,7 +55,7 @@ export default function AddLuggageModal({
       setFormData({
         name: editLuggage.name || "",
         type: editLuggage.type || "suitcase",
-        color: editLuggage.color || "blue",
+        color: editLuggage.color || "black",
         description: editLuggage.description || "",
         airtagName: editLuggage.airtagName || "",
       });
@@ -63,7 +64,7 @@ export default function AddLuggageModal({
       setFormData({
         name: "",
         type: "suitcase",
-        color: "blue",
+        color: "black",
         description: "",
         airtagName: "",
       });
@@ -164,123 +165,118 @@ export default function AddLuggageModal({
 
       {/* Modal */}
       <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+            <h2 className="text-xl font-bold text-zinc-900">
               {editLuggage ? "Edit Luggage" : "Add Luggage"}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
+              className="p-2 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Name
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="e.g., Main Suitcase, Carry-on Backpack"
-              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-          </div>
-
-          {/* Type */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Type
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {LUGGAGE_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, type: type.value })
-                  }
-                  className={`px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                    formData.type === type.value
-                      ? "bg-violet-500 text-white shadow-lg"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
+          <div className="space-y-5">
+            {/* Name */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Luggage Name
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. Main Suitcase"
+                className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+              />
             </div>
-          </div>
 
-          {/* Color */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Color
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {COLORS.map((color) => (
-                <button
-                  key={color.value}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, color: color.value })
-                  }
-                  className={`w-10 h-10 rounded-full ${color.bg} ${
-                    formData.color === color.value
-                      ? "ring-4 ring-violet-500 ring-offset-2"
-                      : "hover:scale-110"
-                  } transition-all`}
-                  title={color.label}
+            {/* Type */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Type
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {LUGGAGE_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: type.value })}
+                      className={`p-3 rounded-xl flex flex-col items-center justify-center gap-2 border transition-all ${
+                        formData.type === type.value
+                          ? "bg-zinc-900 text-white border-zinc-900 shadow-md"
+                          : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-xs font-medium">{type.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Color */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Color Label
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {COLORS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, color: color.value })}
+                    className={`w-8 h-8 rounded-full ${color.bg} transition-all relative flex items-center justify-center ${
+                      formData.color === color.value
+                        ? `ring-2 ring-offset-2 ${color.ring} scale-110`
+                        : "hover:scale-110"
+                    }`}
+                    title={color.label}
+                  >
+                    {formData.color === color.value && <Check className="w-4 h-4 text-white" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Description <span className="text-zinc-400 font-normal normal-case">(Optional)</span>
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={2}
+                placeholder="What's inside?"
+                className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* AirTag */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                AirTag Name <span className="text-zinc-400 font-normal normal-case">(Optional)</span>
+              </label>
+              <div className="relative">
+                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">📍</span>
+                 <input
+                  type="text"
+                  value={formData.airtagName}
+                  onChange={(e) => setFormData({ ...formData, airtagName: e.target.value })}
+                  placeholder="e.g. Red Suitcase Tag"
+                  className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
                 />
-              ))}
+              </div>
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description <span className="text-gray-400 text-xs">(optional)</span>
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={2}
-              placeholder="e.g., Checked luggage for clothes and shoes"
-              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-            />
-          </div>
-
-          {/* AirTag Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              <span className="inline-flex items-center gap-1">
-                <span className="text-base">📍</span> AirTag Name
-              </span>
-              <span className="text-gray-400 text-xs ml-1">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.airtagName}
-              onChange={(e) =>
-                setFormData({ ...formData, airtagName: e.target.value })
-              }
-              placeholder="e.g., Big Red Suitcase, Travel Backpack"
-              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter the name of your AirTag for easy tracking
-            </p>
           </div>
 
           {/* Buttons */}
@@ -288,14 +284,14 @@ export default function AddLuggageModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              className="flex-1 py-3 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-medium hover:bg-zinc-50 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 py-3 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-zinc-200"
             >
               {loading ? (editLuggage ? "Saving..." : "Adding...") : (editLuggage ? "Save Changes" : "Add Luggage")}
             </button>

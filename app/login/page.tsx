@@ -37,86 +37,96 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="w-full max-w-md px-6">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
-          {/* Logo & Title */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-white font-bold text-2xl">✈</span>
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              TravelAI
-            </h1>
-            <p className="text-gray-600">AI-powered travel planning</p>
-          </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center">
+          <span className="text-4xl font-bold tracking-tight text-zinc-900">TravelAI</span>
+          <p className="mt-2 text-sm text-zinc-600">
+            Sign in to plan your next adventure
+          </p>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-sm border border-zinc-200 sm:rounded-2xl sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
                 Username
               </label>
-              <input
-                id="email"
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="input-field"
-                placeholder="Enter your username"
-              />
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full appearance-none rounded-lg border border-zinc-300 px-3 py-2 placeholder-zinc-400 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-zinc-900 sm:text-sm transition-colors"
+                  placeholder="Enter your username"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="input-field"
-                placeholder="Enter your password"
-              />
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full appearance-none rounded-lg border border-zinc-300 px-3 py-2 placeholder-zinc-400 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-zinc-900 sm:text-sm transition-colors"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </div>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-3">Your Accounts</p>
-            <div className="space-y-2 text-xs text-gray-500 bg-gray-50 rounded-xl p-4">
-              <div>
-                <p><span className="font-semibold">Account 1 (BABER):</span></p>
-                <p className="text-gray-400">Username: BABER</p>
-                <p className="text-gray-400">Password: baberhusband</p>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-200" />
               </div>
-              <div className="mt-3">
-                <p><span className="font-semibold">Account 2 (baber):</span></p>
-                <p className="text-gray-400">Username: baber</p>
-                <p className="text-gray-400">Password: baberwife</p>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-zinc-500">Demo Accounts</span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 bg-zinc-50 p-4 rounded-lg border border-zinc-100">
+              <div className="flex justify-between items-center text-xs text-zinc-600">
+                <span className="font-medium">BABER</span>
+                <span className="font-mono text-zinc-400">baberhusband</span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-zinc-600">
+                <span className="font-medium">baber</span>
+                <span className="font-mono text-zinc-400">baberwife</span>
               </div>
             </div>
           </div>
         </div>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Built with AI · Designed for couples
-        </p>
       </div>
     </div>
   );

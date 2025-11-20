@@ -84,14 +84,14 @@ export default async function HealthPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      <div className="min-h-screen bg-zinc-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">
                 🌸 {t.periodTracker}
               </h1>
-              <p className="text-gray-600">{t.startTrackingPeriod}</p>
+              <p className="text-zinc-500 text-lg">{t.startTrackingPeriod}</p>
             </div>
           </div>
 

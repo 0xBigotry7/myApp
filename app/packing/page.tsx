@@ -66,7 +66,7 @@ export default async function PackingPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6">
+      <div className="min-h-screen bg-zinc-50 p-4 sm:p-6">
         <PackingDashboard
           luggages={luggages}
           unorganizedItems={unorganizedItems}

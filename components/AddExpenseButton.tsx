@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AddExpenseModal from "./AddExpenseModal";
+import { Plus } from "lucide-react";
 
 interface AddExpenseButtonProps {
   tripId: string;
@@ -22,9 +23,9 @@ export default function AddExpenseButton({
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg transform active:scale-95"
+        className="flex items-center justify-center gap-2 px-5 py-3 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98]"
       >
-        <span className="text-2xl">💰</span>
+        <Plus className="w-4 h-4" />
         <span>{buttonText}</span>
       </button>
 

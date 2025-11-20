@@ -19,16 +19,14 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: "/timeline", label: `🌟 Timeline` },
-    { href: "/", label: `✈️ ${t.myTrips}` },
-    { href: "/packing", label: `🧳 Packing` },
-    { href: "/map", label: `🗺️ Travel Map` },
-    { href: "/expenses", label: `💸 Expenses` },
-    { href: "/poker", label: `🃏 Poker` },
-    // { href: "/finance", label: `💰 ${t.finance}` },
-    { href: "/converter", label: `💱 ${t.converter || "Converter"}` },
-    { href: "/health", label: `🌸 ${t.health}` },
-    // { href: "/transactions", label: `📊 ${t.transactions}` },
+    // { href: "/timeline", label: "Timeline" },
+    { href: "/", label: t.myTrips },
+    { href: "/packing", label: "Packing" },
+    { href: "/map", label: "Map" },
+    { href: "/expenses", label: "Expenses" },
+    { href: "/poker", label: "Poker" },
+    { href: "/converter", label: t.converter || "Converter" },
+    { href: "/health", label: t.health },
   ];
 
   const userInitial =
@@ -39,25 +37,21 @@ export default function NavbarClient({ user }: NavbarClientProps) {
   const userDisplayName = user?.name ?? user?.email ?? t.you;
 
   return (
-    <nav className="bg-gradient-blue-pink border-b border-white/20 sticky top-0 z-50 backdrop-blur-lg shadow-lg">
+    <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4">
-          <div className="flex items-center gap-4 sm:gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:bg-white/30 transition-all">
-                <span className="text-white font-bold text-lg">✈️</span>
-              </div>
-              <span className="text-xl font-bold text-white drop-shadow-md">
-                TravelAI
-              </span>
+        <div className="relative flex items-center justify-between h-16">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-zinc-900">
+              TravelAI
             </Link>
+            
             {user && (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="text-white/90 hover:text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all font-medium text-sm backdrop-blur-sm"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all"
                   >
                     {link.label}
                   </Link>
@@ -65,85 +59,82 @@ export default function NavbarClient({ user }: NavbarClientProps) {
               </div>
             )}
           </div>
+
           {user && (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm">
-                <div className="w-8 h-8 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                  {userInitial}
-                </div>
-                <span className="text-sm font-medium text-white drop-shadow">
-                  {userDisplayName}
-                </span>
-              </div>
-              <div className="hidden md:block">
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-4">
                 <LanguageSwitcher />
+                
+                <div className="flex items-center gap-2 pl-4 border-l border-zinc-200">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 font-medium text-xs">
+                    {userInitial}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-700">
+                    {userDisplayName}
+                  </span>
+                </div>
+
+                <form action={handleSignOut}>
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                  >
+                    {t.signOut}
+                  </button>
+                </form>
               </div>
-              <form action={handleSignOut} className="hidden md:block">
-                <button
-                  type="submit"
-                  className="text-white/90 hover:text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all text-sm font-medium backdrop-blur-sm"
-                >
-                  {t.signOut}
-                </button>
-              </form>
+
               <button
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="md:hidden inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-white/90 transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="md:hidden p-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
                 aria-expanded={isMenuOpen}
                 aria-controls="mobile-nav-menu"
               >
                 <span className="sr-only">Toggle navigation</span>
-                <span className="text-xl font-semibold">{isMenuOpen ? "✕" : "☰"}</span>
+                <span className="text-xl">{isMenuOpen ? "✕" : "☰"}</span>
               </button>
             </div>
           )}
         </div>
+
         {user && isMenuOpen && (
           <div
             id="mobile-nav-menu"
-            className="md:hidden fixed inset-0 top-[64px] z-50 bg-black/20 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
+            className="md:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-white border-t border-zinc-200"
           >
-            <div
-              className="absolute top-2 left-4 right-4 rounded-3xl border border-white/60 bg-white shadow-2xl max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-blue-pink text-lg font-semibold text-white shadow-lg">
-                      {userInitial}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-base font-semibold text-gray-900">
-                        {userDisplayName}
-                      </span>
-                      {user?.email && (
-                        <span className="text-xs text-gray-500">{user.email}</span>
-                      )}
-                    </div>
-                  </div>
-                  <LanguageSwitcher compact />
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-xl">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-zinc-600 font-medium">
+                  {userInitial}
                 </div>
-                <div className="grid gap-2">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-3 text-sm font-semibold text-gray-800 shadow-sm transition-all hover:shadow-md hover:from-blue-100 hover:to-purple-100"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <span>{link.label}</span>
-                      <span className="text-lg">›</span>
-                    </Link>
-                  ))}
+                <div>
+                  <div className="font-medium text-zinc-900">{userDisplayName}</div>
+                  {user?.email && (
+                    <div className="text-xs text-zinc-500">{user.email}</div>
+                  )}
                 </div>
-                <form action={handleSignOut} className="mt-4">
+              </div>
+
+              <div className="grid gap-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                <LanguageSwitcher />
+                <form action={handleSignOut}>
                   <button
                     type="submit"
-                    className="w-full rounded-2xl bg-gradient-blue-pink py-3 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
-                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     {t.signOut}
                   </button>

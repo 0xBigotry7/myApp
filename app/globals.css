@@ -30,6 +30,8 @@
     min-height: 100%;
     /* Prevent pull-to-refresh */
     overscroll-behavior-y: none;
+    background-color: #fafafa; /* zinc-50 */
+    color: #18181b; /* zinc-900 */
   }
 
   /* Improve touch target sizes for mobile */
@@ -83,43 +85,64 @@
     min-width: 44px;
   }
 
+  /* Modern Gradients - Subtler and more elegant */
   .bg-gradient-sunset {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
   }
 
   .bg-gradient-ocean {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
   }
 
   .bg-gradient-sunset-pink {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
   }
 
   .bg-gradient-blue-pink {
-    background: linear-gradient(135deg, #4facfe 0%, #f093fb 100%);
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
   }
 
   .bg-gradient-pink-orange {
-    background: linear-gradient(135deg, #ff6b9d 0%, #ffa06b 100%);
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .glass-dark {
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Subtle Dot Pattern Background */
+  .bg-dot-pattern {
+    background-image: radial-gradient(#e4e4e7 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }
 
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid rgb(209 213 219);
+  border: 1px solid #e4e4e7; /* zinc-200 */
   border-radius: 0.75rem;
   outline: none;
   transition: all 0.2s;
+  background-color: white;
+  color: #18181b; /* zinc-900 */
 }
 
 .input-field:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) rgb(99 102 241);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-  border-color: transparent;
+  outline: none;
+  border-color: #18181b; /* zinc-900 */
+  box-shadow: 0 0 0 1px #18181b; /* zinc-900 */
 }
 
 /* Google Maps Places Autocomplete - Mobile Fix */
@@ -132,6 +155,10 @@
   position: fixed !important;
   /* Ensure dropdown is clickable on mobile */
   pointer-events: auto !important;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: none;
+  font-family: inherit;
 }
 
 .pac-item {
@@ -140,14 +167,27 @@
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #f4f4f5;
+  font-size: 14px;
+  color: #52525b;
 }
 
-.pac-item:active {
-  background-color: #e5e7eb;
+.pac-item:first-child {
+  border-top: none;
+}
+
+.pac-item:active, .pac-item:hover {
+  background-color: #f4f4f5;
 }
 
 .pac-item-query {
   font-size: 15px;
+  color: #18181b;
+  font-weight: 500;
+}
+
+.pac-icon {
+  display: none; /* Hide default ugly icon */
 }
 
 /* Ensure autocomplete dropdown is above modals on mobile */

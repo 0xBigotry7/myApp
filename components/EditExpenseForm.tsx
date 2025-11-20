@@ -6,6 +6,19 @@ import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
 import LocationAutocomplete from "./LocationAutocomplete";
 import CategorySpecificFields from "./CategorySpecificFields";
+import { 
+  DollarSign, 
+  Tag, 
+  Calendar, 
+  Clock, 
+  CreditCard, 
+  MapPin, 
+  FileText, 
+  Camera, 
+  X, 
+  Save, 
+  Loader2 
+} from "lucide-react";
 
 interface EditExpenseFormProps {
   expense: {
@@ -220,16 +233,14 @@ export default function EditExpenseForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Amount */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
-          💵 {t.amount}
+        <label className="block text-sm font-semibold text-zinc-700 mb-2">
+          {t.amount}
         </label>
         <div className="relative">
-          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">
-            $
-          </span>
+          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
           <input
             type="number"
             inputMode="decimal"
@@ -239,7 +250,7 @@ export default function EditExpenseForm({
             onChange={(e) =>
               setFormData({ ...formData, amount: e.target.value })
             }
-            className="w-full pl-12 pr-6 py-5 text-3xl font-bold border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-sunset-400 focus:border-transparent transition-all placeholder:text-gray-300"
+            className="w-full pl-12 pr-6 py-4 text-2xl font-bold border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-300"
             placeholder="0.00"
           />
         </div>
@@ -247,8 +258,8 @@ export default function EditExpenseForm({
 
       {/* Category */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-3">
-          🏷️ {t.category}
+        <label className="block text-sm font-semibold text-zinc-700 mb-3">
+          {t.category}
         </label>
         <div className="grid grid-cols-2 gap-3">
           {availableCategories.map((cat) => (
@@ -256,10 +267,10 @@ export default function EditExpenseForm({
               key={cat}
               type="button"
               onClick={() => setFormData({ ...formData, category: cat })}
-              className={`px-5 py-5 rounded-2xl font-semibold text-base transition-all touch-manipulation min-h-[60px] ${
+              className={`px-4 py-3 rounded-xl font-medium text-sm transition-all border-2 ${
                 formData.category === cat
-                  ? "bg-gradient-sunset-pink text-white shadow-lg scale-105"
-                  : "bg-white border-2 border-gray-300 text-gray-700 hover:border-sunset-400 hover:bg-sunset-50 active:scale-95"
+                  ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
+                  : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
               }`}
             >
               {translateCategory(cat, locale)}
@@ -269,14 +280,52 @@ export default function EditExpenseForm({
       </div>
 
       {/* Date and Time - Adaptive based on category */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {needsTime ? (
           // Date + Time for Transportation & Activities
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                📅 {t.date}
+              <label className="block text-sm font-semibold text-zinc-700 mb-2">
+                {t.date}
               </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="date"
+                  required
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-zinc-700 mb-2">
+                {t.time} <span className="text-zinc-400 font-normal text-xs">({t.optional})</span>
+              </label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, time: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Single Date for other categories
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 mb-2">
+              {t.date}
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="date"
                 required
@@ -284,98 +333,70 @@ export default function EditExpenseForm({
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
                 }
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                🕐 {t.time} <span className="text-gray-400 font-normal">({t.optional})</span>
-              </label>
-              <input
-                type="time"
-                value={formData.time}
-                onChange={(e) =>
-                  setFormData({ ...formData, time: e.target.value })
-                }
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-        ) : (
-          // Single Date for other categories
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              📅 {t.date}
-            </label>
-            <input
-              type="date"
-              required
-              value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
-              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all"
-            />
           </div>
         )}
 
         {/* Currency */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            💱 {t.currency}
+          <label className="block text-sm font-semibold text-zinc-700 mb-2">
+            {t.currency}
           </label>
-          <select
-            value={formData.currency}
-            onChange={(e) =>
-              setFormData({ ...formData, currency: e.target.value })
-            }
-            className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all appearance-none bg-white"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 0.75rem center",
-              backgroundSize: "1.25rem",
-            }}
-          >
-            <option value="USD">🇺🇸 USD</option>
-            <option value="EUR">🇪🇺 EUR</option>
-            <option value="GBP">🇬🇧 GBP</option>
-            <option value="JPY">🇯🇵 JPY</option>
-            <option value="CNY">🇨🇳 CNY</option>
-            <option value="THB">🇹🇭 THB</option>
-          </select>
+          <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <select
+              value={formData.currency}
+              onChange={(e) =>
+                setFormData({ ...formData, currency: e.target.value })
+              }
+              className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all appearance-none bg-white"
+            >
+              <option value="USD">🇺🇸 USD</option>
+              <option value="EUR">🇪🇺 EUR</option>
+              <option value="GBP">🇬🇧 GBP</option>
+              <option value="JPY">🇯🇵 JPY</option>
+              <option value="CNY">🇨🇳 CNY</option>
+              <option value="THB">🇹🇭 THB</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Location */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
-          📍 {t.location}{" "}
-          <span className="text-gray-400 font-normal">({t.optional})</span>
+        <label className="block text-sm font-semibold text-zinc-700 mb-2">
+          {t.location} <span className="text-zinc-400 font-normal text-xs">({t.optional})</span>
         </label>
-        <LocationAutocomplete
-          value={formData.location}
-          onChange={(value) => setFormData({ ...formData, location: value })}
-          placeholder="e.g., Starbucks, Times Square"
-          className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400"
-        />
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <LocationAutocomplete
+            value={formData.location}
+            onChange={(value) => setFormData({ ...formData, location: value })}
+            placeholder="e.g., Starbucks, Times Square"
+            className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
+          />
+        </div>
       </div>
 
       {/* Note */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
-          📝 {t.note}{" "}
-          <span className="text-gray-400 font-normal">({t.optional})</span>
+        <label className="block text-sm font-semibold text-zinc-700 mb-2">
+          {t.note} <span className="text-zinc-400 font-normal text-xs">({t.optional})</span>
         </label>
-        <textarea
-          value={formData.note}
-          onChange={(e) =>
-            setFormData({ ...formData, note: e.target.value })
-          }
-          rows={3}
-          className="w-full px-5 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent transition-all placeholder:text-gray-400 resize-none"
-          placeholder="e.g., Dinner with friends"
-        />
+        <div className="relative">
+          <FileText className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+          <textarea
+            value={formData.note}
+            onChange={(e) =>
+              setFormData({ ...formData, note: e.target.value })
+            }
+            rows={3}
+            className="w-full pl-10 pr-4 py-3 text-sm border-2 border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400 resize-none"
+            placeholder="e.g., Dinner with friends"
+          />
+        </div>
       </div>
 
       {/* Category-Specific Fields */}
@@ -387,9 +408,8 @@ export default function EditExpenseForm({
 
       {/* Receipt Photo */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
-          📷 Receipt Photo{" "}
-          <span className="text-gray-400 font-normal">({t.optional})</span>
+        <label className="block text-sm font-semibold text-zinc-700 mb-2">
+          Receipt Photo <span className="text-zinc-400 font-normal text-xs">({t.optional})</span>
         </label>
         <input
           ref={fileInputRef}
@@ -399,53 +419,59 @@ export default function EditExpenseForm({
           className="hidden"
         />
         {previewUrl ? (
-          <div className="relative group">
+          <div className="relative group w-full max-w-xs">
             <img
               src={previewUrl.includes('drive.google.com') || previewUrl.includes('googleusercontent.com')
                 ? `/api/proxy-image?url=${encodeURIComponent(previewUrl)}`
                 : previewUrl}
               alt="Receipt preview"
-              className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-gray-200"
+              className="w-full h-48 object-cover rounded-xl border-2 border-zinc-200"
             />
             <button
               type="button"
               onClick={handleRemoveFile}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold hover:bg-red-600 transition-colors"
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4 px-6 rounded-2xl font-bold text-lg hover:shadow-lg transition-all"
+            className="flex items-center justify-center gap-2 w-full bg-zinc-50 border-2 border-dashed border-zinc-300 text-zinc-600 py-4 px-6 rounded-2xl font-medium hover:bg-zinc-100 hover:border-zinc-400 transition-all"
           >
-            Choose Photo
+            <Camera className="w-5 h-5" />
+            Upload Photo
           </button>
         )}
       </div>
 
       {/* Submit Buttons */}
-      <div className="pt-4 space-y-3">
-        <button
-          type="submit"
-          disabled={loading || uploading}
-          className="w-full bg-gradient-sunset-pink text-white py-5 rounded-2xl font-bold text-xl hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
-        >
-          {uploading
-            ? "📤 Uploading..."
-            : loading
-            ? `💾 ${t.saving}`
-            : `✓ ${t.save} ${t.addExpense}`}
-        </button>
-
+      <div className="flex gap-3 pt-4">
         <button
           type="button"
           onClick={() => onCancel ? onCancel() : router.back()}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 transition-all"
+          className="flex-1 py-3.5 bg-white border-2 border-zinc-200 text-zinc-700 rounded-xl font-semibold hover:bg-zinc-50 hover:border-zinc-300 transition-all"
         >
           {t.cancel}
+        </button>
+        <button
+          type="submit"
+          disabled={loading || uploading}
+          className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+        >
+          {(loading || uploading) ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {uploading ? "Uploading..." : t.saving}
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              {t.save}
+            </>
+          )}
         </button>
       </div>
     </form>

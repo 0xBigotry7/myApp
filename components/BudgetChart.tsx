@@ -3,8 +3,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useLocale } from "./LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
-import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { PieChart as PieChartIcon, Wallet } from "lucide-react";
 
 interface CategorySpending {
   category: string;
@@ -21,50 +21,18 @@ interface BudgetChartProps {
   budgetImageUrl?: string | null;
 }
 
-const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+const COLORS = [
+  "#18181b", // zinc-900
+  "#52525b", // zinc-600
+  "#a1a1aa", // zinc-400
+  "#d4d4d8", // zinc-300
+  "#71717a", // zinc-500
+  "#27272a", // zinc-800
+];
 
 export default function BudgetChart({ categorySpending, tripId, destination, budgetImageUrl }: BudgetChartProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
-  const [imageUrl, setImageUrl] = useState<string | null>(budgetImageUrl || null);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  useEffect(() => {
-    async function generateImage() {
-      if (!imageUrl && !isGenerating) {
-        setIsGenerating(true);
-        try {
-          console.log("Generating budget image for:", destination);
-          const response = await fetch("/api/ai/generate-theme-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ theme: "budget", destination }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setImageUrl(data.imageUrl);
-
-            // Save to database
-            await fetch(`/api/trips/${tripId}/update-image`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ imageUrl: data.imageUrl, type: "budget" }),
-            });
-          } else {
-            const errorData = await response.json();
-            console.error("Failed to generate image:", response.status, errorData);
-          }
-        } catch (error) {
-          console.error("Failed to generate budget image:", error);
-        } finally {
-          setIsGenerating(false);
-        }
-      }
-    }
-
-    generateImage();
-  }, [imageUrl, destination, tripId, isGenerating]);
 
   const chartData = categorySpending.map((cat) => ({
     name: cat.category,
@@ -76,94 +44,39 @@ export default function BudgetChart({ categorySpending, tripId, destination, bud
 
   if (totalSpent === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* Anime Background Header */}
-        <div className="relative h-48">
-          {isGenerating ? (
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 animate-pulse flex items-center justify-center">
-              <div className="text-center text-white">
-                <div className="text-4xl mb-2">✨</div>
-                <p className="font-semibold">Generating anime art...</p>
-              </div>
-            </div>
-          ) : imageUrl ? (
-            <>
-              <Image
-                src={imageUrl}
-                alt="Budget theme"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400" />
-          )}
-          <div className="absolute bottom-4 left-6">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2 drop-shadow-lg">
-              <span>💰</span>
-              <span>{t.spendingDistribution}</span>
-            </h2>
-          </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-8 flex flex-col items-center justify-center min-h-[300px] text-center">
+        <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4">
+          <Wallet className="w-8 h-8 text-zinc-300" />
         </div>
-
-        {/* Content */}
-        <div className="p-6">
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="text-6xl mb-4">💸</div>
-            <p className="text-gray-500 text-center">{t.noExpensesYet}</p>
-            <p className="text-sm text-gray-400 mt-2">{t.addFirstExpense}</p>
-          </div>
-        </div>
+        <h3 className="text-lg font-semibold text-zinc-900 mb-2">{t.noExpensesYet}</h3>
+        <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+          {t.addFirstExpense}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Anime Background Header */}
-      <div className="relative h-48">
-        {isGenerating ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 animate-pulse flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="text-4xl mb-2">✨</div>
-              <p className="font-semibold">Generating anime art...</p>
-            </div>
-          </div>
-        ) : imageUrl ? (
-          <>
-            <Image
-              src={imageUrl}
-              alt="Budget theme"
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400" />
-        )}
-        <div className="absolute bottom-4 left-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2 drop-shadow-lg">
-            <span>💰</span>
-            <span>{t.spendingDistribution}</span>
-          </h2>
-        </div>
+    <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden flex flex-col h-full">
+      <div className="px-6 py-5 border-b border-zinc-100 flex items-center gap-2">
+        <PieChartIcon className="w-5 h-5 text-zinc-500" />
+        <h2 className="text-lg font-bold text-zinc-900">
+          {t.spendingDistribution}
+        </h2>
       </div>
 
-      {/* Chart Content */}
-      <div className="p-6">
-        <ResponsiveContainer width="100%" height={350}>
+      <div className="p-6 flex-1 min-h-[350px]">
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={chartData}
               cx="50%"
               cy="50%"
-              labelLine={false}
-              label={false}
+              innerRadius={60}
               outerRadius={100}
-              fill="#8884d8"
+              paddingAngle={2}
               dataKey="value"
+              stroke="none"
             >
               {chartData.map((entry, index) => (
                 <Cell
@@ -173,25 +86,36 @@ export default function BudgetChart({ categorySpending, tripId, destination, bud
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) => `$${value.toFixed(2)}`}
+              formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
               contentStyle={{
                 backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.5rem',
-                padding: '8px 12px'
+                border: '1px solid #e4e4e7', // zinc-200
+                borderRadius: '0.75rem',
+                padding: '12px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }}
+              itemStyle={{
+                color: '#18181b', // zinc-900
+                fontSize: '0.875rem',
+                fontWeight: 500
               }}
             />
             <Legend
               verticalAlign="bottom"
               height={36}
+              iconType="circle"
               formatter={(value, entry: any) => {
                 const item = chartData.find(d => d.name === value);
                 const percent = item ? ((item.value / totalSpent) * 100).toFixed(0) : 0;
                 const translatedName = item?.translatedName || value;
-                return `${translatedName}: ${percent}%`;
+                return (
+                  <span className="text-sm font-medium text-zinc-600 ml-1">
+                    {translatedName} ({percent}%)
+                  </span>
+                );
               }}
               wrapperStyle={{
-                paddingTop: '20px'
+                paddingTop: '24px'
               }}
             />
           </PieChart>

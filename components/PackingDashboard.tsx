@@ -8,6 +8,7 @@ import AddItemModal from "./AddItemModal";
 import SearchItems from "./SearchItems";
 import UnorganizedItems from "./UnorganizedItems";
 import { getTranslations, type Locale } from "@/lib/i18n";
+import { Plus, Search, Briefcase, CheckCircle2, Circle } from "lucide-react";
 
 interface PackingItem {
   id: string;
@@ -260,115 +261,110 @@ export default function PackingDashboard({
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              🧳 {t.packingHelper}
-            </h1>
-          </div>
-          <button
-            onClick={handleAddLuggage}
-            className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-          >
-            + {t.addLuggage}
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="mt-6">
-          <SearchItems
-            query={searchQuery}
-            onChange={setSearchQuery}
-            results={searchResults}
-            locale={locale}
-          />
-        </div>
-      </div>
-
-      {/* Unorganized Items */}
-      <div className="mb-6">
-        <UnorganizedItems
-          items={unorganizedItems}
-          luggages={luggages}
-          locale={locale}
-          onAddItem={() => {
-            setSelectedLuggage(null);
-            setShowAddItem(true);
-          }}
-          onDeleteItem={handleDeleteItem}
-          onMoveItem={handleMoveItem}
-        />
-      </div>
-
-      {/* Luggage Grid */}
-      {luggages.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-          <div className="text-6xl mb-4">🧳</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {t.noLuggageYet}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {t.addYourFirstLuggage}
-          </p>
-          <button
-            onClick={handleAddLuggage}
-            className="px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-          >
-            + {t.addFirstLuggage}
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {luggages.map((luggage) => (
-            <LuggageCard
-              key={luggage.id}
-              luggage={luggage}
-              onAddItem={() => handleAddItem(luggage.id)}
-              onEdit={() => handleEditLuggage(luggage)}
-              onRefresh={refreshData}
-              onToggleItem={handleToggleItem}
-              onRemoveFromLuggage={(itemId) => handleMoveItem(itemId, null)}
-              locale={locale}
-              userId={userId}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Compact Stats at Bottom */}
-      {totalItems > 0 && (
-        <div className="mt-8 bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-6">
-              <span className="text-gray-600">
-                <span className="font-semibold text-violet-600">{luggages.length}</span> {t.luggage}
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-600">
-                <span className="font-semibold text-blue-600">{totalItems}</span> {t.items}
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-600">
-                <span className="font-semibold text-emerald-600">{packedItems}</span> packed
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-32 bg-gray-200 rounded-full h-2">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header & Stats */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight mb-4 flex items-center gap-3">
+            <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-900" />
+            {t.packingHelper}
+          </h1>
+          
+          {/* Progress Bar */}
+          {totalItems > 0 && (
+            <div className="w-full md:w-96">
+              <div className="flex justify-between text-sm font-medium mb-2">
+                <span className="text-zinc-500">{packedItems} of {totalItems} packed</span>
+                <span className="text-zinc-900">{packingProgress.toFixed(0)}%</span>
+              </div>
+              <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-emerald-500 to-green-600 h-2 rounded-full transition-all"
+                  className="h-full bg-zinc-900 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${packingProgress}%` }}
                 />
               </div>
-              <span className="font-semibold text-emerald-600 min-w-[3rem] text-right">
-                {packingProgress.toFixed(0)}%
-              </span>
             </div>
-          </div>
+          )}
         </div>
-      )}
+
+        <button
+          onClick={handleAddLuggage}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 text-white rounded-2xl font-semibold hover:bg-zinc-800 transition-all shadow-sm hover:shadow-md active:scale-95"
+        >
+          <Plus className="w-5 h-5" />
+          {t.addLuggage}
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mb-10 group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-zinc-600 transition-colors" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-zinc-50 to-transparent pointer-events-none" />
+        
+        <div className="w-full">
+            <SearchItems
+              query={searchQuery}
+              onChange={setSearchQuery}
+              results={searchResults}
+              locale={locale}
+            />
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="space-y-10">
+        {/* Unorganized Items Section */}
+        <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-1">
+          <UnorganizedItems
+            items={unorganizedItems}
+            luggages={luggages}
+            locale={locale}
+            onAddItem={() => {
+              setSelectedLuggage(null);
+              setShowAddItem(true);
+            }}
+            onDeleteItem={handleDeleteItem}
+            onMoveItem={handleMoveItem}
+          />
+        </div>
+
+        {/* Luggage Grid */}
+        {luggages.length === 0 ? (
+          <div className="bg-zinc-50 rounded-3xl border border-dashed border-zinc-200 p-16 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-zinc-100">
+              <Briefcase className="w-8 h-8 text-zinc-300" />
+            </div>
+            <h2 className="text-xl font-bold text-zinc-900 mb-2">
+              {t.noLuggageYet}
+            </h2>
+            <p className="text-zinc-500 mb-8 max-w-md mx-auto">
+              {t.addYourFirstLuggage}
+            </p>
+            <button
+              onClick={handleAddLuggage}
+              className="px-8 py-3 bg-white border-2 border-zinc-200 text-zinc-900 rounded-xl font-semibold hover:border-zinc-900 hover:bg-zinc-50 transition-all"
+            >
+              {t.addFirstLuggage}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {luggages.map((luggage) => (
+              <LuggageCard
+                key={luggage.id}
+                luggage={luggage}
+                onAddItem={() => handleAddItem(luggage.id)}
+                onEdit={() => handleEditLuggage(luggage)}
+                onRefresh={refreshData}
+                onToggleItem={handleToggleItem}
+                onRemoveFromLuggage={(itemId) => handleMoveItem(itemId, null)}
+                locale={locale}
+                userId={userId}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Modals */}
       {showAddLuggage && (

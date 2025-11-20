@@ -7,6 +7,22 @@ import { useDroppable, DndContext, closestCenter, DragEndEvent } from "@dnd-kit/
 import { CSS } from "@dnd-kit/utilities";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import AddItemModal from "./AddItemModal";
+import { 
+  GripVertical, 
+  Edit2, 
+  Trash2, 
+  CheckCircle2, 
+  Circle, 
+  Plus, 
+  ChevronRight, 
+  ChevronDown,
+  ShoppingBag,
+  Briefcase,
+  Backpack,
+  Package,
+  Gift,
+  Luggage
+} from "lucide-react";
 
 interface PackingItem {
   id: string;
@@ -21,7 +37,7 @@ interface PackingItem {
   importance: string;
 }
 
-interface Luggage {
+interface LuggageType {
   id: string;
   name: string;
   type: string;
@@ -34,7 +50,7 @@ interface Luggage {
 }
 
 interface LuggageCardProps {
-  luggage: Luggage;
+  luggage: LuggageType;
   onAddItem: () => void;
   onEdit: () => void;
   onRefresh: () => void;
@@ -44,32 +60,32 @@ interface LuggageCardProps {
   userId: string;
 }
 
-const LUGGAGE_ICONS: Record<string, string> = {
-  suitcase: "🧳",
-  backpack: "🎒",
-  duffel: "👜",
-  "carry-on": "💼",
-  personal: "👝",
-  box: "📦",
-  other: "🎁",
+const LUGGAGE_ICONS: Record<string, any> = {
+  suitcase: Luggage,
+  backpack: Backpack,
+  duffel: ShoppingBag,
+  "carry-on": Briefcase,
+  personal: ShoppingBag,
+  box: Package,
+  other: Gift,
 };
 
 const COLOR_CLASSES: Record<string, string> = {
-  red: "from-red-400 to-red-600",
-  blue: "from-blue-400 to-blue-600",
-  green: "from-green-400 to-green-600",
-  yellow: "from-yellow-400 to-yellow-600",
-  purple: "from-purple-400 to-purple-600",
-  pink: "from-pink-400 to-pink-600",
-  orange: "from-orange-400 to-orange-600",
-  gray: "from-gray-400 to-gray-600",
-  black: "from-gray-700 to-gray-900",
+  red: "bg-red-100 text-red-700",
+  blue: "bg-blue-100 text-blue-700",
+  green: "bg-emerald-100 text-emerald-700",
+  yellow: "bg-amber-100 text-amber-700",
+  purple: "bg-purple-100 text-purple-700",
+  pink: "bg-pink-100 text-pink-700",
+  orange: "bg-orange-100 text-orange-700",
+  gray: "bg-zinc-100 text-zinc-700",
+  black: "bg-zinc-800 text-zinc-100",
 };
 
 export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onToggleItem, onRemoveFromLuggage, locale, userId }: LuggageCardProps) {
   const router = useRouter();
   const t = getTranslations(locale);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<PackingItem | null>(null);
   const [items, setItems] = useState(luggage.items);
@@ -102,8 +118,7 @@ export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onT
   const progress = totalCount > 0 ? (packedCount / totalCount) * 100 : 0;
 
   const colorClass = COLOR_CLASSES[luggage.color] || COLOR_CLASSES.gray;
-  const icon = LUGGAGE_ICONS[luggage.type] || LUGGAGE_ICONS.other;
-
+  const Icon = LUGGAGE_ICONS[luggage.type] || LUGGAGE_ICONS.other;
 
   const handleDeleteLuggage = async () => {
     if (!confirm(`Delete "${luggage.name}" and all its items?`)) return;
@@ -212,127 +227,134 @@ export default function LuggageCard({ luggage, onAddItem, onEdit, onRefresh, onT
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={`bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden ${
-        isOver ? "ring-4 ring-violet-300" : ""
+      className={`bg-white rounded-2xl shadow-sm border border-zinc-200 hover:shadow-md transition-all overflow-hidden flex flex-col h-full ${
+        isOver ? "ring-2 ring-zinc-900" : ""
       }`}
     >
-      <div ref={setDropRef} className="w-full h-full">
-      {/* Header */}
-      <div className={`bg-gradient-to-r ${colorClass} p-4 text-white`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              {...listeners}
-              className="text-3xl cursor-move"
-              title="Drag to reorder"
-            >
-              {icon}
+      <div ref={setDropRef} className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="p-5 border-b border-zinc-100">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div
+                {...listeners}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing ${colorClass}`}
+              >
+                <Icon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 text-lg leading-tight">{luggage.name}</h3>
+                <div className="flex items-center gap-2 text-xs text-zinc-500 mt-0.5">
+                  <span className="capitalize">{luggage.type}</span>
+                  {luggage.airtagName && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <span>📍</span> {luggage.airtagName}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-lg">{luggage.name}</h3>
-              <p className="text-sm opacity-90 capitalize">{luggage.type}</p>
-              {luggage.airtagName && (
-                <p className="text-xs opacity-80 mt-1 flex items-center gap-1">
-                  <span>📍</span> {luggage.airtagName}
-                </p>
-              )}
+            <div className="flex gap-1">
+              <button
+                onClick={onEdit}
+                className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg transition-colors"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDeleteLuggage}
+                disabled={loading}
+                className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onEdit}
-              className="text-white/80 hover:text-white transition-colors"
-              title="Edit luggage"
-            >
-              ✏️
-            </button>
-            <button
-              onClick={handleDeleteLuggage}
-              disabled={loading}
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              🗑️
-            </button>
+
+          {luggage.description && (
+            <p className="text-sm text-zinc-500 mb-4">{luggage.description}</p>
+          )}
+
+          {/* Progress */}
+          <div>
+            <div className="flex items-center justify-between text-xs font-medium text-zinc-500 mb-1.5">
+              <span>{packedCount} of {totalCount} packed</span>
+              <span>{progress.toFixed(0)}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  progress === 100 ? "bg-emerald-500" : "bg-zinc-900"
+                }`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        {luggage.description && (
-          <p className="text-sm opacity-90 mt-2">{luggage.description}</p>
-        )}
-
-        {/* Progress */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-sm mb-1">
-            <span>
-              {packedCount} / {totalCount} items packed
-            </span>
-            <span>{progress.toFixed(0)}%</span>
+        {/* Items List */}
+        <div className="flex-1 bg-zinc-50/50">
+          <div className="p-4 pb-2">
+             <div className="flex items-center justify-between mb-2">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-zinc-600 uppercase tracking-wider transition-colors"
+              >
+                {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                Items ({totalCount})
+              </button>
+              <button
+                onClick={onAddItem}
+                className="text-xs font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-1 bg-white border border-zinc-200 px-2 py-1 rounded-md shadow-sm"
+              >
+                <Plus className="w-3 h-3" />
+                Add
+              </button>
+            </div>
           </div>
-          <div className="w-full bg-white/30 rounded-full h-2">
-            <div
-              className="bg-white h-2 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Items */}
-      <div className="p-4">
-        <div className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-3">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex-1 text-left hover:text-gray-900 transition-colors"
-          >
-            <span>{expanded ? "▼" : "▶"} {t.items} ({totalCount})</span>
-          </button>
-          <button
-            onClick={onAddItem}
-            className="px-3 py-1 bg-violet-100 text-violet-700 rounded-lg text-xs font-semibold hover:bg-violet-200 transition-colors"
-          >
-            + {t.addItem}
-          </button>
-        </div>
-
-        {expanded && (
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {totalCount === 0 ? (
-                <p className="text-center text-gray-400 py-8 text-sm">
-                  {t.noItemsYet}
-                </p>
-              ) : (
-                sortedCategories.map((category) => {
-                  const categoryItems = itemsByCategory[category];
-                  return (
-                    <div key={category} className="border-l-2 border-gray-200 pl-3">
-                      <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                        {t[category as keyof typeof t] || category}
+          {expanded && (
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <div className="px-4 pb-4 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                {totalCount === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50">
+                    <p className="text-zinc-400 text-sm">Empty luggage</p>
+                  </div>
+                ) : (
+                  sortedCategories.map((category) => {
+                    const categoryItems = itemsByCategory[category];
+                    return (
+                      <div key={category}>
+                        <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 ml-1">
+                          {t[category as keyof typeof t] || category}
+                        </h4>
+                        <SortableContext
+                          items={categoryItems.map((item) => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-1.5">
+                            {categoryItems.map((item) => (
+                              <SortableItem
+                                key={item.id}
+                                item={item}
+                                onToggle={() => onToggleItem(item.id, item.isPacked)}
+                                onEdit={() => handleEditItem(item)}
+                                onRemove={() => onRemoveFromLuggage(item.id)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
                       </div>
-                      <SortableContext
-                        items={categoryItems.map((item) => item.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-1">
-                          {categoryItems.map((item) => (
-                            <SortableItem
-                              key={item.id}
-                              item={item}
-                              onToggle={() => onToggleItem(item.id, item.isPacked)}
-                              onEdit={() => handleEditItem(item)}
-                              onRemove={() => onRemoveFromLuggage(item.id)}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </DndContext>
-        )}
-      </div>
+                    );
+                  })
+                )}
+              </div>
+            </DndContext>
+          )}
+        </div>
       </div>
 
       {/* Edit Item Modal */}
@@ -373,72 +395,87 @@ function SortableItem({ item, onToggle, onEdit, onRemove }: SortableItemProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
-
-  // Get background color based on belongsTo
-  const getBackgroundColor = () => {
-    if (item.belongsTo === "baber") return "bg-pink-50"; // Light pink for baber
-    if (item.belongsTo === "BABER") return "bg-blue-50"; // Light blue for BABER
-    return "bg-white"; // White for shared
+    zIndex: isDragging ? 10 : 1,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 group px-2 py-1 rounded-lg ${getBackgroundColor()}`}
+      className={`group flex items-center gap-3 p-3 rounded-xl border transition-all ${
+        item.isPacked
+          ? "bg-zinc-50 border-zinc-100"
+          : "bg-white border-zinc-200 shadow-sm hover:border-zinc-300"
+      }`}
     >
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        className="text-zinc-300 hover:text-zinc-500 cursor-grab active:cursor-grabbing shrink-0"
       >
-        ⋮⋮
+        <GripVertical className="w-4 h-4" />
       </div>
-      <input
-        type="checkbox"
-        checked={item.isPacked}
-        onChange={onToggle}
-        className="w-4 h-4 text-violet-600 rounded cursor-pointer"
-      />
-      {item.importance && item.importance !== "normal" && (
-        <span
-          className="text-xs flex-shrink-0"
-          title={item.importance}
-        >
-          {item.importance === "essential" && "🔴"}
-          {item.importance === "important" && "🟠"}
-          {item.importance === "optional" && "⚪"}
-        </span>
-      )}
-      <span
-        className={`flex-1 text-sm ${
-          item.isPacked
-            ? "text-gray-500"
-            : "text-gray-700"
-        }`}
-      >
-        {item.name}
-        {item.quantity > 1 && (
-          <span className="text-xs text-gray-500 ml-1">
-            ×{item.quantity}
-          </span>
+
+      <button onClick={onToggle} className="shrink-0">
+        {item.isPacked ? (
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+        ) : (
+          <Circle className="w-5 h-5 text-zinc-300 hover:text-zinc-400" />
         )}
-      </span>
-      <button
-        onClick={onEdit}
-        className="sm:opacity-0 sm:group-hover:opacity-100 text-blue-500 hover:text-blue-700 text-xs transition-opacity"
-        title="Edit item"
-      >
-        ✏️
       </button>
-      <button
-        onClick={onRemove}
-        className="sm:opacity-0 sm:group-hover:opacity-100 text-orange-500 hover:text-orange-700 text-xs transition-opacity"
-        title="Move to unorganized"
-      >
-        ↩
-      </button>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span 
+            className={`text-sm font-medium truncate ${
+              item.isPacked ? "text-zinc-400 line-through" : "text-zinc-700"
+            }`}
+          >
+            {item.name}
+          </span>
+          {item.quantity > 1 && (
+            <span className="text-xs font-medium text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-md">
+              ×{item.quantity}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2 mt-0.5">
+          {/* User Badge */}
+          {item.belongsTo !== "shared" && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium uppercase tracking-wide ${
+              item.belongsTo === "baber" ? "bg-pink-50 text-pink-600" : 
+              item.belongsTo === "BABER" ? "bg-blue-50 text-blue-600" : 
+              "bg-zinc-100 text-zinc-500"
+            }`}>
+              {item.belongsTo}
+            </span>
+          )}
+          
+          {/* Importance Badge */}
+          {item.importance === "essential" && (
+            <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md font-medium">
+              Essential
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={onEdit}
+          className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={onRemove}
+          className="p-1.5 text-zinc-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
+          title="Move to unorganized"
+        >
+          <ShoppingBag className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

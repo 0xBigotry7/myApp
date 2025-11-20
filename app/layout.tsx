@@ -47,7 +47,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover", // Important for iPhone notch/safe areas
-  themeColor: "#3b82f6",
+  themeColor: "#fafafa", // zinc-50
 };
 
 export default function RootLayout({
@@ -57,7 +57,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${notoSansSC.variable}`}>
-      <body className="font-sans">
+      <body className="font-sans bg-zinc-50 text-zinc-900 antialiased bg-dot-pattern min-h-screen">
         {children}
         <PWAInstaller />
       </body>

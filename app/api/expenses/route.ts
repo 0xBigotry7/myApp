@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { convertCurrency } from "@/lib/currency";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -147,6 +148,13 @@ export async function POST(request: Request) {
       });
 
       if (account) {
+        // Calculate amount in account currency
+        const amountInAccountCurrency = convertCurrency(
+          Number(amount), 
+          currency || "USD", 
+          account.currency
+        );
+
         // Create transaction and update balance atomically
         await prisma.$transaction([
           // Create transaction (negative amount for expense)
@@ -154,7 +162,7 @@ export async function POST(request: Request) {
             data: {
               userId: session.user.id,
               accountId: userAccountId,
-              amount: -Math.abs(amount), // Always negative for expenses
+              amount: -Math.abs(amountInAccountCurrency), // Always negative for expenses, converted
               category: category || "Travel",
               description: note || `Trip expense: ${trip.name}`,
               date: parsedDate,
@@ -168,7 +176,7 @@ export async function POST(request: Request) {
             where: { id: userAccountId },
             data: {
               balance: {
-                decrement: Math.abs(amount)
+                decrement: Math.abs(amountInAccountCurrency) // Converted amount
               }
             },
           }),
