@@ -6,6 +6,9 @@ import Navbar from "@/components/Navbar";
 import QuickAddTransaction from "@/components/QuickAddTransaction";
 import { getHouseholdUserIds, getUserBadge } from "@/lib/household";
 
+// Revalidate every 30 seconds for fresher data
+export const revalidate = 30;
+
 export default async function FinancePage() {
   const session = await auth();
 
@@ -16,41 +19,48 @@ export default async function FinancePage() {
   // Get all household user IDs for shared financial view
   const householdUserIds = await getHouseholdUserIds();
 
-  // Get all users for color coding
-  const allUsers = await prisma.user.findMany({
-    select: { id: true, name: true },
-  });
-
-  // Get financial data for entire household
-  const accounts = await prisma.account.findMany({
-    where: { userId: { in: householdUserIds }, isActive: true },
-    orderBy: { createdAt: "asc" },
-    include: {
-      user: { select: { id: true, name: true } },
-    },
-  });
-
-  const allTransactions = await prisma.transaction.findMany({
-    where: { userId: { in: householdUserIds } },
-    include: {
-      account: { select: { name: true, icon: true, color: true } },
-      user: { select: { id: true, name: true } },
-    },
-    orderBy: { date: "desc" },
-  });
-
-  // Calculate financial metrics
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-
+  // Run all database queries in parallel for better performance
   const thisMonthStart = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
     1
   );
 
-  const thisMonthTransactions = allTransactions.filter(
-    (t) => new Date(t.date) >= thisMonthStart
-  );
+  const [allUsers, accounts, allTransactions] = await Promise.all([
+    // Get all users for color coding
+    prisma.user.findMany({
+      select: { id: true, name: true },
+    }),
+
+    // Get financial data for entire household
+    prisma.account.findMany({
+      where: { userId: { in: householdUserIds }, isActive: true },
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+    }),
+
+    // Get recent transactions only (for better performance)
+    prisma.transaction.findMany({
+      where: { 
+        userId: { in: householdUserIds },
+        date: { gte: thisMonthStart } // Only get this month's transactions
+      },
+      include: {
+        account: { select: { name: true, icon: true, color: true } },
+        user: { select: { id: true, name: true } },
+      },
+      orderBy: { date: "desc" },
+      take: 200, // Limit for performance
+    }),
+  ]);
+
+  // Calculate financial metrics
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+  // All transactions are already filtered to this month
+  const thisMonthTransactions = allTransactions;
 
   const thisMonthIncome = thisMonthTransactions
     .filter((t) => t.amount > 0)

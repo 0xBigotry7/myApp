@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CalendarPicker from "@/components/CalendarPicker";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Calendar, Clock, MapPin, Sparkles, Plane } from "lucide-react";
 
 const CATEGORIES = [
   { name: "Accommodation", icon: "🏨", color: "#3b82f6", defaultPercent: 30 },
@@ -344,22 +345,22 @@ export default function NewTripPage() {
   const remainingPercentage = 100 - totalPercentage;
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-20 text-zinc-900 dark:text-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">Plan New Trip</h1>
-              <p className="text-zinc-500 text-lg">Create your perfect travel budget in 3 easy steps</p>
+              <h1 className="text-4xl font-bold mb-2 tracking-tight">Plan New Trip</h1>
+              <p className="text-zinc-500 dark:text-zinc-400 text-lg">Create your perfect travel budget in 3 easy steps</p>
             </div>
             <button
               type="button"
               onClick={handleGetSuggestions}
               disabled={loadingSuggestions}
-              className="hidden md:inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
+              className="hidden md:inline-flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
             >
-              <span className="text-xl">✨</span>
+              <Sparkles className="w-5 h-5" />
               {loadingSuggestions ? "Loading..." : "AI Suggestions"}
             </button>
           </div>
@@ -375,24 +376,24 @@ export default function NewTripPage() {
                 <div className="flex items-center w-full">
                   {idx > 0 && (
                     <div className={`flex-1 h-0.5 rounded ${
-                      step > idx ? 'bg-zinc-900' : 'bg-zinc-200'
+                      step > idx ? 'bg-zinc-900 dark:bg-white' : 'bg-zinc-200 dark:bg-zinc-800'
                     }`} />
                   )}
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all mx-2 border-2 ${
                     step >= s.num
-                      ? 'bg-zinc-900 border-zinc-900 text-white'
-                      : 'bg-white border-zinc-200 text-zinc-400'
+                      ? 'bg-zinc-900 dark:bg-white border-zinc-900 dark:border-white text-white dark:text-zinc-900'
+                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-600'
                   }`}>
                     {s.num}
                   </div>
                   {idx < 2 && (
                     <div className={`flex-1 h-0.5 rounded ${
-                      step > s.num ? 'bg-zinc-900' : 'bg-zinc-200'
+                      step > s.num ? 'bg-zinc-900 dark:bg-white' : 'bg-zinc-200 dark:bg-zinc-800'
                     }`} />
                   )}
                 </div>
                 <span className={`mt-2 text-sm font-medium ${
-                  step >= s.num ? 'text-zinc-900' : 'text-zinc-400'
+                  step >= s.num ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-zinc-600'
                 }`}>
                   {s.label}
                 </span>
@@ -403,12 +404,12 @@ export default function NewTripPage() {
 
         {/* AI Suggestions */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6 mb-8 shadow-sm">
+          <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-8 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-zinc-900">✨ AI Destination Suggestions</h2>
+              <h2 className="text-xl font-bold">✨ AI Destination Suggestions</h2>
               <button
                 onClick={() => setShowSuggestions(false)}
-                className="text-zinc-500 hover:text-zinc-700 p-2"
+                className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-2"
               >
                 ✕
               </button>
@@ -418,13 +419,13 @@ export default function NewTripPage() {
                 <div
                   key={index}
                   onClick={() => handleSelectSuggestion(suggestion)}
-                  className="bg-white p-4 rounded-xl border border-zinc-200 hover:border-zinc-400 hover:shadow-md cursor-pointer transition-all group"
+                  className="bg-white dark:bg-zinc-800 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-md cursor-pointer transition-all group"
                 >
-                  <h3 className="font-bold text-lg text-zinc-900 group-hover:text-zinc-700 transition-colors">
+                  <h3 className="font-bold text-lg group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">
                     {suggestion.destination}
                   </h3>
-                  <p className="text-zinc-500 text-sm mt-1 line-clamp-2">{suggestion.reason}</p>
-                  <p className="font-bold text-zinc-900 text-lg mt-2">${suggestion.estimatedBudget.toLocaleString()}</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 line-clamp-2">{suggestion.reason}</p>
+                  <p className="font-bold text-lg mt-2">${suggestion.estimatedBudget.toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -434,27 +435,27 @@ export default function NewTripPage() {
         <form onSubmit={handleSubmit}>
           {/* Step 1: Trip Details */}
           {step === 1 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8 space-y-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8 space-y-6">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">
-                    What should we call this trip? <span className="text-zinc-400 font-normal">(optional)</span>
+                  <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    What should we call this trip? <span className="font-normal lowercase opacity-60">(optional)</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="input-field text-lg"
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-lg font-medium focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent outline-none transition-all"
                     placeholder="e.g., Summer in Europe"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">
+                  <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                     Where are you starting from?
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">✈️</div>
+                    <Plane className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                     <input
                       type="text"
                       required
@@ -471,21 +472,21 @@ export default function NewTripPage() {
                           }
                         }
                       }}
-                      className="input-field pl-12 text-lg"
+                      className="w-full pl-12 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-lg font-medium focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent outline-none transition-all"
                       placeholder="e.g., New York, USA"
                       autoComplete="off"
                     />
                     {showStartingFrom && filteredStartingFrom.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
                         {filteredStartingFrom.map((dest, idx) => (
                           <button
                             key={idx}
                             type="button"
                             onClick={() => selectStartingFrom(dest)}
-                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 transition-colors flex items-center gap-3 border-b border-zinc-100 last:border-b-0"
+                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-700 last:border-b-0"
                           >
-                            <span className="text-xl opacity-50">✈️</span>
-                            <span className="text-zinc-900">{dest}</span>
+                            <Plane className="w-4 h-4 text-zinc-400" />
+                            <span>{dest}</span>
                           </button>
                         ))}
                       </div>
@@ -494,11 +495,11 @@ export default function NewTripPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">
+                  <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                     Where are you heading?
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">📍</div>
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                     <input
                       type="text"
                       required
@@ -515,21 +516,21 @@ export default function NewTripPage() {
                           }
                         }
                       }}
-                      className="input-field pl-12 text-lg"
+                      className="w-full pl-12 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-lg font-medium focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent outline-none transition-all"
                       placeholder="e.g., Paris, France"
                       autoComplete="off"
                     />
                     {showDestinations && filteredDestinations.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg max-h-64 overflow-y-auto z-20">
                         {filteredDestinations.map((dest, idx) => (
                           <button
                             key={idx}
                             type="button"
                             onClick={() => selectDestination(dest)}
-                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 transition-colors flex items-center gap-3 border-b border-zinc-100 last:border-b-0"
+                            className="w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-700 last:border-b-0"
                           >
-                            <span className="text-xl opacity-50">📍</span>
-                            <span className="text-zinc-900">{dest}</span>
+                            <MapPin className="w-4 h-4 text-zinc-400" />
+                            <span>{dest}</span>
                           </button>
                         ))}
                       </div>
@@ -546,18 +547,18 @@ export default function NewTripPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
+                    <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                       Duration (days)
                     </label>
                     <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xl pointer-events-none z-10 opacity-50">⏱️</div>
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                       <input
                         type="number"
                         required
                         min="1"
                         value={formData.duration}
                         onChange={(e) => handleDurationChange(e.target.value)}
-                        className="input-field pl-12"
+                        className="w-full pl-12 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-lg font-medium focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent outline-none transition-all"
                         placeholder="e.g., 7"
                       />
                     </div>
@@ -565,9 +566,9 @@ export default function NewTripPage() {
                 </div>
 
                 {formData.endDate && (
-                  <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-sm text-zinc-900">
-                      <span className="text-lg text-green-500">✓</span>
+                  <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-lg text-emerald-500">✓</span>
                       <span className="font-medium">
                         Your trip will end on {new Date(formData.endDate).toLocaleDateString('en-US', {
                           weekday: 'long',
@@ -586,7 +587,7 @@ export default function NewTripPage() {
                   type="button"
                   onClick={handleStep1Next}
                   disabled={!formData.startingFrom || !formData.destination || !formData.startDate || !formData.duration || !formData.endDate}
-                  className="bg-zinc-900 text-white px-8 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
+                  className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 font-bold disabled:opacity-50 shadow-lg shadow-zinc-200 dark:shadow-zinc-900/50 active:scale-95"
                 >
                   Next Step →
                 </button>
@@ -598,17 +599,17 @@ export default function NewTripPage() {
           {step === 2 && (
             <div className="space-y-6">
               {loadingBudgetOptions ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-16">
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-16">
                   <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin text-4xl">✨</div>
-                    <p className="text-lg text-zinc-600">Generating personalized budget options for your trip...</p>
+                    <p className="text-lg text-zinc-600 dark:text-zinc-400">Generating personalized budget options for your trip...</p>
                   </div>
                 </div>
               ) : budgetOptions.length > 0 ? (
                 <>
-                  <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
-                    <h3 className="text-xl font-bold text-zinc-900 mb-2">Choose Your Budget Level</h3>
-                    <p className="text-zinc-500 text-sm">
+                  <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+                    <h3 className="text-xl font-bold mb-2">Choose Your Budget Level</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">
                       Based on {formData.destination} for {formData.duration} days (2 travelers)
                     </p>
                   </div>
@@ -630,10 +631,10 @@ export default function NewTripPage() {
                         <div
                           key={option.level}
                           onClick={() => selectBudgetOption(option)}
-                          className={`bg-white rounded-2xl shadow-sm border-2 cursor-pointer transition-all hover:shadow-md overflow-hidden ${
+                          className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border-2 cursor-pointer transition-all hover:shadow-md overflow-hidden ${
                             selectedBudgetOption?.level === option.level
-                              ? 'border-zinc-900 ring-1 ring-zinc-900'
-                              : 'border-zinc-200 hover:border-zinc-300'
+                              ? 'border-zinc-900 dark:border-white ring-1 ring-zinc-900 dark:ring-white'
+                              : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                           }`}
                         >
                           <div className="p-6 space-y-4">
@@ -644,16 +645,16 @@ export default function NewTripPage() {
                                 {option.level === 'balanced' && '⭐'}
                                 {option.level === 'luxury' && '💎'}
                               </div>
-                              <h4 className="text-2xl font-bold text-zinc-900 capitalize">{option.level}</h4>
-                              <p className="text-sm text-zinc-500 mt-1 line-clamp-2">{option.description}</p>
+                              <h4 className="text-2xl font-bold capitalize">{option.level}</h4>
+                              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">{option.description}</p>
                             </div>
 
                             {/* Price */}
-                            <div className="text-center py-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                              <div className="text-3xl font-bold text-zinc-900">
+                            <div className="text-center py-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                              <div className="text-3xl font-bold">
                                 ${option.totalBudget.toLocaleString()}
                               </div>
-                              <div className="text-sm text-zinc-500 mt-1">
+                              <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                                 ${option.perPersonPerDay.toFixed(0)}/person/day
                               </div>
                             </div>
@@ -670,6 +671,7 @@ export default function NewTripPage() {
                                     outerRadius={70}
                                     paddingAngle={2}
                                     dataKey="value"
+                                    stroke="none"
                                   >
                                     {pieData.map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -677,7 +679,13 @@ export default function NewTripPage() {
                                   </Pie>
                                   <Tooltip
                                     formatter={(value: number) => `$${value.toLocaleString()}`}
-                                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                                    contentStyle={{ 
+                                      borderRadius: '12px', 
+                                      border: 'none', 
+                                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                      color: '#18181b'
+                                    }}
                                   />
                                 </PieChart>
                               </ResponsiveContainer>
@@ -685,33 +693,33 @@ export default function NewTripPage() {
 
                             {/* Detailed Breakdown */}
                             <details className="group">
-                              <summary className="cursor-pointer text-sm font-semibold text-zinc-600 hover:text-zinc-900 flex items-center justify-between py-2">
+                              <summary className="cursor-pointer text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center justify-between py-2">
                                 <span>📊 Detailed Breakdown</span>
                                 <span className="text-zinc-400 group-open:rotate-180 transition-transform">▼</span>
                               </summary>
                               <div className="mt-3 space-y-3 text-xs">
                                 {/* Flights */}
-                                <div className="bg-zinc-50 rounded-lg p-3">
-                                  <div className="font-semibold text-zinc-900 mb-1">✈️ Flights (${option.breakdown.flights.toLocaleString()})</div>
-                                  <div className="text-zinc-600 space-y-1">
+                                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3">
+                                  <div className="font-semibold mb-1">✈️ Flights (${option.breakdown.flights.toLocaleString()})</div>
+                                  <div className="text-zinc-600 dark:text-zinc-400 space-y-1">
                                     <div>• Tickets: ${option.detailedBreakdown.flights.economy.toLocaleString()}</div>
                                     <div>• Baggage: ${option.detailedBreakdown.flights.bags.toLocaleString()}</div>
                                   </div>
                                 </div>
 
                                 {/* Accommodation */}
-                                <div className="bg-zinc-50 rounded-lg p-3">
-                                  <div className="font-semibold text-zinc-900 mb-1">🏨 Accommodation (${option.breakdown.accommodation.toLocaleString()})</div>
-                                  <div className="text-zinc-600 space-y-1">
+                                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3">
+                                  <div className="font-semibold mb-1">🏨 Accommodation (${option.breakdown.accommodation.toLocaleString()})</div>
+                                  <div className="text-zinc-600 dark:text-zinc-400 space-y-1">
                                     <div>• {option.detailedBreakdown.accommodation.type}</div>
                                     <div>• ${option.detailedBreakdown.accommodation.perNight.toLocaleString()}/night</div>
                                   </div>
                                 </div>
 
                                 {/* Food */}
-                                <div className="bg-zinc-50 rounded-lg p-3">
-                                  <div className="font-semibold text-zinc-900 mb-1">🍽️ Food (${option.breakdown.food.toLocaleString()})</div>
-                                  <div className="text-zinc-600 space-y-1">
+                                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3">
+                                  <div className="font-semibold mb-1">🍽️ Food (${option.breakdown.food.toLocaleString()})</div>
+                                  <div className="text-zinc-600 dark:text-zinc-400 space-y-1">
                                     <div>• Breakfast: ${option.detailedBreakdown.food.breakfast.toLocaleString()}</div>
                                     <div>• Lunch: ${option.detailedBreakdown.food.lunch.toLocaleString()}</div>
                                     <div>• Dinner: ${option.detailedBreakdown.food.dinner.toLocaleString()}</div>
@@ -720,9 +728,9 @@ export default function NewTripPage() {
                                 </div>
 
                                 {/* Activities */}
-                                <div className="bg-zinc-50 rounded-lg p-3">
-                                  <div className="font-semibold text-zinc-900 mb-1">🎭 Activities (${option.breakdown.activities.toLocaleString()})</div>
-                                  <div className="text-zinc-600 space-y-1">
+                                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3">
+                                  <div className="font-semibold mb-1">🎭 Activities (${option.breakdown.activities.toLocaleString()})</div>
+                                  <div className="text-zinc-600 dark:text-zinc-400 space-y-1">
                                     <div>• Attractions: ${option.detailedBreakdown.activities.attractions.toLocaleString()}</div>
                                     <div>• Tours: ${option.detailedBreakdown.activities.tours.toLocaleString()}</div>
                                     <div>• Experiences: ${option.detailedBreakdown.activities.experiences.toLocaleString()}</div>
@@ -733,9 +741,9 @@ export default function NewTripPage() {
 
                             {/* Highlights */}
                             {option.highlights && option.highlights.length > 0 && (
-                              <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-                                <div className="text-sm font-semibold text-green-900 mb-2">✨ Highlights</div>
-                                <ul className="text-xs text-green-700 space-y-1">
+                              <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-lg p-3">
+                                <div className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">✨ Highlights</div>
+                                <ul className="text-xs text-green-700 dark:text-green-400 space-y-1">
                                   {option.highlights.slice(0, 2).map((highlight, idx) => (
                                     <li key={idx}>• {highlight}</li>
                                   ))}
@@ -745,9 +753,9 @@ export default function NewTripPage() {
 
                             {/* Savings Tips */}
                             {option.savings && option.savings.tips.length > 0 && (
-                              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3">
-                                <div className="text-sm font-semibold text-yellow-900 mb-1">💡 Save ${option.savings.amount}</div>
-                                <ul className="text-xs text-yellow-700 space-y-1">
+                              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-3">
+                                <div className="text-sm font-semibold text-yellow-900 dark:text-yellow-300 mb-1">💡 Save ${option.savings.amount}</div>
+                                <ul className="text-xs text-yellow-700 dark:text-yellow-400 space-y-1">
                                   {option.savings.tips.slice(0, 2).map((tip, idx) => (
                                     <li key={idx}>• {tip}</li>
                                   ))}
@@ -756,24 +764,24 @@ export default function NewTripPage() {
                             )}
 
                             {/* Currency Conversions */}
-                            <div className="pt-3 border-t border-zinc-100 grid grid-cols-3 gap-2 text-xs">
+                            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 grid grid-cols-3 gap-2 text-xs">
                               <div className="text-center">
-                                <div className="text-zinc-500">USD</div>
-                                <div className="font-bold text-zinc-900">${(option.currency.usd/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500 dark:text-zinc-400">USD</div>
+                                <div className="font-bold">${(option.currency.usd/1000).toFixed(1)}k</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-zinc-500">{option.currency.local.code}</div>
-                                <div className="font-bold text-zinc-900">{(option.currency.local.amount/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500 dark:text-zinc-400">{option.currency.local.code}</div>
+                                <div className="font-bold">{(option.currency.local.amount/1000).toFixed(1)}k</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-zinc-500">CNY</div>
-                                <div className="font-bold text-zinc-900">¥{(option.currency.cny/1000).toFixed(1)}k</div>
+                                <div className="text-zinc-500 dark:text-zinc-400">CNY</div>
+                                <div className="font-bold">¥{(option.currency.cny/1000).toFixed(1)}k</div>
                               </div>
                             </div>
 
                             {/* Selection indicator */}
                             {selectedBudgetOption?.level === option.level && (
-                              <div className="text-center py-2 bg-zinc-900 text-white rounded-lg font-semibold text-sm">
+                              <div className="text-center py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-semibold text-sm">
                                 ✓ Selected
                               </div>
                             )}
@@ -783,12 +791,12 @@ export default function NewTripPage() {
                     })}
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+                  <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                     <div className="flex gap-4">
                       <button
                         type="button"
                         onClick={() => setStep(1)}
-                        className="flex-1 bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
+                        className="flex-1 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium"
                       >
                         ← Back
                       </button>
@@ -796,7 +804,7 @@ export default function NewTripPage() {
                         type="button"
                         onClick={() => setStep(3)}
                         disabled={!selectedBudgetOption}
-                        className="flex-1 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
+                        className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 font-bold disabled:opacity-50 shadow-lg active:scale-95"
                       >
                         Next Step →
                       </button>
@@ -804,13 +812,13 @@ export default function NewTripPage() {
                   </div>
                 </>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8">
-                  <p className="text-zinc-600 text-center">Unable to generate budget options. Please go back and try again.</p>
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8">
+                  <p className="text-zinc-600 dark:text-zinc-400 text-center">Unable to generate budget options. Please go back and try again.</p>
                   <div className="flex justify-center mt-6">
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
+                      className="bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium"
                     >
                       ← Back
                     </button>
@@ -824,7 +832,7 @@ export default function NewTripPage() {
           {step === 3 && (
             <div className="space-y-6">
               {/* Header Summary */}
-              <div className="bg-zinc-900 rounded-2xl p-6 text-white">
+              <div className="bg-zinc-900 dark:bg-zinc-800 rounded-2xl p-6 text-white border border-zinc-800 dark:border-zinc-700">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="text-xl font-bold mb-1">Fine-tune Your Budget</h3>
@@ -840,8 +848,8 @@ export default function NewTripPage() {
               </div>
 
               {/* Presets */}
-              <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
-                <h3 className="font-semibold text-zinc-900 mb-4">⚡ Quick Presets - Choose Your Travel Style</h3>
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+                <h3 className="font-semibold mb-4">⚡ Quick Presets - Choose Your Travel Style</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   {[
                     { key: 'foodie', label: 'Foodie', icon: '🍜', desc: '45% food' },
@@ -855,11 +863,11 @@ export default function NewTripPage() {
                       key={preset.key}
                       type="button"
                       onClick={() => applyPreset(preset.key as keyof typeof TRIP_PRESETS)}
-                      className="px-3 py-4 rounded-xl border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-50 transition-all font-medium text-sm flex flex-col items-center gap-2 group"
+                      className="px-3 py-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium text-sm flex flex-col items-center gap-2 group"
                     >
                       <span className="text-3xl group-hover:scale-110 transition-transform">{preset.icon}</span>
-                      <span className="font-semibold text-zinc-900">{preset.label}</span>
-                      <span className="text-xs text-zinc-500">{preset.desc}</span>
+                      <span className="font-semibold">{preset.label}</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">{preset.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -868,11 +876,13 @@ export default function NewTripPage() {
               {/* Budget Allocation */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Left: Sliders */}
-                <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+                <div className="lg:col-span-3 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-                    <h3 className="font-semibold text-zinc-900 text-lg">📊 Category Breakdown</h3>
-                    <div className={`text-sm font-semibold px-4 py-2 rounded-full ${
-                      Math.abs(remainingPercentage) < 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    <h3 className="font-semibold text-lg">📊 Category Breakdown</h3>
+                    <div className={`text-sm font-bold px-4 py-2 rounded-full ${
+                      Math.abs(remainingPercentage) < 1 
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                     }`}>
                       {remainingPercentage > 0 ? '+' : ''}{isNaN(remainingPercentage) ? 0 : remainingPercentage.toFixed(0)}% {remainingPercentage > 0 ? 'remaining' : 'over'}
                     </div>
@@ -883,19 +893,19 @@ export default function NewTripPage() {
                       const percentage = budgetPercentages[cat.name] || 0;
                       const amount = (totalBudget * percentage) / 100;
                       return (
-                        <div key={cat.name} className="p-4 rounded-xl hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-100">
+                        <div key={cat.name} className="p-4 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700">
                           <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-100 text-lg">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-lg">
                                 <span>{cat.icon}</span>
                               </div>
                               <div>
-                                <div className="font-semibold text-zinc-900">{cat.name}</div>
-                                <div className="text-xs text-zinc-500">{percentage.toFixed(1)}% of budget</div>
+                                <div className="font-semibold">{cat.name}</div>
+                                <div className="text-xs text-zinc-500 dark:text-zinc-400">{percentage.toFixed(1)}% of budget</div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-bold text-lg text-zinc-900">
+                              <div className="font-bold text-lg">
                                 ${isNaN(amount) ? 0 : amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                               </div>
                             </div>
@@ -907,9 +917,9 @@ export default function NewTripPage() {
                             step="0.5"
                             value={percentage}
                             onChange={(e) => handlePercentageChange(cat.name, parseFloat(e.target.value))}
-                            className="w-full h-2 rounded-full appearance-none cursor-pointer bg-zinc-200 accent-zinc-900"
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer bg-zinc-200 dark:bg-zinc-700 accent-zinc-900 dark:accent-white"
                             style={{
-                              background: `linear-gradient(to right, ${cat.color} 0%, ${cat.color} ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`
+                              background: `linear-gradient(to right, ${cat.color} 0%, ${cat.color} ${percentage}%, ${typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#3f3f46' : '#e5e7eb'} ${percentage}%, ${typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#3f3f46' : '#e5e7eb'} 100%)`
                             }}
                           />
                         </div>
@@ -919,12 +929,12 @@ export default function NewTripPage() {
                 </div>
 
                 {/* Right: Visual Preview */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 h-fit sticky top-24">
-                  <h3 className="font-semibold text-zinc-900 mb-4 text-lg">💰 Budget Preview</h3>
+                <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6 h-fit sticky top-24">
+                  <h3 className="font-semibold mb-4 text-lg">💰 Budget Preview</h3>
 
                   {/* Stacked Bar Chart */}
                   <div className="mb-6">
-                    <div className="h-12 rounded-xl overflow-hidden flex w-full bg-zinc-100">
+                    <div className="h-12 rounded-xl overflow-hidden flex w-full bg-zinc-100 dark:bg-zinc-800">
                       {CATEGORIES.map((cat) => {
                         const percentage = budgetPercentages[cat.name] || 0;
                         if (percentage === 0 || isNaN(percentage)) return null;
@@ -945,9 +955,9 @@ export default function NewTripPage() {
 
                   {/* Summary */}
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm pb-2 border-b border-zinc-100">
-                      <span className="text-zinc-500">Total Budget</span>
-                      <span className="font-bold text-zinc-900">${isNaN(totalBudget) ? 0 : totalBudget.toLocaleString()}</span>
+                    <div className="flex justify-between text-sm pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                      <span className="text-zinc-500 dark:text-zinc-400">Total Budget</span>
+                      <span className="font-bold">${isNaN(totalBudget) ? 0 : totalBudget.toLocaleString()}</span>
                     </div>
                     {CATEGORIES.map((cat) => {
                       const percentage = budgetPercentages[cat.name] || 0;
@@ -960,9 +970,9 @@ export default function NewTripPage() {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: cat.color }}
                             />
-                            <span className="text-zinc-600">{cat.name}</span>
+                            <span className="text-zinc-600 dark:text-zinc-400">{cat.name}</span>
                           </div>
-                          <span className="font-medium text-zinc-900">
+                          <span className="font-medium">
                             ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </span>
                         </div>
@@ -973,25 +983,25 @@ export default function NewTripPage() {
               </div>
 
               {/* Actions */}
-              <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                 <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="flex-1 bg-white text-zinc-700 px-6 py-3 rounded-full border border-zinc-300 hover:bg-zinc-50 transition-all font-medium"
+                    className="flex-1 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all font-medium"
                   >
                     ← Back
                   </button>
                   <button
                     type="submit"
                     disabled={loading || Math.abs(remainingPercentage) > 5}
-                    className="flex-1 bg-zinc-900 text-white px-6 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium disabled:opacity-50 shadow-sm"
+                    className="flex-1 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 font-bold disabled:opacity-50 shadow-lg active:scale-95"
                   >
                     {loading ? "Creating..." : "Create Trip 🎉"}
                   </button>
                 </div>
                 {Math.abs(remainingPercentage) > 5 && (
-                  <p className="text-sm text-yellow-600 mt-3 text-center bg-yellow-50 py-2 rounded-lg">
+                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-3 text-center bg-amber-50 dark:bg-amber-900/20 py-2 rounded-lg">
                     💡 Adjust sliders to reach 100% allocation (currently {(100 - remainingPercentage).toFixed(0)}%)
                   </p>
                 )}

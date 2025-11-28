@@ -50,46 +50,46 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
     switch (severity) {
       case "alert":
         return {
-          bg: "bg-red-50",
-          border: "border-red-100",
-          text: "text-red-900",
+          bg: "bg-red-50 dark:bg-red-950/30",
+          border: "border-red-100 dark:border-red-900",
+          text: "text-red-900 dark:text-red-300",
           icon: AlertCircle,
-          iconColor: "text-red-600"
+          iconColor: "text-red-600 dark:text-red-400"
         };
       case "warning":
         return {
-          bg: "bg-amber-50",
-          border: "border-amber-100",
-          text: "text-amber-900",
+          bg: "bg-amber-50 dark:bg-amber-950/30",
+          border: "border-amber-100 dark:border-amber-900",
+          text: "text-amber-900 dark:text-amber-300",
           icon: AlertTriangle,
-          iconColor: "text-amber-600"
+          iconColor: "text-amber-600 dark:text-amber-400"
         };
       default:
         return {
-          bg: "bg-indigo-50",
-          border: "border-indigo-100",
-          text: "text-indigo-900",
+          bg: "bg-indigo-50 dark:bg-indigo-950/30",
+          border: "border-indigo-100 dark:border-indigo-900",
+          text: "text-indigo-900 dark:text-indigo-300",
           icon: Lightbulb,
-          iconColor: "text-indigo-600"
+          iconColor: "text-indigo-600 dark:text-indigo-400"
         };
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 overflow-hidden">
-      <div className="p-6 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+      <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
-          <h2 className="text-lg font-bold text-zinc-900">{t.aiExpenseInsights}</h2>
+          <Sparkles className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{t.aiExpenseInsights}</h2>
         </div>
         <button
           onClick={loadInsights}
           disabled={isLoading}
-          className="flex items-center justify-center gap-2 bg-zinc-900 text-white px-4 py-2 rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all shadow-sm active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all shadow-sm active:scale-[0.98]"
         >
           {isLoading ? (
             <>
-              <span className="animate-spin block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+              <span className="animate-spin block w-4 h-4 border-2 border-white/30 dark:border-zinc-900/30 border-t-white dark:border-t-zinc-900 rounded-full" />
               {t.analyzing}
             </>
           ) : (
@@ -103,11 +103,11 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
 
       {!hasLoaded && !isLoading && (
         <div className="p-8 text-center">
-          <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Sparkles className="w-6 h-6 text-purple-500" />
+          <div className="w-12 h-12 bg-purple-50 dark:bg-purple-950/50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Sparkles className="w-6 h-6 text-purple-500 dark:text-purple-400" />
           </div>
-          <p className="text-zinc-600 font-medium mb-1">Unlock spending insights</p>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-zinc-600 dark:text-zinc-300 font-medium mb-1">Unlock spending insights</p>
+          <p className="text-zinc-400 dark:text-zinc-500 text-sm">
             {t.clickAnalyzeSpending}
           </p>
         </div>
@@ -117,20 +117,20 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
         <div className="p-6 space-y-6">
           {summary && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t.dailyBudgetRemaining}</p>
-                <p className="font-bold text-2xl text-zinc-900">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700">
+                <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">{t.dailyBudgetRemaining}</p>
+                <p className="font-bold text-2xl text-zinc-900 dark:text-white">
                   $
                   {summary.daysRemaining > 0
                     ? (summary.remaining / summary.daysRemaining).toFixed(2)
                     : "0.00"}
                 </p>
-                <p className="text-xs text-zinc-400 mt-1">per day</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">per day</p>
               </div>
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1">{t.daysRemaining}</p>
-                <p className="font-bold text-2xl text-zinc-900">{summary.daysRemaining}</p>
-                <p className="text-xs text-zinc-400 mt-1">days left</p>
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700">
+                <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">{t.daysRemaining}</p>
+                <p className="font-bold text-2xl text-zinc-900 dark:text-white">{summary.daysRemaining}</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">days left</p>
               </div>
             </div>
           )}
@@ -147,7 +147,7 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
                     className={`rounded-xl p-4 border ${styles.bg} ${styles.border}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full bg-white/50 ${styles.iconColor}`}>
+                      <div className={`p-2 rounded-full bg-white/50 dark:bg-black/20 ${styles.iconColor}`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
@@ -159,7 +159,7 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
                           </p>
                         )}
                         {insight.category && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/60 text-zinc-700 mt-2 border border-black/5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/60 dark:bg-black/20 text-zinc-700 dark:text-zinc-300 mt-2 border border-black/5 dark:border-white/10">
                             {insight.category}
                           </span>
                         )}
@@ -170,8 +170,8 @@ export default function ExpenseInsights({ tripId }: ExpenseInsightsProps) {
               })}
             </div>
           ) : (
-            <div className="text-center py-4 text-zinc-500 flex items-center justify-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <div className="text-center py-4 text-zinc-500 dark:text-zinc-400 flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
               <span>Your spending looks good! No alerts found.</span>
             </div>
           )}

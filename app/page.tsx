@@ -15,46 +15,100 @@ export default async function Dashboard() {
 
   const locale = await getServerLocale();
   const t = getTranslations(locale);
-
-  // 1. Get Trips (Active > Upcoming > Recent)
   const now = new Date();
 
-  const activeTrip = await prisma.trip.findFirst({
-    where: {
-      AND: [
-        { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
-        { startDate: { lte: now } },
-        { endDate: { gte: now } }
-      ]
-    },
-    include: { _count: { select: { expenses: true, activities: true, places: true } } }
-  });
+  // Run ALL database queries in parallel for maximum performance
+  const [
+    activeTrip,
+    upcomingTrip,
+    lastTrip,
+    accounts,
+    recentExpenses,
+    recentMemory,
+    visitedDestinations
+  ] = await Promise.all([
+    // 1. Active trip (currently happening)
+    prisma.trip.findFirst({
+      where: {
+        AND: [
+          { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
+          { startDate: { lte: now } },
+          { endDate: { gte: now } }
+        ]
+      },
+      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+    }),
 
-  const upcomingTrip = !activeTrip ? await prisma.trip.findFirst({
-    where: {
-      AND: [
-        { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
-        { startDate: { gt: now } }
-      ]
-    },
-    orderBy: { startDate: 'asc' },
-    include: { _count: { select: { expenses: true, activities: true, places: true } } }
-  }) : null;
+    // 2. Upcoming trip
+    prisma.trip.findFirst({
+      where: {
+        AND: [
+          { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
+          { startDate: { gt: now } }
+        ]
+      },
+      orderBy: { startDate: 'asc' },
+      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+    }),
 
-  const lastTrip = (!activeTrip && !upcomingTrip) ? await prisma.trip.findFirst({
-    where: {
-      OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }]
-    },
-    orderBy: { endDate: 'desc' },
-    include: { _count: { select: { expenses: true, activities: true, places: true } } }
-  }) : null;
+    // 3. Most recent past trip
+    prisma.trip.findFirst({
+      where: {
+        OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }]
+      },
+      orderBy: { endDate: 'desc' },
+      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+    }),
 
-  const tripStatus = (activeTrip ? 'active' : upcomingTrip ? 'upcoming' : 'past') as 'active' | 'upcoming' | 'past';
+    // 4. Finance accounts
+    prisma.account.findMany({
+      where: { userId: session.user.id },
+      select: { balance: true, currency: true } // Only select needed fields
+    }),
 
-  // 2. Finance Summary
-  const accounts = await prisma.account.findMany({
-    where: { userId: session.user.id },
-  });
+    // 5. Recent expenses
+    prisma.expense.findMany({
+      where: { userId: session.user.id },
+      orderBy: { date: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        amount: true,
+        category: true,
+        note: true,
+        date: true,
+        trip: { select: { name: true } }
+      }
+    }),
+
+    // 6. Recent memory
+    prisma.lifeEvent.findFirst({
+      where: { userId: session.user.id },
+      orderBy: { date: 'desc' },
+      select: { title: true }
+    }),
+
+    // 7. Visited destinations
+    prisma.travelDestination.findMany({
+      where: {
+        userId: session.user.id,
+        visitDate: { not: null },
+        latitude: { not: 0 },
+        longitude: { not: 0 }
+      },
+      select: {
+        id: true,
+        city: true,
+        country: true,
+        latitude: true,
+        longitude: true
+      }
+    })
+  ]);
+
+  // Determine which trip to feature (prioritize: active > upcoming > last)
+  const featuredTrip = activeTrip || (!activeTrip ? upcomingTrip : null) || (!activeTrip && !upcomingTrip ? lastTrip : null);
+  const tripStatus = (activeTrip ? 'active' : upcomingTrip && !activeTrip ? 'upcoming' : 'past') as 'active' | 'upcoming' | 'past';
 
   // Simple currency conversion for display (USD base)
   const conversionRates: Record<string, number> = {
@@ -66,36 +120,6 @@ export default async function Dashboard() {
     return sum + (acc.balance * rate);
   }, 0);
 
-  const recentExpenses = await prisma.expense.findMany({
-    where: { userId: session.user.id },
-    orderBy: { date: 'desc' },
-    take: 5,
-    include: { trip: { select: { name: true } } },
-  });
-
-  // 3. Timeline / Life Events
-  const recentMemory = await prisma.lifeEvent.findFirst({
-    where: { userId: session.user.id },
-    orderBy: { date: 'desc' },
-  });
-
-  // 4. Map Stats - Fetch detailed destinations for the globe
-  const visitedDestinations = await prisma.travelDestination.findMany({
-    where: {
-      userId: session.user.id,
-      visitDate: { not: null },
-      latitude: { not: 0 }, // Filter out invalid coords if any
-      longitude: { not: 0 }
-    },
-    select: {
-      id: true,
-      city: true,
-      country: true,
-      latitude: true,
-      longitude: true
-    }
-  });
-
   const visitedCountries = new Set(visitedDestinations.map(d => d.country)).size;
 
   // 5. Greeting Logic
@@ -106,8 +130,8 @@ export default async function Dashboard() {
 
   const stats = {
     activeTrip,
-    upcomingTrip,
-    lastTrip,
+    upcomingTrip: activeTrip ? null : upcomingTrip,
+    lastTrip: (activeTrip || upcomingTrip) ? null : lastTrip,
     tripStatus,
     totalNetWorth,
     visitedCount: visitedCountries,

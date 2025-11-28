@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 interface CalendarPickerProps {
   value: string;
@@ -18,8 +19,9 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
 
   useEffect(() => {
     if (value) {
-      setSelectedDate(new Date(value));
-      setCurrentMonth(new Date(value));
+      const date = new Date(value + 'T12:00:00'); // Handle timezone properly
+      setSelectedDate(date);
+      setCurrentMonth(date);
     }
   }, [value]);
 
@@ -58,9 +60,9 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
 
   const handleDateClick = (day: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    setSelectedDate(newDate);
-    const dateString = newDate.toISOString().split('T')[0];
-    onChange(dateString);
+    const offsetDate = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));
+    setSelectedDate(offsetDate);
+    onChange(offsetDate.toISOString().split('T')[0]);
     setIsOpen(false);
   };
 
@@ -109,7 +111,7 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
   return (
     <div className="relative">
       {label && (
-        <label className="block text-sm font-semibold text-gray-900 mb-2">
+        <label className="block text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
           {label}
         </label>
       )}
@@ -118,13 +120,13 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white hover:border-gray-400"
+        className="w-full flex items-center gap-3 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent transition-all"
       >
-        <span className="text-xl">📅</span>
-        <span className={`flex-1 text-left ${selectedDate ? 'text-gray-900' : 'text-gray-500'}`}>
+        <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
+        <span className={`flex-1 text-left text-lg font-medium ${selectedDate ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-zinc-500'}`}>
           {formatDisplayDate()}
         </span>
-        <span className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+        <span className={`text-zinc-400 dark:text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
           ▼
         </span>
       </button>
@@ -133,28 +135,28 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-20"
+            className="fixed inset-0 z-40 bg-black/20 dark:bg-black/50 sm:bg-transparent sm:dark:bg-transparent backdrop-blur-sm sm:backdrop-blur-none"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-30 p-4 w-full sm:w-80">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:absolute sm:top-full sm:left-0 sm:translate-x-0 sm:translate-y-0 sm:mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl z-50 p-4 w-[90vw] max-w-[320px] sm:w-80 animate-in fade-in zoom-in-95 duration-200">
             {/* Month Navigation */}
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={goToPreviousMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-600 dark:text-zinc-400"
               >
-                ←
+                <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className="font-semibold text-gray-900">
+              <div className="font-bold text-zinc-900 dark:text-white">
                 {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
               </div>
               <button
                 type="button"
                 onClick={goToNextMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-600 dark:text-zinc-400"
               >
-                →
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
 
@@ -163,7 +165,7 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
               {dayNames.map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-semibold text-gray-600 py-2"
+                  className="text-center text-xs font-bold text-zinc-400 dark:text-zinc-500 py-2"
                 >
                   {day}
                 </div>
@@ -188,11 +190,11 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
                     onClick={() => !disabled && handleDateClick(day)}
                     disabled={disabled}
                     className={`
-                      aspect-square p-2 rounded-lg text-sm font-medium transition-all
-                      ${disabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-indigo-50 cursor-pointer'}
-                      ${selected ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700' : ''}
-                      ${today && !selected ? 'border-2 border-indigo-500 text-indigo-600' : ''}
-                      ${!selected && !today && !disabled ? 'text-gray-700' : ''}
+                      aspect-square p-2 rounded-xl text-sm font-bold transition-all
+                      ${disabled ? 'text-zinc-300 dark:text-zinc-700 cursor-not-allowed' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer'}
+                      ${selected ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md' : ''}
+                      ${today && !selected ? 'border-2 border-zinc-900 dark:border-white text-zinc-900 dark:text-white' : ''}
+                      ${!selected && !today && !disabled ? 'text-zinc-700 dark:text-zinc-300' : ''}
                     `}
                   >
                     {day}
@@ -202,24 +204,25 @@ export default function CalendarPicker({ value, onChange, minDate, label }: Cale
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+            <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-2">
               <button
                 type="button"
                 onClick={() => {
                   const today = new Date();
                   setSelectedDate(today);
                   setCurrentMonth(today);
-                  onChange(today.toISOString().split('T')[0]);
+                  const offsetDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+                  onChange(offsetDate.toISOString().split('T')[0]);
                   setIsOpen(false);
                 }}
-                className="flex-1 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="flex-1 px-3 py-2.5 text-sm font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
               >
                 Today
               </button>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex-1 px-3 py-2.5 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
               >
                 Close
               </button>

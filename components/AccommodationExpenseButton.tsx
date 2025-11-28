@@ -52,7 +52,7 @@ export default function AccommodationExpenseButton({
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 px-5 py-3 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all text-sm shadow-sm active:scale-[0.98]"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all text-sm shadow-sm active:scale-[0.98]"
       >
         <BedDouble className="w-4 h-4" />
         <span>Add Accommodation</span>

@@ -5,6 +5,9 @@ import Navbar from "@/components/Navbar";
 import TravelMapClient from "@/components/TravelMapClient";
 import { getHouseholdUserIds } from "@/lib/household";
 
+// Cache map data for 5 minutes - destinations don't change frequently
+export const revalidate = 300;
+
 export default async function TravelMapPage() {
   const session = await auth();
   if (!session?.user) {
@@ -13,37 +16,36 @@ export default async function TravelMapPage() {
 
   const householdUserIds = await getHouseholdUserIds();
 
-  // Get all travel destinations:
-  // 1. Shared destinations (isPersonal = false) from all household members
-  // 2. Personal destinations (isPersonal = true) only from current user
-  const destinations = await prisma.travelDestination.findMany({
-    where: {
-      OR: [
-        {
-          // Shared destinations from any household member
-          userId: { in: householdUserIds },
-          isPersonal: false,
-        },
-        {
-          // Personal destinations from current user only
-          userId: session.user.id,
-          isPersonal: true,
-        },
-      ],
-    },
-    orderBy: {
-      visitDate: "desc",
-    },
-  });
+  // Run queries in parallel
+  const [destinations, users] = await Promise.all([
+    // Get all travel destinations
+    prisma.travelDestination.findMany({
+      where: {
+        OR: [
+          {
+            userId: { in: householdUserIds },
+            isPersonal: false,
+          },
+          {
+            userId: session.user.id,
+            isPersonal: true,
+          },
+        ],
+      },
+      orderBy: {
+        visitDate: "desc",
+      },
+    }),
 
-  // Get user details (for joint travel with wife)
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  });
+    // Get user details
+    prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    }),
+  ]);
 
   return (
     <>

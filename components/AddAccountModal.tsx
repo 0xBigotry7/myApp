@@ -14,7 +14,8 @@ import {
   Save,
   Trash2,
   Archive,
-  RotateCcw
+  RotateCcw,
+  Pencil
 } from "lucide-react";
 
 interface Account {
@@ -123,34 +124,34 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-      <div className="relative bg-zinc-50 w-full sm:max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
+      <div className="relative bg-zinc-50 dark:bg-zinc-900 w-full sm:max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-white">
-          <h2 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-            <span className="bg-zinc-900 text-white w-8 h-8 rounded-lg flex items-center justify-center">
-              {accountToEdit ? <PencilIcon /> : <Wallet className="w-5 h-5" />}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
+            <span className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 w-8 h-8 rounded-lg flex items-center justify-center">
+              {accountToEdit ? <Pencil className="w-4 h-4" /> : <Wallet className="w-5 h-5" />}
             </span>
             {accountToEdit ? "Edit Account" : "New Account"}
           </h2>
-          <button onClick={onClose} className="p-2 -mr-2 hover:bg-zinc-100 rounded-full text-zinc-500">
+          <button onClick={onClose} className="p-2 -mr-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full text-zinc-500 dark:text-zinc-400 transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Scrollable Form */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-950">
           <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Balance Input (Hero) */}
-            <div className="bg-white p-6 rounded-3xl border border-zinc-100 text-center shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border-2 border-zinc-100 dark:border-zinc-800 text-center shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none transition-opacity group-hover:opacity-75" />
               
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Current Balance</label>
+              <label className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 block">Current Balance</label>
               <div className="flex items-center justify-center gap-2">
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="text-2xl font-bold bg-transparent border-none text-zinc-400 focus:ring-0 cursor-pointer py-0 pl-0 pr-6"
+                  className="text-2xl font-bold bg-transparent border-none text-zinc-400 dark:text-zinc-500 focus:ring-0 cursor-pointer py-0 pl-0 pr-6"
                 >
                   {CURRENCIES.map(curr => <option key={curr} value={curr}>{curr}</option>)}
                 </select>
@@ -159,7 +160,7 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
                   step="0.01"
                   value={formData.balance}
                   onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
-                  className="w-40 text-4xl font-black text-zinc-900 bg-transparent border-none p-0 text-center focus:ring-0 placeholder:text-zinc-200"
+                  className="w-40 text-4xl font-black text-zinc-900 dark:text-white bg-transparent border-none p-0 text-center focus:ring-0 placeholder:text-zinc-200 dark:placeholder:text-zinc-800"
                   placeholder="0.00"
                 />
               </div>
@@ -167,20 +168,20 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
 
             {/* Name */}
             <div>
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Account Name</label>
+              <label className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 block">Account Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 placeholder="e.g. Chase Sapphire"
-                className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 rounded-xl font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-all"
               />
             </div>
 
             {/* Type Grid */}
             <div>
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 block">Account Type</label>
+              <label className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3 block">Account Type</label>
               <div className="grid grid-cols-2 gap-3">
                 {ACCOUNT_TYPES.map((type) => (
                   <button
@@ -189,16 +190,16 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
                     onClick={() => setFormData({ ...formData, type: type.id })}
                     className={`p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                       formData.type === type.id
-                        ? "border-indigo-500 bg-indigo-50"
-                        : "border-zinc-100 bg-white hover:border-zinc-200"
+                        ? "border-zinc-900 bg-zinc-900 dark:border-white dark:bg-white"
+                        : "border-zinc-100 bg-white dark:border-zinc-800 dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${formData.type === type.id ? "bg-indigo-500 text-white" : "bg-zinc-100 text-zinc-500"}`}>
+                    <div className={`p-2 rounded-lg ${formData.type === type.id ? "bg-white/20 text-white dark:text-zinc-900 dark:bg-zinc-200" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"}`}>
                       {type.icon}
                     </div>
                     <div>
-                      <div className={`text-sm font-bold ${formData.type === type.id ? "text-indigo-900" : "text-zinc-700"}`}>{type.label}</div>
-                      <div className="text-[10px] text-zinc-500 opacity-80">{type.desc}</div>
+                      <div className={`text-sm font-bold ${formData.type === type.id ? "text-white dark:text-zinc-900" : "text-zinc-700 dark:text-zinc-200"}`}>{type.label}</div>
+                      <div className={`text-[10px] ${formData.type === type.id ? "text-white/60 dark:text-zinc-600" : "text-zinc-500/80 dark:text-zinc-500"}`}>{type.desc}</div>
                     </div>
                   </button>
                 ))}
@@ -207,12 +208,12 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Notes (Optional)</label>
+              <label className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2 block">Notes (Optional)</label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={2}
-                className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white resize-none transition-all"
                 placeholder="Account number, benefits, etc."
               />
             </div>
@@ -222,14 +223,14 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
                <button
                 type="button"
                 onClick={handleArchiveToggle}
-                className={`w-full p-4 rounded-xl border flex items-center justify-between transition-colors ${
+                className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-colors ${
                   !formData.isActive 
-                    ? "bg-amber-50 border-amber-200 text-amber-800" 
-                    : "bg-zinc-50 border-zinc-100 text-zinc-600 hover:bg-zinc-100"
+                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-900/50 dark:text-amber-200" 
+                    : "bg-white border-zinc-100 text-zinc-600 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${!formData.isActive ? "bg-amber-100" : "bg-zinc-200"}`}>
+                  <div className={`p-2 rounded-lg ${!formData.isActive ? "bg-amber-100 dark:bg-amber-900/50" : "bg-zinc-100 dark:bg-zinc-800"}`}>
                     {!formData.isActive ? <RotateCcw className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
                   </div>
                   <div className="text-left">
@@ -243,18 +244,18 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 bg-white border-t border-zinc-100 flex gap-3">
+        <div className="p-4 sm:p-6 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3.5 bg-zinc-100 text-zinc-600 rounded-xl font-bold hover:bg-zinc-200 transition-all active:scale-95"
+            className="px-6 py-3.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 py-3.5 bg-zinc-900 text-white rounded-xl font-bold shadow-lg shadow-zinc-200 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold shadow-lg shadow-zinc-200 dark:shadow-zinc-900/50 hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -267,14 +268,5 @@ export default function AddAccountModal({ isOpen, onClose, accountToEdit }: AddA
       </div>
     </div>
   );
-}
-
-function PencilIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-      <path d="m15 5 4 4"/>
-    </svg>
-  )
 }
 

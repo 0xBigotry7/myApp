@@ -22,6 +22,13 @@ interface ExpensesOfflineWrapperProps {
     trips: any[];
     currentMonth: number;
     currentYear: number;
+    // Pagination support
+    hasMoreTransactions?: boolean;
+    nextCursor?: string | null;
+    monthlyStats?: {
+      totalSpent: number;
+      transactionCount: number;
+    };
   };
 }
 
@@ -122,6 +129,9 @@ export default function ExpensesOfflineWrapper({ initialData }: ExpensesOfflineW
         trips={trips}
         currentMonth={initialData.currentMonth}
         currentYear={initialData.currentYear}
+        hasMoreTransactions={initialData.hasMoreTransactions}
+        nextCursor={initialData.nextCursor}
+        monthlyStats={initialData.monthlyStats}
       />
     </div>
   );
