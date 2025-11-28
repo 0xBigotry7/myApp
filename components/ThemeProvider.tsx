@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -12,10 +12,25 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Get the current theme from DOM (set by the blocking script in layout.tsx)
+function getInitialResolvedTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "system";
+  try {
+    return (localStorage.getItem("theme") as Theme) || "system";
+  } catch {
+    return "system";
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  // Initialize with the actual current state (from the blocking script)
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(getInitialResolvedTheme);
 
   // Get system preference
   const getSystemTheme = (): "light" | "dark" => {
@@ -46,18 +61,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(newTheme);
   };
 
-  // Initialize on mount
+  // Sync state on mount (in case SSR/hydration mismatch)
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme | null;
     const initialTheme = savedTheme || "system";
-    setThemeState(initialTheme);
-    applyTheme(initialTheme);
-    setMounted(true);
+    
+    // Only update if different to avoid unnecessary re-renders
+    if (initialTheme !== theme) {
+      setThemeState(initialTheme);
+    }
+    
+    // Ensure DOM is in sync
+    const currentResolved = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    if (currentResolved !== resolvedTheme) {
+      setResolvedTheme(currentResolved);
+    }
 
     // Listen for system preference changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
-      if (theme === "system") {
+      const currentTheme = localStorage.getItem("theme") as Theme || "system";
+      if (currentTheme === "system") {
         applyTheme("system");
       }
     };
@@ -66,24 +90,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Re-apply when theme changes to system
-  useEffect(() => {
-    if (mounted && theme === "system") {
-      applyTheme("system");
-    }
-  }, [theme, mounted]);
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return (
-      <ThemeContext.Provider value={{ theme: "system", resolvedTheme: "light", setTheme: () => {} }}>
-        {children}
-      </ThemeContext.Provider>
-    );
-  }
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    theme,
+    resolvedTheme,
+    setTheme,
+  }), [theme, resolvedTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

@@ -23,7 +23,7 @@ export default function AddExpenseButton({
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center justify-center gap-2 px-5 py-3 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98]"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-[0.98]"
       >
         <Plus className="w-4 h-4" />
         <span>{buttonText}</span>

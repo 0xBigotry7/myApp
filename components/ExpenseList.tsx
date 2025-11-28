@@ -102,12 +102,12 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
 
   if (expenses.length === 0) {
     return (
-      <div className="bg-white rounded-[24px] border border-zinc-100 p-12 text-center">
-        <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Receipt className="w-8 h-8 text-zinc-300" />
+      <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-100 dark:border-zinc-800 p-12 text-center">
+        <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Receipt className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
         </div>
-        <h3 className="text-xl font-bold text-zinc-900 mb-2">{t.recentExpenses}</h3>
-        <p className="text-zinc-500 font-medium">{t.noExpensesYet}</p>
+        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{t.recentExpenses}</h3>
+        <p className="text-zinc-500 dark:text-zinc-400 font-medium">{t.noExpensesYet}</p>
       </div>
     );
   }
@@ -117,22 +117,22 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
   };
 
   return (
-    <div className="bg-white rounded-[24px] border border-zinc-100 shadow-sm overflow-hidden">
-      <div className="px-8 py-6 border-b border-zinc-100 flex items-center gap-3">
-        <div className="p-2 bg-zinc-100 rounded-xl text-zinc-500">
+    <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden">
+      <div className="px-8 py-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3">
+        <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 dark:text-zinc-400">
           <Receipt className="w-5 h-5" />
         </div>
-        <h3 className="text-xl font-bold text-zinc-900">{t.recentExpenses}</h3>
+        <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{t.recentExpenses}</h3>
       </div>
       
-      <div className="divide-y divide-zinc-50">
+      <div className="divide-y divide-zinc-50 dark:divide-zinc-800">
         {expenses.map((expense) => {
           if (isAccommodation(expense)) {
             return (
-              <div key={expense.id} className="p-4 sm:p-6 hover:bg-zinc-50/50 transition-colors">
+              <div key={expense.id} className="p-4 sm:p-6 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors">
                 <AccommodationExpenseCardCompact
                   expense={expense}
-                  userColor={{ bg: "bg-zinc-50", badge: "bg-zinc-200 text-zinc-800" }}
+                  userColor={{ bg: "bg-zinc-50 dark:bg-zinc-800", badge: "bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200" }}
                   onEdit={() => router.push(`/trips/${tripId}/edit-accommodation/${expense.id}`)}
                   onDelete={() => handleDelete(expense.id)}
                 />
@@ -143,32 +143,32 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
           return (
             <div
               key={expense.id}
-              className="group relative flex items-start p-4 sm:p-6 hover:bg-zinc-50/80 transition-all"
+              className="group relative flex items-start p-4 sm:p-6 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50 transition-all"
             >
               {/* Category Icon */}
               <div className="mr-5 mt-1 hidden sm:block">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-zinc-400 border border-zinc-100 shadow-sm group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 border border-zinc-100 dark:border-zinc-700 shadow-sm group-hover:scale-105 transition-transform">
                   <Receipt className="w-5 h-5" />
                 </div>
               </div>
 
               <div className="flex-1 min-w-0 mr-4">
                 <div className="flex items-center flex-wrap gap-3 mb-1.5">
-                  <span className="font-black text-lg text-zinc-900 tracking-tight">
+                  <span className="font-black text-lg text-zinc-900 dark:text-white tracking-tight">
                     {getCurrencySymbol(expense.currency)}{expense.amount.toFixed(2)}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                  <span className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
                     {translateCategory(expense.category, locale)}
                   </span>
                 </div>
                 
                 {expense.note && (
-                  <p className="text-sm font-medium text-zinc-600 mt-1 break-words line-clamp-2">
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mt-1 break-words line-clamp-2">
                     {expense.note}
                   </p>
                 )}
                 
-                <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-zinc-400 mt-3">
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-zinc-400 dark:text-zinc-500 mt-3">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
                     {format(new Date(expense.date), "MMM d, yyyy")}
@@ -178,7 +178,7 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
                     {expense.user.name}
                   </span>
                   {expense.location && (
-                    <span className="flex items-center gap-1.5 text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded-md">
+                    <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
                       <MapPin className="w-3 h-3" />
                       {expense.location}
                     </span>
@@ -190,7 +190,7 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
               <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto">
                 <button
                   onClick={() => setEditingExpense(expense)}
-                  className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                  className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
                   title="Edit"
                 >
                   <Edit2 className="w-4 h-4" />
@@ -198,7 +198,7 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
                 <button
                   onClick={() => handleDelete(expense.id)}
                   disabled={deletingId === expense.id}
-                  className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                  className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-xl transition-all"
                   title="Delete"
                 >
                   {deletingId === expense.id ? (

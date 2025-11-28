@@ -16,12 +16,12 @@ export default async function ExpensesPage() {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
   
-  // Calculate date range once
-  const ninetyDaysAgo = new Date();
-  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
+  // Calculate date range for stats (current month only for faster loading)
+  const monthStart = new Date(currentYear, currentMonth - 1, 1);
+  
   // Run all database queries in parallel for better performance
-  const [budget, accounts, transactions, trips, recurringTransactions] = await Promise.all([
+  const [budget, accounts, recentTransactions, monthlyStats, trips, recurringTransactions] = await Promise.all([
+    // Budget for current month
     prisma.budget.findUnique({
       where: {
         userId_month_year: {
@@ -35,6 +35,7 @@ export default async function ExpensesPage() {
       },
     }),
     
+    // Active accounts
     prisma.account.findMany({
       where: {
         userId: session.user.id,
@@ -45,15 +46,22 @@ export default async function ExpensesPage() {
       },
     }),
     
+    // Only load first 20 transactions for initial display (paginated)
     prisma.transaction.findMany({
       where: {
         userId: session.user.id,
-        date: {
-          gte: ninetyDaysAgo,
-        },
       },
       include: {
-        account: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            icon: true,
+            color: true,
+            currency: true,
+          },
+        },
         trip: {
           select: {
             id: true,
@@ -65,9 +73,20 @@ export default async function ExpensesPage() {
       orderBy: {
         date: "desc",
       },
-      take: 300,
+      take: 20, // Only load 20 initially - much faster!
     }),
     
+    // Get aggregated stats for current month (lightweight query)
+    prisma.transaction.aggregate({
+      where: {
+        userId: session.user.id,
+        date: { gte: monthStart },
+      },
+      _sum: { amount: true },
+      _count: true,
+    }),
+    
+    // Trips (only essential fields)
     prisma.trip.findMany({
       where: {
         OR: [
@@ -85,8 +104,10 @@ export default async function ExpensesPage() {
       orderBy: {
         startDate: "desc",
       },
+      take: 10, // Only recent trips
     }),
     
+    // Recurring transactions
     prisma.recurringTransaction.findMany({
       where: {
         userId: session.user.id,
@@ -95,6 +116,7 @@ export default async function ExpensesPage() {
       orderBy: {
         nextDate: "asc",
       },
+      take: 10, // Limit for initial load
     }),
   ]);
 
@@ -102,12 +124,20 @@ export default async function ExpensesPage() {
   const initialData = {
     budget: budget ? JSON.parse(JSON.stringify(budget)) : null,
     accounts: JSON.parse(JSON.stringify(accounts)),
-    transactions: JSON.parse(JSON.stringify(transactions)),
+    transactions: JSON.parse(JSON.stringify(recentTransactions)),
     expenses: [],
     recurringTransactions: JSON.parse(JSON.stringify(recurringTransactions)),
     trips: JSON.parse(JSON.stringify(trips)),
     currentMonth,
     currentYear,
+    // Pagination support
+    hasMoreTransactions: recentTransactions.length >= 20,
+    nextCursor: recentTransactions.length > 0 ? recentTransactions[recentTransactions.length - 1].id : null,
+    // Monthly stats for quick display
+    monthlyStats: {
+      totalSpent: Math.abs(monthlyStats._sum.amount || 0),
+      transactionCount: monthlyStats._count,
+    },
   };
 
   return (

@@ -66,11 +66,11 @@ export default function AccommodationExpenseCardCompact({
 
   return (
     <div
-      className={`group relative flex flex-col sm:flex-row justify-between items-start gap-4 p-5 rounded-xl transition-all border border-zinc-100 hover:border-zinc-200 bg-white shadow-sm`}
+      className={`group relative flex flex-col sm:flex-row justify-between items-start gap-4 p-5 rounded-xl transition-all border border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm`}
     >
       {/* Icon */}
       <div className="hidden sm:block mt-1">
-        <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
           <Bed className="w-5 h-5" />
         </div>
       </div>
@@ -78,18 +78,18 @@ export default function AccommodationExpenseCardCompact({
       <div className="flex-1 min-w-0 w-full">
         {/* Header: Amount & Type */}
         <div className="flex items-center justify-between sm:justify-start gap-3 mb-1">
-          <span className="font-bold text-zinc-900 text-lg">
+          <span className="font-bold text-zinc-900 dark:text-white text-lg">
             {getCurrencySymbol(expense.currency)}
             {expense.amount.toFixed(2)}
           </span>
-          <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-            {expense.accommodationType || "Accommodation"}
+          <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900">
+            {expense.accommodationType || "Hotel"}
           </span>
         </div>
 
         {/* Hotel Name */}
         {expense.accommodationName && (
-          <h4 className="font-semibold text-zinc-800 mb-2">
+          <h4 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-2">
             {expense.accommodationName}
           </h4>
         )}
@@ -97,10 +97,10 @@ export default function AccommodationExpenseCardCompact({
         {/* Details Grid */}
         <div className="space-y-1.5">
           {dateRange && (
-            <div className="flex items-center gap-2 text-sm text-zinc-600">
-              <Calendar className="w-4 h-4 text-zinc-400" />
+            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <Calendar className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
               <span>{dateRange.checkIn} - {dateRange.checkOut}</span>
-              <span className="w-1 h-1 rounded-full bg-zinc-300" />
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
               <span className="font-medium">
                 {dateRange.nights} night{dateRange.nights !== 1 ? "s" : ""}
               </span>
@@ -108,38 +108,38 @@ export default function AccommodationExpenseCardCompact({
           )}
 
           {dateRange && dateRange.nights > 0 && (
-            <div className="text-xs text-zinc-500 ml-6">
+            <div className="text-xs text-zinc-500 dark:text-zinc-500 ml-6">
               {getCurrencySymbol(expense.currency)}
               {(expense.amount / dateRange.nights).toFixed(0)} / night
             </div>
           )}
 
           {expense.confirmationNumber && (
-            <div className="flex items-center gap-2 text-sm text-zinc-600">
-              <FileText className="w-4 h-4 text-zinc-400" />
-              <span className="font-mono bg-zinc-50 px-1.5 py-0.5 rounded text-zinc-700">
+            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <FileText className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+              <span className="font-mono bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-700 dark:text-zinc-300">
                 #{expense.confirmationNumber}
               </span>
             </div>
           )}
 
           {expense.hotelRating && (
-            <div className="flex items-center gap-1 text-sm text-amber-500">
+            <div className="flex items-center gap-1 text-sm text-amber-500 dark:text-amber-400">
               <Star className="w-4 h-4 fill-current" />
-              <span className="font-medium text-zinc-700">{expense.hotelRating.toFixed(1)}</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{expense.hotelRating.toFixed(1)}</span>
             </div>
           )}
         </div>
 
         {/* Note */}
         {expense.note && (
-          <p className="text-sm text-zinc-600 mt-3 bg-zinc-50 p-3 rounded-lg italic">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-3 bg-zinc-50 dark:bg-zinc-800 p-3 rounded-lg italic">
             "{expense.note}"
           </p>
         )}
 
         {/* Added By */}
-        <div className="mt-3 text-xs text-zinc-400">
+        <div className="mt-3 text-xs text-zinc-400 dark:text-zinc-500">
           Added by {expense.user.name}
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function AccommodationExpenseCardCompact({
         {onEdit && (
           <button
             onClick={onEdit}
-            className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
+            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-all"
             title="Edit"
           >
             <Edit2 className="w-4 h-4" />
@@ -158,7 +158,7 @@ export default function AccommodationExpenseCardCompact({
         {onDelete && (
           <button
             onClick={onDelete}
-            className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-all"
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />

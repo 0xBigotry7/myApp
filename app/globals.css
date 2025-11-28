@@ -39,6 +39,19 @@
     --accent-foreground: #0a0a0a;
   }
 
+  /* CRITICAL: Prevent theme flash during navigation */
+  /* The blocking script in layout.tsx sets .dark or .light immediately */
+  /* This ensures dark mode colors are applied instantly via the class */
+  html.dark {
+    color-scheme: dark;
+    background-color: #0a0a0a;
+  }
+  
+  html.light {
+    color-scheme: light;
+    background-color: #F5F5F7;
+  }
+
   /* ============================================
      PERFORMANCE OPTIMIZATIONS
      ============================================ */
@@ -86,7 +99,8 @@
     overscroll-behavior-y: none;
     background-color: var(--background);
     color: var(--foreground);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    /* Disable transition during initial theme load to prevent flash */
+    transition: var(--theme-transition, background-color 0.2s ease, color 0.2s ease);
     /* Contain paint for better performance */
     contain: layout style;
   }

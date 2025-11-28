@@ -52,14 +52,20 @@ export const viewport = {
   themeColor: "#fafafa", // zinc-50
 };
 
-// Script to prevent flash of wrong theme
+// Script to prevent flash of wrong theme - runs synchronously before any rendering
 const themeScript = `
   (function() {
     try {
-      const theme = localStorage.getItem('theme') || 'system';
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = theme === 'dark' || (theme === 'system' && systemDark);
-      document.documentElement.classList.add(isDark ? 'dark' : 'light');
+      var theme = localStorage.getItem('theme') || 'system';
+      var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var isDark = theme === 'dark' || (theme === 'system' && systemDark);
+      var root = document.documentElement;
+      // Remove any existing theme classes first
+      root.classList.remove('light', 'dark');
+      root.classList.add(isDark ? 'dark' : 'light');
+      // Set background color IMMEDIATELY on html to prevent any flash
+      root.style.backgroundColor = isDark ? '#0a0a0a' : '#F5F5F7';
+      root.style.colorScheme = isDark ? 'dark' : 'light';
     } catch (e) {}
   })()
 `;
@@ -83,7 +89,7 @@ export default function RootLayout({
         {/* Theme script - runs before paint to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="font-sans antialiased bg-dot-pattern min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-200">
+      <body className="font-sans antialiased bg-dot-pattern min-h-screen bg-[var(--background)] text-[var(--foreground)]">
         <ThemeProvider>
           {children}
           <PWAInstaller />

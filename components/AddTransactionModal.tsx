@@ -54,6 +54,8 @@ const EXPENSE_CATEGORIES = [
   { name: "Entertainment", icon: "🎬", gradient: "from-purple-400 to-indigo-500" },
   { name: "Groceries", icon: "🛒", gradient: "from-green-400 to-emerald-500" },
   { name: "Bills", icon: "📱", gradient: "from-yellow-400 to-orange-500" },
+  { name: "Rent/Mortgage", icon: "🏠", gradient: "from-rose-400 to-pink-500" },
+  { name: "Accommodation", icon: "🏨", gradient: "from-violet-400 to-purple-500" },
   { name: "Health", icon: "💊", gradient: "from-cyan-400 to-blue-500" },
   { name: "Other", icon: "📦", gradient: "from-zinc-400 to-zinc-600" },
 ];
@@ -124,17 +126,36 @@ export default function AddTransactionModal({
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      document.body.style.overflow = "hidden";
+      // Prevent body scroll - works on iOS too
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
       // Focus amount input after animation
       setTimeout(() => amountInputRef.current?.focus(), 300);
     } else {
       setIsVisible(false);
-      document.body.style.overflow = "unset";
+      // Restore scroll position
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
       // Reset form when closed
       resetForm();
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
@@ -167,11 +188,6 @@ export default function AddTransactionModal({
     if (parts.length > 2) return;
     if (parts[1]?.length > 2) return;
     setAmount(cleaned);
-  };
-
-  const handleQuickAmount = (value: number) => {
-    const current = parseFloat(amount) || 0;
-    setAmount((current + value).toFixed(2));
   };
 
   const handleFileSelect = async (file: File) => {
@@ -296,19 +312,19 @@ export default function AddTransactionModal({
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
-          }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"}`}
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div
-        className={`relative w-full sm:max-w-md bg-white dark:bg-zinc-900 h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col transition-all duration-500 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-          }`}
-      >
+      {/* Modal Container - positions modal at top */}
+      <div className="fixed inset-0 flex items-start justify-center p-4 pt-6 sm:pt-8 pointer-events-none overflow-y-auto">
+        {/* Modal */}
+        <div
+          className={`pointer-events-auto w-full sm:max-w-md bg-white dark:bg-zinc-900 max-h-[90vh] rounded-[28px] shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ease-out ${isVisible ? "translate-y-0 opacity-100 scale-100" : "-translate-y-4 opacity-0 scale-95"}`}
+        >
         {/* Mobile Handle */}
         <div className="sm:hidden flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
@@ -376,20 +392,6 @@ export default function AddTransactionModal({
                     className="w-full max-w-[200px] text-center text-5xl font-bold text-zinc-900 dark:text-white bg-transparent border-none outline-none placeholder:text-zinc-200 dark:placeholder:text-zinc-700"
                     placeholder="0"
                   />
-                </div>
-
-                {/* Quick Amount Buttons */}
-                <div className="flex gap-2 mt-6">
-                  {[5, 10, 20, 50].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => handleQuickAmount(val)}
-                      className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full text-sm font-semibold transition-colors"
-                    >
-                      +{val}
-                    </button>
-                  ))}
                 </div>
               </div>
 
@@ -682,6 +684,7 @@ export default function AddTransactionModal({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>,
     document.body

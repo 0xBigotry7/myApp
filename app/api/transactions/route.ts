@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET all transactions for current user
+// GET all transactions for current user with pagination support
 export async function GET(req: NextRequest) {
   const session = await auth();
 
@@ -16,9 +16,16 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const limit = searchParams.get("limit");
+    const limitParam = searchParams.get("limit");
+    const cursor = searchParams.get("cursor"); // For cursor-based pagination
     const tripId = searchParams.get("tripId");
     const includeTripRelated = searchParams.get("includeTripRelated");
+    const paginated = searchParams.get("paginated"); // New: opt-in to paginated response
+
+    // Default limit (unlimited for legacy, 20 for paginated)
+    const limit = limitParam 
+      ? Math.min(parseInt(limitParam), 100) 
+      : (paginated === "true" ? 20 : undefined);
 
     const where: any = {
       userId: session.user.id,
@@ -53,6 +60,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // For paginated requests, fetch one extra to check if there are more
+    const take = paginated === "true" && limit ? limit + 1 : limit;
+
     const transactions = await prisma.transaction.findMany({
       where,
       include: {
@@ -75,9 +85,27 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { date: "desc" },
-      take: limit ? parseInt(limit) : undefined,
+      take,
+      ...(cursor && {
+        cursor: { id: cursor },
+        skip: 1, // Skip the cursor itself
+      }),
     });
 
+    // For paginated requests, return paginated response
+    if (paginated === "true" && limit) {
+      const hasMore = transactions.length > limit;
+      const data = hasMore ? transactions.slice(0, -1) : transactions;
+      const nextCursor = hasMore && data.length > 0 ? data[data.length - 1].id : null;
+
+      return NextResponse.json({
+        transactions: data,
+        nextCursor,
+        hasMore,
+      });
+    }
+
+    // Legacy format: return array directly for backward compatibility
     return NextResponse.json(transactions);
   } catch (error) {
     console.error("Error fetching transactions:", error);

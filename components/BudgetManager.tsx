@@ -146,7 +146,7 @@ const ProgressRing = ({ percent, size = 60, strokeWidth = 6 }: { percent: number
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-bold text-zinc-900">{Math.round(percent)}%</span>
+        <span className="text-xs font-black text-zinc-900 dark:text-white">{Math.round(percent)}%</span>
       </div>
     </div>
   );
@@ -166,81 +166,108 @@ const EnvelopeCard = ({
   const total = envelope.allocated + envelope.rollover;
   const remaining = total - envelope.spent;
   const status = getEnvelopeStatus(envelope.spent, total);
+  const percentUsed = total > 0 ? (envelope.spent / total) * 100 : 0;
 
   return (
     <div
-      className="group relative bg-white rounded-2xl border border-zinc-100 p-5 hover:shadow-lg hover:shadow-zinc-100/50 hover:border-zinc-200 transition-all duration-300"
+      className="group relative bg-white dark:bg-zinc-900 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 p-6 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 hover:border-zinc-200 dark:hover:border-zinc-700 hover:-translate-y-0.5 transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Actions */}
-      <div className={`absolute top-3 right-3 flex gap-1 transition-opacity duration-200 ${isHovered ? "opacity-100" : "opacity-0"}`}>
+      <div className={`absolute top-4 right-4 flex gap-1 transition-all duration-200 ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"}`}>
         <button
           onClick={onEdit}
-          className="p-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+          className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all hover:scale-110 active:scale-95 shadow-sm"
+          title="Edit envelope"
         >
-          <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
+          <Edit3 className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
         </button>
         <button
           onClick={onDelete}
-          className="p-1.5 rounded-lg hover:bg-red-50 transition-colors group/delete"
+          className="p-2 rounded-xl bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50 transition-all hover:scale-110 active:scale-95 shadow-sm group/delete"
+          title="Delete envelope"
         >
-          <Trash2 className="w-3.5 h-3.5 text-zinc-400 group-hover/delete:text-red-500" />
+          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400 group-hover/delete:scale-110 transition-transform" />
         </button>
       </div>
 
       {/* Header */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${category.color.split(' ')[0]} transition-transform duration-200 group-hover:scale-110`}>
+      <div className="flex items-start gap-4 mb-5">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${category.color.split(' ')[0]} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-lg`}>
           {category.icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-zinc-900 truncate">{envelope.category}</h3>
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <h3 className="font-black text-lg text-zinc-900 dark:text-white truncate mb-1">{envelope.category}</h3>
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
             <span>{formatCurrency(envelope.allocated)} budgeted</span>
             {envelope.rollover > 0 && (
-              <span className="text-emerald-600">+{formatCurrency(envelope.rollover)} rollover</span>
+              <>
+                <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span className="text-emerald-600 dark:text-emerald-400">+{formatCurrency(envelope.rollover)} rollover</span>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-4">
-        <div className="h-2.5 bg-zinc-100 rounded-full overflow-hidden">
+      {/* Enhanced Progress Bar */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Progress</span>
+          <span className={`text-sm font-black ${
+            percentUsed >= 100 ? "text-red-600 dark:text-red-400" :
+            percentUsed >= 90 ? "text-amber-600 dark:text-amber-400" :
+            "text-zinc-900 dark:text-white"
+          }`}>
+            {percentUsed.toFixed(0)}%
+          </span>
+        </div>
+        <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden shadow-inner">
           <div
-            className={`h-full rounded-full transition-all duration-500 ease-out ${
-              status.color === "red" ? "bg-red-500" :
-              status.color === "amber" ? "bg-amber-500" :
-              status.color === "yellow" ? "bg-yellow-500" :
-              "bg-emerald-500"
+            className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
+              status.color === "red" ? "bg-gradient-to-r from-red-500 to-red-600" :
+              status.color === "amber" ? "bg-gradient-to-r from-amber-500 to-amber-600" :
+              status.color === "yellow" ? "bg-gradient-to-r from-yellow-500 to-yellow-600" :
+              "bg-gradient-to-r from-emerald-500 to-emerald-600"
             }`}
-            style={{ width: `${Math.min(status.percent, 100)}%` }}
-          />
+            style={{ width: `${Math.min(percentUsed, 100)}%` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      {/* Enhanced Stats */}
+      <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-2.5">
           {status.color === "red" ? (
-            <AlertTriangle className="w-4 h-4 text-red-500" />
+            <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/50">
+              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            </div>
           ) : status.color === "amber" || status.color === "yellow" ? (
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
           ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
           )}
-          <span className={`text-sm font-bold ${
-            remaining < 0 ? "text-red-600" :
-            status.color === "amber" ? "text-amber-600" :
-            "text-emerald-600"
-          }`}>
-            {remaining < 0 ? `-${formatCurrency(Math.abs(remaining))}` : formatCurrency(remaining)} {remaining >= 0 ? "left" : "over"}
-          </span>
+          <div>
+            <div className={`text-sm font-black ${
+              remaining < 0 ? "text-red-600 dark:text-red-400" :
+              status.color === "amber" ? "text-amber-600 dark:text-amber-400" :
+              "text-emerald-600 dark:text-emerald-400"
+            }`}>
+              {remaining < 0 ? `-${formatCurrency(Math.abs(remaining))}` : formatCurrency(remaining)} {remaining >= 0 ? "left" : "over"}
+            </div>
+            <div className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+              {formatCurrency(envelope.spent)} spent
+            </div>
+          </div>
         </div>
-        <span className="text-xs text-zinc-400">
-          {formatCurrency(envelope.spent)} spent
-        </span>
+        <ProgressRing percent={percentUsed} size={56} strokeWidth={6} />
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import TripCard from "@/components/TripCard";
 import { getServerLocale } from "@/lib/locale-server";
 import { getTranslations } from "@/lib/i18n";
 
+// Revalidate this page every 60 seconds for better caching
+export const revalidate = 60;
+
 export default async function TripsPage() {
   const session = await auth();
 
@@ -16,7 +19,7 @@ export default async function TripsPage() {
   const locale = await getServerLocale();
   const t = getTranslations(locale);
 
-  // Get all trips where user is owner OR member
+  // Get trips with aggregated expense totals (MUCH more efficient than loading all expenses)
   const trips = await prisma.trip.findMany({
     where: {
       OR: [
@@ -24,9 +27,22 @@ export default async function TripsPage() {
         { members: { some: { userId: session.user.id } } }
       ]
     },
-    include: {
-      expenses: true,
-      budgetCategories: true,
+    select: {
+      id: true,
+      name: true,
+      destination: true,
+      startDate: true,
+      endDate: true,
+      totalBudget: true,
+      destinationImageUrl: true,
+      createdAt: true,
+      // Use aggregation to get expense totals instead of loading all expenses
+      expenses: {
+        select: {
+          amount: true,
+          currency: true,
+        }
+      }
     },
     orderBy: { createdAt: "desc" },
   });
@@ -50,9 +66,21 @@ export default async function TripsPage() {
   const tripsWithStats = trips.map((trip) => {
     const totalSpent = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
     const remaining = trip.totalBudget - totalSpent;
-    const percentUsed = (totalSpent / trip.totalBudget) * 100;
+    const percentUsed = trip.totalBudget > 0 ? (totalSpent / trip.totalBudget) * 100 : 0;
 
-    return { ...trip, totalSpent, remaining, percentUsed };
+    // Return only what TripCard needs
+    return {
+      id: trip.id,
+      name: trip.name,
+      destination: trip.destination,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      totalBudget: trip.totalBudget,
+      destinationImageUrl: trip.destinationImageUrl,
+      totalSpent,
+      remaining,
+      percentUsed
+    };
   });
 
   return (

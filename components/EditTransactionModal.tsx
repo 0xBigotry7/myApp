@@ -150,11 +150,26 @@ export default function EditTransactionModal({
     };
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
+      // Prevent body scroll - works on iOS too
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
     }
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
+      // Restore scroll position
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     };
   }, [isOpen, isLoading, onClose]);
 
@@ -217,15 +232,17 @@ export default function EditTransactionModal({
   const selectedCategory = CATEGORIES[category] || CATEGORIES.Other;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999]">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={() => !isLoading && onClose()}
       />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Modal Container - positions modal at top */}
+      <div className="fixed inset-0 flex items-start justify-center p-4 pt-6 sm:pt-8 pointer-events-none overflow-y-auto">
+        {/* Modal */}
+        <div className="pointer-events-auto relative bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Success Overlay */}
         {showSuccess && (
           <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
@@ -486,6 +503,7 @@ export default function EditTransactionModal({
             </div>
           </div>
         </form>
+      </div>
       </div>
     </div>,
     document.body

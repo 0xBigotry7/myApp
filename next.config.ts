@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       "recharts",
       "@dnd-kit/core",
       "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
+      "three",
+      "@react-three/fiber",
+      "@react-three/drei",
+      "react-simple-maps",
     ],
   },
   

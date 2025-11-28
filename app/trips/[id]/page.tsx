@@ -1,13 +1,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-import { format } from "date-fns";
 import TripPageTabs from "@/components/TripPageTabs";
+import TripHeader from "@/components/TripHeader";
 import { getTranslations } from "@/lib/i18n";
 import { getServerLocale } from "@/lib/locale-server";
 import { getHouseholdUserIds } from "@/lib/household";
-import { MapPin, Calendar, Users, Wallet } from "lucide-react";
-import Image from "next/image";
 
 export default async function TripDetailPage({
   params,
@@ -23,51 +21,57 @@ export default async function TripDetailPage({
     redirect("/login");
   }
 
+  // Optimized query - only load initial data, pagination handled client-side
   const trip = await prisma.trip.findUnique({
     where: { id },
     include: {
       budgetCategories: true,
       members: {
         include: {
-          user: true,
+          user: {
+            select: { id: true, name: true, email: true }
+          },
         }
       },
-      // Legacy expenses (will be phased out)
+      // Legacy expenses (for migration compatibility - will be removed once fully migrated)
       expenses: {
         include: {
-          user: true,
+          user: { select: { id: true, name: true, email: true } },
         },
         orderBy: { date: "desc" },
+        take: 10,
       },
-      // New unified transactions
+      // Unified transactions - limit to 10 initially
       transactions: {
         include: {
-          user: true,
+          user: { select: { id: true, name: true, email: true } },
           account: {
-            select: {
-              id: true,
-              name: true,
-              currency: true,
-            },
+            select: { id: true, name: true, currency: true },
           },
         },
         orderBy: { date: "desc" },
+        take: 10,
       },
       activities: {
         orderBy: [{ date: "asc" }, { order: "asc" }],
+        take: 20,
       },
       posts: {
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
+          user: { select: { id: true, name: true, email: true } },
         },
         orderBy: { timestamp: "desc" },
+        take: 10,
       },
+      // Get counts for pagination info
+      _count: {
+        select: {
+          expenses: true,
+          transactions: true,
+          posts: true,
+          activities: true,
+        }
+      }
     },
   });
 
@@ -97,21 +101,20 @@ export default async function TripDetailPage({
     return amount * rate;
   };
 
-  // Calculate total spent from both legacy expenses AND new transactions
+  // Calculate total spent (combining legacy expenses and transactions during migration)
+  // TODO: Remove legacy expense calculation once migration is complete
   const legacyExpenseTotal = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
   const transactionTotal = trip.transactions.reduce((sum, tx) => {
-    // Transactions are stored as negative for expenses
     const currency = tx.currency || tx.account.currency;
     return sum + convertToUSD(Math.abs(tx.amount), currency);
   }, 0);
   
-  // Use the larger of the two to avoid double-counting during migration
-  // Once migration is complete, this will just be transactionTotal
+  // Use the larger to avoid double-counting during migration period
   const totalSpent = Math.max(legacyExpenseTotal, transactionTotal);
   const remaining = trip.totalBudget - totalSpent;
   const percentUsed = (totalSpent / trip.totalBudget) * 100;
 
-  // Calculate spending by category (combining both sources)
+  // Calculate spending by category (combining legacy and new during migration)
   const categorySpending = trip.budgetCategories.map((bc) => {
     const legacySpent = trip.expenses
       .filter((exp) => exp.category === bc.category)
@@ -124,7 +127,7 @@ export default async function TripDetailPage({
         return sum + convertToUSD(Math.abs(tx.amount), currency);
       }, 0);
     
-    // Use the larger to avoid double-counting
+    // Use the larger to avoid double-counting during migration
     const spent = Math.max(legacySpent, txSpent);
     
     return {
@@ -149,54 +152,13 @@ export default async function TripDetailPage({
   });
 
   return (
-    <main className="min-h-screen bg-zinc-50 pb-20">
-      {/* Hero Header */}
-      <div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden bg-zinc-900">
-        {trip.destinationImageUrl ? (
-          <Image
-            src={trip.destinationImageUrl}
-            alt={trip.destination}
-            fill
-            className="object-cover opacity-60"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 lg:p-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-medium text-white">
-                <Users className="w-3 h-3" />
-                {trip.members.length} Traveler{trip.members.length !== 1 && 's'}
-              </span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4 shadow-sm">
-              {trip.name || trip.destination}
-            </h1>
-            <div className="flex flex-wrap items-center gap-6 text-zinc-300 text-sm sm:text-base font-medium">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-zinc-400" />
-                {trip.destination}
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-zinc-400" />
-                {format(new Date(trip.startDate), "MMM d")} - {format(new Date(trip.endDate), "MMM d, yyyy")}
-              </div>
-              <div className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-zinc-400" />
-                Budget: ${trip.totalBudget.toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-20">
+      {/* Hero Header with Edit functionality */}
+      <TripHeader trip={trip} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
         {/* Tabbed Content */}
-        <div className="bg-white rounded-2xl shadow-xl border border-zinc-100 overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
           <TripPageTabs
             trip={trip}
             categorySpending={categorySpending}
@@ -206,6 +168,7 @@ export default async function TripDetailPage({
             totalSpent={totalSpent}
             remaining={remaining}
             percentUsed={percentUsed}
+            counts={trip._count}
           />
         </div>
       </div>
