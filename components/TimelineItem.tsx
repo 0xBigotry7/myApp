@@ -5,6 +5,21 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { markdownToHtml } from "@/lib/markdown";
+import { 
+  Camera, 
+  CreditCard, 
+  DollarSign, 
+  Activity, 
+  Sparkles, 
+  Edit2, 
+  Trash2, 
+  MapPin, 
+  Clock, 
+  MoreHorizontal,
+  Plane,
+  Home,
+  Heart
+} from "lucide-react";
 
 interface TimelineItemProps {
   item: {
@@ -31,6 +46,7 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [editedTime, setEditedTime] = useState(format(new Date(item.date), "HH:mm"));
   const [isSaving, setIsSaving] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const handleDelete = async () => {
     if (!item.isEditable) return;
@@ -89,11 +105,8 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
     }
   };
 
-  // Clean up location display - extract English name from possible JSON or formatted string
   const cleanLocationName = (location: string | undefined | null): string => {
     if (!location) return "";
-
-    // If it looks like JSON, try to parse it
     if (location.startsWith("{") || location.startsWith("[")) {
       try {
         const parsed = JSON.parse(location);
@@ -102,279 +115,228 @@ export default function TimelineItem({ item, onDeleted }: TimelineItemProps) {
         return location;
       }
     }
-
     return location;
   };
 
-  // Determine card style based on source
-  const getCardStyle = () => {
+  const getSourceStyle = () => {
     switch (item.source) {
       case "trip_post":
+        return { bg: "bg-blue-50", border: "border-blue-100", icon: <Plane className="w-4 h-4 text-blue-500" />, color: "text-blue-700" };
       case "expense":
-        return "bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200";
+        return { bg: "bg-emerald-50", border: "border-emerald-100", icon: <CreditCard className="w-4 h-4 text-emerald-500" />, color: "text-emerald-700" };
       case "transaction":
-        return "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200";
+        return { bg: "bg-green-50", border: "border-green-100", icon: <DollarSign className="w-4 h-4 text-green-500" />, color: "text-green-700" };
       case "health":
-        return "bg-gradient-to-br from-pink-50 to-rose-50 border-pink-200";
+        return { bg: "bg-rose-50", border: "border-rose-100", icon: <Activity className="w-4 h-4 text-rose-500" />, color: "text-rose-700" };
       case "life_event":
-        return "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200";
+        return { bg: "bg-amber-50", border: "border-amber-100", icon: <Sparkles className="w-4 h-4 text-amber-500" />, color: "text-amber-700" };
       default:
-        return "bg-white border-gray-200";
+        return { bg: "bg-zinc-50", border: "border-zinc-100", icon: <Edit2 className="w-4 h-4 text-zinc-500" />, color: "text-zinc-700" };
     }
   };
 
-  const getIcon = () => {
-    switch (item.source) {
-      case "trip_post":
-        return "📸";
-      case "expense":
-        return "💳";
-      case "transaction":
-        return "💰";
-      case "health":
-        return "🌸";
-      case "life_event":
-        return "✨";
-      default:
-        return "📝";
-    }
-  };
-
+  const style = getSourceStyle();
   const canEditTime = item.source === "life_event" || item.source === "expense";
 
   return (
-    <div className={`rounded-2xl shadow-sm border-2 p-6 ${getCardStyle()} hover:shadow-md transition-all`}>
+    <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-5 transition-all hover:shadow-md group relative">
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-3 flex-1">
-          <span className="text-3xl">{getIcon()}</span>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900">{item.title}</h3>
-            <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
-              {isEditingTime ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="time"
-                    value={editedTime}
-                    onChange={(e) => setEditedTime(e.target.value)}
-                    className="px-2 py-1 border-2 border-blue-300 rounded text-sm"
-                  />
-                  <button
-                    onClick={handleTimeUpdate}
-                    disabled={isSaving}
-                    className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    {isSaving ? "..." : "Save"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingTime(false);
-                      setEditedTime(format(new Date(item.date), "HH:mm"));
-                    }}
-                    className="px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span
-                    className={canEditTime ? "cursor-pointer hover:text-blue-600" : ""}
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-start gap-4 flex-1">
+          {/* Avatar/Icon */}
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${style.bg}`}>
+            {style.icon}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold text-zinc-900 leading-tight mb-1">
+              {item.title}
+            </h3>
+            
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 font-medium">
+              {/* Time */}
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                {isEditingTime ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={editedTime}
+                      onChange={(e) => setEditedTime(e.target.value)}
+                      className="px-2 py-0.5 border border-zinc-200 rounded text-xs bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+                      autoFocus
+                    />
+                    <button onClick={handleTimeUpdate} disabled={isSaving} className="text-emerald-600 font-bold hover:underline">
+                      Save
+                    </button>
+                    <button onClick={() => setIsEditingTime(false)} className="text-zinc-400 hover:text-zinc-600">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button 
                     onClick={() => canEditTime && setIsEditingTime(true)}
-                    title={canEditTime ? "Click to edit time" : ""}
+                    className={canEditTime ? "hover:text-zinc-800 transition-colors cursor-pointer" : "cursor-default"}
                   >
                     {format(new Date(item.date), "h:mm a")}
-                  </span>
-                  {canEditTime && (
-                    <button
-                      onClick={() => setIsEditingTime(true)}
-                      className="text-blue-500 hover:text-blue-700 text-xs"
-                      title="Edit time"
-                    >
-                      ✏️
-                    </button>
-                  )}
-                </>
-              )}
+                  </button>
+                )}
+              </div>
+
+              {/* Location */}
               {item.location && (
-                <>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <span>📍</span>
-                    {cleanLocationName(item.location)}
-                  </span>
-                </>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                  <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="truncate max-w-[150px]">{cleanLocationName(item.location)}</span>
+                </div>
               )}
+
+              {/* Trip Link */}
               {item.metadata?.tripName && (
-                <>
-                  <span>•</span>
-                  <Link
-                    href={`/trips/${item.metadata.tripId}`}
-                    className="text-blue-600 hover:underline"
-                  >
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                  <Plane className="w-3.5 h-3.5 text-zinc-400" />
+                  <Link href={`/trips/${item.metadata.tripId}`} className="text-indigo-600 hover:text-indigo-700 hover:underline truncate max-w-[150px]">
                     {item.metadata.tripName}
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Actions Menu */}
         {item.isEditable && (
-          <div className="flex gap-1">
-            {/* Edit button - only for expenses */}
-            {item.source === "expense" && (
-              <button
-                onClick={() => {
-                  // Navigate to trip page to edit
-                  if (item.metadata?.tripId) {
-                    window.location.href = `/trips/${item.metadata.tripId}`;
-                  }
-                }}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                title="Edit in trip"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-            )}
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-              title="Delete"
+          <div className="relative">
+            <button 
+              onClick={() => setShowActions(!showActions)}
+              className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+              <MoreHorizontal className="w-5 h-5" />
             </button>
+            
+            {showActions && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowActions(false)} />
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-zinc-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  {item.source === "expense" && item.metadata?.tripId && (
+                    <Link 
+                      href={`/trips/${item.metadata.tripId}`}
+                      className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit in Trip
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowActions(false);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Event
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
 
       {/* Content */}
-      {item.content && (
-        <div className="mb-3 bg-gray-50 rounded-xl p-4">
-          <div
-            className="text-gray-700 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: markdownToHtml(item.content) }}
-          />
-        </div>
-      )}
+      <div className="pl-[56px]">
+        {item.content && (
+          <div className="text-sm text-zinc-600 leading-relaxed mb-4 prose prose-sm max-w-none prose-p:my-1 prose-a:text-indigo-600">
+            <div dangerouslySetInnerHTML={{ __html: markdownToHtml(item.content) }} />
+          </div>
+        )}
 
-      {/* Metadata for specific types */}
-      {item.source === "expense" && item.metadata && (
-        <div className="mb-3 p-3 bg-white/50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-900">
+        {/* Specialized Metadata Cards */}
+        {item.source === "expense" && item.metadata && (
+          <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-100 mb-4 inline-block min-w-[200px]">
+            <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">Expense</div>
+            <div className="font-bold text-zinc-900 text-lg">
               {item.metadata.currency} {item.metadata.amount.toLocaleString()}
-            </span>
-            <span className="text-sm text-gray-600">{item.metadata.category}</span>
+            </div>
+            <div className="text-sm text-zinc-600 mt-1 flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-white border border-zinc-200 rounded text-xs">
+                {item.metadata.category}
+              </span>
+            </div>
           </div>
-          {item.metadata.transportationMethod && (
-            <div className="mt-2 text-sm text-blue-700">
-              🚗 {item.metadata.transportationMethod}
-              {item.metadata.fromLocation && item.metadata.toLocation && (
-                <div className="mt-1">
-                  {cleanLocationName(item.metadata.fromLocation)} → {cleanLocationName(item.metadata.toLocation)}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {item.source === "transaction" && item.metadata && (
-        <div className="mb-3 p-3 bg-white/50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-green-700">
-              ${item.metadata.amount.toLocaleString()}
-            </span>
-            <span className="text-sm text-gray-600">{item.metadata.category}</span>
+        {/* Photos Grid */}
+        {item.photos && item.photos.length > 0 && (
+          <div className={`grid gap-2 mb-4 ${
+            item.photos.length === 1 ? 'grid-cols-1' : 
+            item.photos.length === 2 ? 'grid-cols-2' : 
+            'grid-cols-2 sm:grid-cols-3'
+          }`}>
+            {item.photos.slice(0, expanded ? undefined : 4).map((photo, index) => (
+              <div 
+                key={index} 
+                className={`relative rounded-xl overflow-hidden bg-zinc-100 cursor-zoom-in group/photo ${
+                  item.photos.length === 1 ? 'aspect-video' : 'aspect-square'
+                }`}
+                onClick={() => window.open(photo, "_blank")}
+              >
+                <img
+                  src={photo}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover/photo:scale-105"
+                />
+                {!expanded && index === 3 && item.photos.length > 4 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm cursor-pointer" onClick={(e) => { e.stopPropagation(); setExpanded(true); }}>
+                    <span className="text-white font-bold text-lg">+{item.photos.length - 4}</span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          {item.metadata.merchantName && (
-            <div className="mt-1 text-sm text-gray-600">
-              at {item.metadata.merchantName}
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {item.source === "health" && item.metadata && (
-        <div className="mb-3 p-3 bg-white/50 rounded-lg">
-          {item.metadata.flowIntensity && (
-            <div className="text-sm text-pink-700 mb-1">
-              Flow: {item.metadata.flowIntensity}
-            </div>
-          )}
-          {item.metadata.symptoms && item.metadata.symptoms.length > 0 && (
-            <div className="text-sm text-gray-600">
-              Symptoms: {item.metadata.symptoms.join(", ")}
-            </div>
-          )}
-        </div>
-      )}
+        {/* Tags & Mood */}
+        {(item.metadata?.tags || item.metadata?.mood) && (
+          <div className="flex flex-wrap gap-2">
+            {item.metadata.mood && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-100">
+                <Sparkles className="w-3 h-3" />
+                {item.metadata.mood}
+              </span>
+            )}
+            {item.metadata.tags?.map((tag: string) => (
+              <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 text-xs font-medium border border-zinc-200">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {item.source === "life_event" && item.metadata && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          {item.metadata.mood && (
-            <span className="px-3 py-1 bg-white/70 rounded-full text-sm font-medium text-gray-700">
-              😊 {item.metadata.mood}
-            </span>
-          )}
-          {item.metadata.tags && item.metadata.tags.map((tag: string) => (
-            <span
-              key={tag}
-              className="px-3 py-1 bg-white/70 rounded-full text-sm font-medium text-gray-700"
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Photos */}
-      {item.photos && item.photos.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3">
-          {item.photos.slice(0, expanded ? undefined : 4).map((photo, index) => (
-            <img
-              key={index}
-              src={photo}
-              alt=""
-              className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => window.open(photo, "_blank")}
-            />
-          ))}
-        </div>
-      )}
-
-      {item.photos.length > 4 && !expanded && (
-        <button
-          onClick={() => setExpanded(true)}
-          className="text-sm text-purple-600 hover:text-purple-800 font-medium"
-        >
-          Show {item.photos.length - 4} more photos
-        </button>
-      )}
-
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-          <p className="text-sm text-red-800 mb-3">Are you sure you want to delete this memory?</p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(false)}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-300"
-            >
-              Cancel
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">Delete this memory?</h3>
+            <p className="text-zinc-500 text-sm mb-6">This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-200"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

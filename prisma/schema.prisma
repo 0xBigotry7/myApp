@@ -62,7 +62,8 @@ model Trip {
   owner                User              @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members              TripMember[]
   budgetCategories     BudgetCategory[]
-  expenses             Expense[]
+  expenses             Expense[]         // Legacy - will be deprecated
+  transactions         Transaction[]     // New unified expense tracking
   activities           Activity[]
   places               Place[]
   posts                TripPost[]
@@ -329,11 +330,70 @@ model Transaction {
   isFromBankSync        Boolean                @default(false) // true if synced from bank
   bankTransactionId     String?                @unique // Plaid or Wise transaction ID
   pending               Boolean                @default(false) // for pending transactions
+
+  // Currency for trip expenses (defaults to account currency if not set)
+  currency              String?
+
+  // Transportation-specific fields
+  transportationMethod  String?  // e.g., "Flight", "Train", "Bus", "Car", "Taxi", "Uber", "Boat"
+  fromLocation          String?  // Start location for transportation
+  toLocation            String?  // End location for transportation
+  transportationDistance Float?  // Distance in kilometers
+  transportationDuration Int?    // Duration in minutes
+  ticketReference       String?  // Booking/ticket reference
+  numberOfPassengers    Int?     // Number of passengers
+
+  // Accommodation-specific fields
+  accommodationName     String?  // Hotel/Airbnb name from Google Places
+  accommodationType     String?  // "Hotel", "Airbnb", "Hostel", "Resort", etc.
+  checkInDate           DateTime? // Start date of stay
+  checkOutDate          DateTime? // End date of stay
+  numberOfNights        Int?     // Calculated: checkOutDate - checkInDate
+  googlePlaceId         String?  // Google Places API place_id for hotel
+  hotelAddress          String?  // Full address from Google Places
+  hotelPhone            String?  // Hotel phone number
+  hotelWebsite          String?  // Hotel website
+  hotelRating           Float?   // Google rating (1-5)
+  hotelPhotos           String[] @default([]) // Hotel photos from Google Places
+  confirmationNumber    String?  // Booking confirmation number
+
+  // Food & Dining-specific fields
+  partySize             Int?     // Number of people dining
+  mealType              String?  // "Breakfast", "Lunch", "Dinner", "Snacks", "Drinks"
+  cuisineType           String?  // "Italian", "Japanese", "Mexican", etc.
+  restaurantName        String?  // Restaurant name
+  hasReservation        Boolean? // Had reservation
+
+  // Activities-specific fields
+  activityType          String?  // "Museum", "Tour", "Concert", "Theme Park", etc.
+  activityName          String?  // Name of attraction/activity
+  activityDuration      Float?   // Duration in hours
+  numberOfTickets       Int?     // Number of tickets
+  activityReference     String?  // Booking/ticket reference
+  hasGuide              Boolean? // Guided tour?
+
+  // Shopping-specific fields
+  storeName             String?  // Name of store
+  shoppingCategory      String?  // "Clothing", "Souvenirs", "Electronics", etc.
+  numberOfItems         Int?     // How many items purchased
+  hasReturnPolicy       Boolean? // Can return?
+  isGift                Boolean? // Bought as gift?
+  giftRecipient         String?  // Who is it for (if gift)
+
+  // Other category fields
+  otherSubcategory      String?  // "Tips", "Fees", "Insurance", "Medical", etc.
+
+  // Universal optional fields
+  expenseRating         Float?   // 1-5 stars rating for the experience
+
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   account               Account                @relation(fields: [accountId], references: [id], onDelete: Cascade)
   recurringTransaction  RecurringTransaction?  @relation(fields: [recurringTransactionId], references: [id])
+  trip                  Trip?                  @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
 }
 
 model RecurringTransaction {

@@ -40,7 +40,7 @@ export interface GameState {
 
 export function createDeck(): Card[] {
   const suits: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-  const ranks: Rank[] = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K" | "A"];
+  const ranks: Rank[] = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
   const deck: Card[] = [];
   for (const suit of suits) {
     for (const rank of ranks) {
@@ -102,17 +102,17 @@ export function determineWinner(players: Player[], communityCards: Card[]): { wi
   });
 
   const winners = Hand.winners(solvedHands.map(sh => sh.hand));
-  
+
   if (winners.length > 1) {
-     // Tie logic could be complex, for now return null (split pot handled by caller usually, but here we just signal tie)
-     // Or return the first one as "winner" for display if we don't support splits fully in this helper
-     // Let's return null for tie
-     return { winnerId: null, winningHand: winners[0].descr }; 
+    // Tie logic could be complex, for now return null (split pot handled by caller usually, but here we just signal tie)
+    // Or return the first one as "winner" for display if we don't support splits fully in this helper
+    // Let's return null for tie
+    return { winnerId: null, winningHand: winners[0].descr };
   }
 
   const winnerHand = winners[0];
   const winner = solvedHands.find(sh => sh.hand === winnerHand);
-  
+
   return {
     winnerId: winner ? winner.playerId : null,
     winningHand: winnerHand.descr

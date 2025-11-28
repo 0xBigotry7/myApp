@@ -164,17 +164,17 @@ export default function AddLuggageModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
+      <div className="relative bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-            <h2 className="text-xl font-bold text-zinc-900">
+          <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
               {editLuggage ? "Edit Luggage" : "Add Luggage"}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -183,7 +183,7 @@ export default function AddLuggageModal({
           <div className="space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                 Luggage Name
               </label>
               <input
@@ -192,13 +192,13 @@ export default function AddLuggageModal({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Main Suitcase"
-                className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                className="w-full px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent"
               />
             </div>
 
             {/* Type */}
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                 Type
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -211,8 +211,8 @@ export default function AddLuggageModal({
                       onClick={() => setFormData({ ...formData, type: type.value })}
                       className={`p-3 rounded-xl flex flex-col items-center justify-center gap-2 border transition-all ${
                         formData.type === type.value
-                          ? "bg-zinc-900 text-white border-zinc-900 shadow-md"
-                          : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300"
+                          ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-md"
+                          : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
                       }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -225,7 +225,7 @@ export default function AddLuggageModal({
 
             {/* Color */}
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
                 Color Label
               </label>
               <div className="flex flex-wrap gap-3">
@@ -236,7 +236,7 @@ export default function AddLuggageModal({
                     onClick={() => setFormData({ ...formData, color: color.value })}
                     className={`w-8 h-8 rounded-full ${color.bg} transition-all relative flex items-center justify-center ${
                       formData.color === color.value
-                        ? `ring-2 ring-offset-2 ${color.ring} scale-110`
+                        ? `ring-2 ring-offset-2 dark:ring-offset-zinc-900 ${color.ring} scale-110`
                         : "hover:scale-110"
                     }`}
                     title={color.label}
@@ -249,22 +249,22 @@ export default function AddLuggageModal({
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
-                Description <span className="text-zinc-400 font-normal normal-case">(Optional)</span>
+              <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                Description <span className="text-zinc-400 dark:text-zinc-500 font-normal normal-case">(Optional)</span>
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
                 placeholder="What's inside?"
-                className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent resize-none"
               />
             </div>
 
             {/* AirTag */}
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
-                AirTag Name <span className="text-zinc-400 font-normal normal-case">(Optional)</span>
+              <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                AirTag Name <span className="text-zinc-400 dark:text-zinc-500 font-normal normal-case">(Optional)</span>
               </label>
               <div className="relative">
                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base">📍</span>
@@ -273,7 +273,7 @@ export default function AddLuggageModal({
                   value={formData.airtagName}
                   onChange={(e) => setFormData({ ...formData, airtagName: e.target.value })}
                   placeholder="e.g. Red Suitcase Tag"
-                  className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 text-sm border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent"
                 />
               </div>
             </div>
@@ -284,14 +284,14 @@ export default function AddLuggageModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-medium hover:bg-zinc-50 transition-all"
+              className="flex-1 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-zinc-200"
+              className="flex-1 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-zinc-200 dark:shadow-zinc-900"
             >
               {loading ? (editLuggage ? "Saving..." : "Adding...") : (editLuggage ? "Save Changes" : "Add Luggage")}
             </button>

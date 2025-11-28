@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import PWAInstaller from "@/components/PWAInstaller";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
+// Font configuration
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -11,7 +13,7 @@ const inter = Inter({
 
 const notoSansSC = Noto_Sans_SC({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700", "900"],
+  weight: ["400", "500", "700"],
   variable: "--font-noto-sans-sc",
   display: "swap",
 });
@@ -50,16 +52,42 @@ export const viewport = {
   themeColor: "#fafafa", // zinc-50
 };
 
+// Script to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    try {
+      const theme = localStorage.getItem('theme') || 'system';
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = theme === 'dark' || (theme === 'system' && systemDark);
+      document.documentElement.classList.add(isDark ? 'dark' : 'light');
+    } catch (e) {}
+  })()
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${notoSansSC.variable}`}>
-      <body className="font-sans bg-zinc-50 text-zinc-900 antialiased bg-dot-pattern min-h-screen">
-        {children}
-        <PWAInstaller />
+    <html lang="en" className={`${inter.variable} ${notoSansSC.variable}`} suppressHydrationWarning>
+      <head>
+        {/* DNS prefetch for faster external resource loading */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        
+        {/* Preconnect to critical origins */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Theme script - runs before paint to prevent flash */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="font-sans antialiased bg-dot-pattern min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-200">
+        <ThemeProvider>
+          {children}
+          <PWAInstaller />
+        </ThemeProvider>
       </body>
     </html>
   );

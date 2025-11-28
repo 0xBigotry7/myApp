@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface Account {
   id: string;
@@ -10,11 +11,25 @@ interface Account {
   color?: string;
 }
 
+interface Suggestion {
+  merchants: Array<{ name: string; count: number; lastAmount: number; category: string }>;
+  categories: Array<{ name: string; count: number }>;
+  commonAmounts: number[];
+}
+
 export default function QuickAddTransaction() {
   const [isOpen, setIsOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [categorizing, setCategorizing] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion | null>(null);
+  const [showMerchantSuggestions, setShowMerchantSuggestions] = useState(false);
+  const merchantInputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     accountId: "",
@@ -25,7 +40,7 @@ export default function QuickAddTransaction() {
     date: new Date().toISOString().split("T")[0],
   });
 
-  // Fetch user accounts
+  // Fetch user accounts and suggestions
   useEffect(() => {
     if (isOpen) {
       fetch("/api/accounts")
@@ -36,8 +51,24 @@ export default function QuickAddTransaction() {
             setFormData((prev) => ({ ...prev, accountId: data[0].id }));
           }
         });
+
+      fetch("/api/expenses/suggestions")
+        .then((res) => res.json())
+        .then((data) => {
+          setSuggestions(data);
+          // Set default category to most used if available
+          if (data.categories && data.categories.length > 0) {
+            setFormData((prev) => ({ ...prev, category: data.categories[0].name }));
+          }
+        })
+        .catch((err) => console.error("Failed to load suggestions:", err));
     }
   }, [isOpen]);
+
+  // Filter merchants based on input
+  const filteredMerchants = suggestions?.merchants.filter((m) =>
+    m.name.toLowerCase().includes(formData.merchantName.toLowerCase())
+  ).slice(0, 5) || [];
 
   // Auto-categorize when merchant name changes
   useEffect(() => {
@@ -108,20 +139,23 @@ export default function QuickAddTransaction() {
     }
   };
 
+  if (!mounted) return null;
+
   if (!isOpen) {
-    return (
+    return createPortal(
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center text-2xl z-50"
         aria-label="Add transaction"
       >
         +
-      </button>
+      </button>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Quick Add Transaction</h2>
@@ -168,19 +202,70 @@ export default function QuickAddTransaction() {
             <p className="text-xs text-gray-500 mt-1">
               Use negative for expenses, positive for income
             </p>
+            {/* Quick Amount Buttons */}
+            {suggestions && suggestions.commonAmounts.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {suggestions.commonAmounts.slice(0, 6).map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, amount: amt.toFixed(2) })}
+                    className="px-3 py-1 bg-blue-50 hover:bg-blue-100 rounded-lg text-xs font-medium text-blue-700 transition-all"
+                  >
+                    ${amt.toFixed(0)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-1">Merchant</label>
             <input
+              ref={merchantInputRef}
               type="text"
               value={formData.merchantName}
-              onChange={(e) =>
-                setFormData({ ...formData, merchantName: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, merchantName: e.target.value });
+                setShowMerchantSuggestions(true);
+              }}
+              onFocus={() => setShowMerchantSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowMerchantSuggestions(false), 200)}
               className="w-full border rounded-lg px-3 py-2"
               placeholder="Starbucks, Amazon, etc."
             />
+            {/* Merchant Suggestions */}
+            {showMerchantSuggestions && filteredMerchants.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {filteredMerchants.map((merchant) => (
+                  <button
+                    key={merchant.name}
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        merchantName: merchant.name,
+                        category: merchant.category || formData.category,
+                        amount: merchant.lastAmount.toFixed(2),
+                      });
+                      setShowMerchantSuggestions(false);
+                      merchantInputRef.current?.blur();
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between border-b border-gray-100 last:border-b-0 text-sm"
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900">{merchant.name}</div>
+                      <div className="text-xs text-gray-500">
+                        ${merchant.lastAmount.toFixed(2)}
+                      </div>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded text-gray-600">
+                      {merchant.category}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -196,7 +281,30 @@ export default function QuickAddTransaction() {
               className="w-full border rounded-lg px-3 py-2"
               placeholder="Groceries, Dining, etc."
               required
+              list="category-suggestions"
             />
+            <datalist id="category-suggestions">
+              {suggestions?.categories.map((cat) => (
+                <option key={cat.name} value={cat.name} />
+              ))}
+            </datalist>
+            {suggestions && suggestions.categories.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {suggestions.categories.slice(0, 5).map((cat) => (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: cat.name })}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${formData.category === cat.name
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -243,6 +351,7 @@ export default function QuickAddTransaction() {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

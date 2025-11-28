@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const limit = searchParams.get("limit");
+    const tripId = searchParams.get("tripId");
+    const includeTripRelated = searchParams.get("includeTripRelated");
 
     const where: any = {
       userId: session.user.id,
@@ -28,6 +30,17 @@ export async function GET(req: NextRequest) {
 
     if (category) {
       where.category = category;
+    }
+
+    if (tripId) {
+      where.tripId = tripId;
+    }
+
+    // Filter by trip-related status if specified
+    if (includeTripRelated === "false") {
+      where.isTripRelated = false;
+    } else if (includeTripRelated === "only") {
+      where.isTripRelated = true;
     }
 
     if (startDate || endDate) {
@@ -50,6 +63,14 @@ export async function GET(req: NextRequest) {
             type: true,
             icon: true,
             color: true,
+            currency: true,
+          },
+        },
+        trip: {
+          select: {
+            id: true,
+            name: true,
+            destination: true,
           },
         },
       },
@@ -67,7 +88,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Create new transaction
+// POST - Create new transaction (unified for both general and trip expenses)
 export async function POST(request: Request) {
   const session = await auth();
 
@@ -85,7 +106,6 @@ export async function POST(request: Request) {
       description,
       date,
       tags,
-      isTripRelated,
       tripId,
       isRecurring,
       recurringTransactionId,
@@ -93,6 +113,51 @@ export async function POST(request: Request) {
       location,
       latitude,
       longitude,
+      currency,
+      // Transportation fields
+      transportationMethod,
+      fromLocation,
+      toLocation,
+      transportationDistance,
+      transportationDuration,
+      ticketReference,
+      numberOfPassengers,
+      // Accommodation fields
+      accommodationName,
+      accommodationType,
+      checkInDate,
+      checkOutDate,
+      numberOfNights,
+      googlePlaceId,
+      hotelAddress,
+      hotelPhone,
+      hotelWebsite,
+      hotelRating,
+      hotelPhotos,
+      confirmationNumber,
+      // Food & Dining fields
+      partySize,
+      mealType,
+      cuisineType,
+      restaurantName,
+      hasReservation,
+      // Activities fields
+      activityType,
+      activityName,
+      activityDuration,
+      numberOfTickets,
+      activityReference,
+      hasGuide,
+      // Shopping fields
+      storeName,
+      shoppingCategory,
+      numberOfItems,
+      hasReturnPolicy,
+      isGift,
+      giftRecipient,
+      // Other fields
+      otherSubcategory,
+      expenseRating,
     } = body;
 
     // Validate required fields
@@ -118,7 +183,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create transaction
+    // If tripId is provided, verify user has access to the trip
+    if (tripId) {
+      const trip = await prisma.trip.findFirst({
+        where: {
+          id: tripId,
+          OR: [
+            { ownerId: session.user.id },
+            { members: { some: { userId: session.user.id } } }
+          ]
+        },
+      });
+
+      if (!trip) {
+        return NextResponse.json(
+          { error: "Trip not found or unauthorized" },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Parse dates
+    const parsedDate = new Date(date);
+    const parsedCheckInDate = checkInDate ? new Date(checkInDate) : null;
+    const parsedCheckOutDate = checkOutDate ? new Date(checkOutDate) : null;
+
+    // Create transaction with all fields
     const transaction = await prisma.transaction.create({
       data: {
         userId: session.user.id,
@@ -127,16 +217,61 @@ export async function POST(request: Request) {
         category,
         merchantName,
         description,
-        date: new Date(date),
+        date: parsedDate,
         tags: tags || [],
-        isTripRelated: isTripRelated || false,
-        tripId,
+        isTripRelated: !!tripId,
+        tripId: tripId || null,
         isRecurring: isRecurring || false,
         recurringTransactionId,
         receiptUrl,
         location,
         latitude,
         longitude,
+        currency: currency || null,
+        // Transportation fields
+        transportationMethod: transportationMethod || null,
+        fromLocation: fromLocation || null,
+        toLocation: toLocation || null,
+        transportationDistance: transportationDistance ?? null,
+        transportationDuration: transportationDuration ?? null,
+        ticketReference: ticketReference || null,
+        numberOfPassengers: numberOfPassengers ?? null,
+        // Accommodation fields
+        accommodationName: accommodationName || null,
+        accommodationType: accommodationType || null,
+        checkInDate: parsedCheckInDate,
+        checkOutDate: parsedCheckOutDate,
+        numberOfNights: numberOfNights ?? null,
+        googlePlaceId: googlePlaceId || null,
+        hotelAddress: hotelAddress || null,
+        hotelPhone: hotelPhone || null,
+        hotelWebsite: hotelWebsite || null,
+        hotelRating: hotelRating ?? null,
+        hotelPhotos: hotelPhotos || [],
+        confirmationNumber: confirmationNumber || null,
+        // Food & Dining fields
+        partySize: partySize ?? null,
+        mealType: mealType || null,
+        cuisineType: cuisineType || null,
+        restaurantName: restaurantName || null,
+        hasReservation: hasReservation ?? null,
+        // Activities fields
+        activityType: activityType || null,
+        activityName: activityName || null,
+        activityDuration: activityDuration ?? null,
+        numberOfTickets: numberOfTickets ?? null,
+        activityReference: activityReference || null,
+        hasGuide: hasGuide ?? null,
+        // Shopping fields
+        storeName: storeName || null,
+        shoppingCategory: shoppingCategory || null,
+        numberOfItems: numberOfItems ?? null,
+        hasReturnPolicy: hasReturnPolicy ?? null,
+        isGift: isGift ?? null,
+        giftRecipient: giftRecipient || null,
+        // Other fields
+        otherSubcategory: otherSubcategory || null,
+        expenseRating: expenseRating ?? null,
       },
       include: {
         account: {
@@ -146,6 +281,14 @@ export async function POST(request: Request) {
             type: true,
             icon: true,
             color: true,
+            currency: true,
+          },
+        },
+        trip: {
+          select: {
+            id: true,
+            name: true,
+            destination: true,
           },
         },
       },

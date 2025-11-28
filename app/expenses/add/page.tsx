@@ -24,12 +24,15 @@ export default async function AddExpensePage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-zinc-50 bg-dot-pattern">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-6 sm:p-8">
-            <h1 className="text-2xl font-bold text-zinc-900 mb-6">Add Transaction</h1>
-            <AddExpenseForm accounts={JSON.parse(JSON.stringify(accounts))} />
-          </div>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 bg-dot-pattern transition-colors">
+        <div className="max-w-lg mx-auto px-4 py-6 sm:py-8">
+          <h1 className="text-2xl font-black text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+            <span className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+              +
+            </span>
+            Add Transaction
+          </h1>
+          <AddExpenseForm accounts={JSON.parse(JSON.stringify(accounts))} />
         </div>
       </div>
     </>

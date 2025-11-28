@@ -32,9 +32,24 @@ export default async function TripDetailPage({
           user: true,
         }
       },
+      // Legacy expenses (will be phased out)
       expenses: {
         include: {
           user: true,
+        },
+        orderBy: { date: "desc" },
+      },
+      // New unified transactions
+      transactions: {
+        include: {
+          user: true,
+          account: {
+            select: {
+              id: true,
+              name: true,
+              currency: true,
+            },
+          },
         },
         orderBy: { date: "desc" },
       },
@@ -82,15 +97,36 @@ export default async function TripDetailPage({
     return amount * rate;
   };
 
-  const totalSpent = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
+  // Calculate total spent from both legacy expenses AND new transactions
+  const legacyExpenseTotal = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
+  const transactionTotal = trip.transactions.reduce((sum, tx) => {
+    // Transactions are stored as negative for expenses
+    const currency = tx.currency || tx.account.currency;
+    return sum + convertToUSD(Math.abs(tx.amount), currency);
+  }, 0);
+  
+  // Use the larger of the two to avoid double-counting during migration
+  // Once migration is complete, this will just be transactionTotal
+  const totalSpent = Math.max(legacyExpenseTotal, transactionTotal);
   const remaining = trip.totalBudget - totalSpent;
   const percentUsed = (totalSpent / trip.totalBudget) * 100;
 
-  // Calculate spending by category
+  // Calculate spending by category (combining both sources)
   const categorySpending = trip.budgetCategories.map((bc) => {
-    const spent = trip.expenses
+    const legacySpent = trip.expenses
       .filter((exp) => exp.category === bc.category)
       .reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
+    
+    const txSpent = trip.transactions
+      .filter((tx) => tx.category === bc.category)
+      .reduce((sum, tx) => {
+        const currency = tx.currency || tx.account.currency;
+        return sum + convertToUSD(Math.abs(tx.amount), currency);
+      }, 0);
+    
+    // Use the larger to avoid double-counting
+    const spent = Math.max(legacySpent, txSpent);
+    
     return {
       category: bc.category,
       budget: bc.budgetAmount,

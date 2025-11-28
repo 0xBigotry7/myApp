@@ -1,12 +1,10 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import TripCard from "@/components/TripCard";
-import DatabaseErrorPage from "@/components/DatabaseErrorPage";
 import { getServerLocale } from "@/lib/locale-server";
 import { getTranslations } from "@/lib/i18n";
+import DashboardClient from "@/components/dashboard/DashboardClient";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -18,95 +16,115 @@ export default async function Dashboard() {
   const locale = await getServerLocale();
   const t = getTranslations(locale);
 
-  // Get all trips where user is owner OR member
-  const trips = await prisma.trip.findMany({
+  // 1. Get Trips (Active > Upcoming > Recent)
+  const now = new Date();
+
+  const activeTrip = await prisma.trip.findFirst({
     where: {
-      OR: [
-        { ownerId: session.user.id },
-        { members: { some: { userId: session.user.id } } }
+      AND: [
+        { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
+        { startDate: { lte: now } },
+        { endDate: { gte: now } }
       ]
     },
-    include: {
-      expenses: true,
-      budgetCategories: true,
+    include: { _count: { select: { expenses: true, activities: true, places: true } } }
+  });
+
+  const upcomingTrip = !activeTrip ? await prisma.trip.findFirst({
+    where: {
+      AND: [
+        { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
+        { startDate: { gt: now } }
+      ]
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { startDate: 'asc' },
+    include: { _count: { select: { expenses: true, activities: true, places: true } } }
+  }) : null;
+
+  const lastTrip = (!activeTrip && !upcomingTrip) ? await prisma.trip.findFirst({
+    where: {
+      OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }]
+    },
+    orderBy: { endDate: 'desc' },
+    include: { _count: { select: { expenses: true, activities: true, places: true } } }
+  }) : null;
+
+  const tripStatus = (activeTrip ? 'active' : upcomingTrip ? 'upcoming' : 'past') as 'active' | 'upcoming' | 'past';
+
+  // 2. Finance Summary
+  const accounts = await prisma.account.findMany({
+    where: { userId: session.user.id },
   });
 
-  // Currency conversion rates to USD
+  // Simple currency conversion for display (USD base)
   const conversionRates: Record<string, number> = {
-    USD: 1,
-    EUR: 1.09,
-    GBP: 1.27,
-    JPY: 0.0067,
-    CNY: 0.138,
-    THB: 0.029,
+    USD: 1, EUR: 1.09, GBP: 1.27, JPY: 0.0067, CNY: 0.138, THB: 0.029,
   };
 
-  // Helper function to convert any currency to USD
-  const convertToUSD = (amount: number, currency: string): number => {
-    const rate = conversionRates[currency] || 1;
-    return amount * rate;
-  };
+  const totalNetWorth = accounts.reduce((sum, acc) => {
+    const rate = conversionRates[acc.currency] || 1;
+    return sum + (acc.balance * rate);
+  }, 0);
 
-  const tripsWithStats = trips.map((trip) => {
-    const totalSpent = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
-    const remaining = trip.totalBudget - totalSpent;
-    const percentUsed = (totalSpent / trip.totalBudget) * 100;
-
-    return { ...trip, totalSpent, remaining, percentUsed };
+  const recentExpenses = await prisma.expense.findMany({
+    where: { userId: session.user.id },
+    orderBy: { date: 'desc' },
+    take: 5,
+    include: { trip: { select: { name: true } } },
   });
+
+  // 3. Timeline / Life Events
+  const recentMemory = await prisma.lifeEvent.findFirst({
+    where: { userId: session.user.id },
+    orderBy: { date: 'desc' },
+  });
+
+  // 4. Map Stats - Fetch detailed destinations for the globe
+  const visitedDestinations = await prisma.travelDestination.findMany({
+    where: {
+      userId: session.user.id,
+      visitDate: { not: null },
+      latitude: { not: 0 }, // Filter out invalid coords if any
+      longitude: { not: 0 }
+    },
+    select: {
+      id: true,
+      city: true,
+      country: true,
+      latitude: true,
+      longitude: true
+    }
+  });
+
+  const visitedCountries = new Set(visitedDestinations.map(d => d.country)).size;
+
+  // 5. Greeting Logic
+  const hour = now.getHours();
+  let greeting = "Good Evening";
+  if (hour < 12) greeting = "Good Morning";
+  else if (hour < 18) greeting = "Good Afternoon";
+
+  const stats = {
+    activeTrip,
+    upcomingTrip,
+    lastTrip,
+    tripStatus,
+    totalNetWorth,
+    visitedCount: visitedCountries,
+    recentExpenses,
+    recentMemory,
+    greeting,
+    destinations: visitedDestinations
+  };
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-zinc-50 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Header Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-end gap-6 mb-12">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight text-zinc-900 mb-2">
-                My Trips
-              </h1>
-              <p className="text-zinc-500 text-lg max-w-2xl">
-                Manage your adventures, track expenses, and plan your next journey.
-              </p>
-            </div>
-            <Link
-              href="/trips/new"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-8 py-3 text-sm font-medium text-white transition-all hover:bg-zinc-800 hover:shadow-lg active:scale-95"
-            >
-              <span className="text-xl leading-none mb-0.5">+</span>
-              {t.planTrip}
-            </Link>
-          </div>
-
-          {/* Content Section */}
-          {tripsWithStats.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 px-4 bg-white rounded-3xl border border-zinc-100 shadow-sm text-center">
-              <div className="w-24 h-24 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
-                <span className="text-5xl opacity-50">✈️</span>
-              </div>
-              <h3 className="text-2xl font-bold text-zinc-900 mb-3">{t.noTripsYet}</h3>
-              <p className="text-zinc-500 mb-8 max-w-md mx-auto text-lg leading-relaxed">
-                {t.startPlanningAdventure}
-              </p>
-              <Link
-                href="/trips/new"
-                className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-8 py-3 text-base font-medium text-white transition-all hover:bg-zinc-800 hover:shadow-lg active:scale-95"
-              >
-                {t.createFirstTrip}
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {tripsWithStats.map((trip) => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+      <DashboardClient
+        user={session.user}
+        stats={stats}
+        t={t}
+      />
     </>
   );
 }

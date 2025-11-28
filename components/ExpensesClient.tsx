@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations } from "@/lib/i18n";
-import { format, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
+import { format, isSameMonth, isToday, isYesterday, startOfMonth, endOfMonth } from "date-fns";
 import Link from "next/link";
 import { 
   Plus, 
@@ -16,8 +16,14 @@ import {
   Home, 
   Search, 
   CreditCard,
-  PieChart
+  PieChart,
+  ArrowUpRight,
+  ArrowDownLeft,
+  MoreHorizontal,
+  Repeat
 } from "lucide-react";
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import AddTransactionModal from "./AddTransactionModal";
 
 interface Account {
   id: string;
@@ -42,6 +48,12 @@ interface Transaction {
   isTripRelated: boolean;
   tripId?: string | null;
   location?: string | null;
+  currency?: string | null;
+  trip?: {
+    id: string;
+    name: string;
+    destination: string;
+  } | null;
 }
 
 interface Expense {
@@ -88,6 +100,8 @@ interface Trip {
   id: string;
   name: string;
   destination: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
 }
 
 interface ExpensesClientProps {
@@ -140,14 +154,14 @@ const EXPENSE_CATEGORIES = [
   { name: "Groceries", icon: "🛒", color: "bg-emerald-100 text-emerald-700" },
   { name: "Dining", icon: "🍽️", color: "bg-orange-100 text-orange-700" },
   { name: "Transportation", icon: "🚗", color: "bg-blue-100 text-blue-700" },
-  { name: "Utilities", icon: "💡", color: "bg-yellow-100 text-yellow-700" },
-  { name: "Rent/Mortgage", icon: "🏠", color: "bg-red-100 text-red-700" },
+  { name: "Utilities", icon: "⚡", color: "bg-yellow-100 text-yellow-700" },
+  { name: "Rent/Mortgage", icon: "🏠", color: "bg-rose-100 text-rose-700" },
   { name: "Entertainment", icon: "🎬", color: "bg-pink-100 text-pink-700" },
   { name: "Shopping", icon: "🛍️", color: "bg-purple-100 text-purple-700" },
   { name: "Healthcare", icon: "⚕️", color: "bg-cyan-100 text-cyan-700" },
   { name: "Subscriptions", icon: "📱", color: "bg-indigo-100 text-indigo-700" },
   { name: "Travel", icon: "✈️", color: "bg-sky-100 text-sky-700" },
-  { name: "Accommodation", icon: "🛏️", color: "bg-indigo-100 text-indigo-700" },
+  { name: "Accommodation", icon: "🏨", color: "bg-violet-100 text-violet-700" },
   { name: "Activities", icon: "🎫", color: "bg-rose-100 text-rose-700" },
   { name: "Other", icon: "📦", color: "bg-zinc-100 text-zinc-700" },
 ];
@@ -164,6 +178,8 @@ interface UnifiedExpenseItem {
   tripId?: string | null;
   location?: string | null;
   accountName?: string;
+  isIncome?: boolean;
+  tripName?: string;
 }
 
 export default function ExpensesClient({
@@ -181,26 +197,37 @@ export default function ExpensesClient({
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "trip" | "general">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [amountRange, setAmountRange] = useState<{ min: string; max: string }>({ min: "", max: "" });
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const now = new Date();
   const daysPassed = now.getDate();
 
   // Merge and normalize data
   const unifiedItems: UnifiedExpenseItem[] = useMemo(() => {
-    const txItems: UnifiedExpenseItem[] = transactions.map(t => ({
-      id: t.id,
-      date: new Date(t.date),
-      amount: convertToUSD(Math.abs(t.amount), t.account.currency), // Convert transaction amount if account is foreign
-      originalAmount: Math.abs(t.amount),
-      originalCurrency: t.account.currency,
-      category: t.category,
-      description: t.merchantName || t.description || t.category,
-      type: "transaction",
-      tripId: t.tripId,
-      location: t.location,
-      accountName: t.account.name
-    }));
+    const txItems: UnifiedExpenseItem[] = transactions.map(t => {
+      const currency = t.currency || t.account.currency;
+      return {
+        id: t.id,
+        date: new Date(t.date),
+        amount: convertToUSD(Math.abs(t.amount), currency),
+        originalAmount: Math.abs(t.amount),
+        originalCurrency: currency,
+        category: t.category,
+        description: t.merchantName || t.description || t.category,
+        type: "transaction" as const,
+        tripId: t.tripId,
+        location: t.location || t.trip?.destination,
+        accountName: t.account.name,
+        isIncome: t.amount > 0,
+        tripName: t.trip?.name || t.trip?.destination,
+      };
+    });
 
+    // Legacy expenses
     const expItems: UnifiedExpenseItem[] = expenses.map(e => ({
       id: e.id,
       date: new Date(e.date),
@@ -209,9 +236,10 @@ export default function ExpensesClient({
       originalCurrency: e.currency,
       category: e.category,
       description: e.note || e.category,
-      type: "expense",
+      type: "expense" as const,
       tripId: e.tripId,
       location: e.location,
+      isIncome: false,
     }));
 
     return [...txItems, ...expItems].sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -233,9 +261,19 @@ export default function ExpensesClient({
         item.location?.toLowerCase().includes(searchQuery.toLowerCase())
       ) : true;
 
-      return matchesFilter && matchesSearch;
+      const matchesCategory = selectedCategory ? item.category === selectedCategory : true;
+
+      const matchesAmountRange = 
+        (amountRange.min === "" || item.amount >= parseFloat(amountRange.min)) &&
+        (amountRange.max === "" || item.amount <= parseFloat(amountRange.max));
+
+      const matchesDateRange = 
+        (dateRange.start === "" || item.date >= new Date(dateRange.start)) &&
+        (dateRange.end === "" || item.date <= new Date(dateRange.end));
+
+      return matchesFilter && matchesSearch && matchesCategory && matchesAmountRange && matchesDateRange;
     });
-  }, [unifiedItems, filter, searchQuery]);
+  }, [unifiedItems, filter, searchQuery, selectedCategory, amountRange, dateRange]);
 
   // Calculate stats for CURRENT MONTH
   const monthlyStats = useMemo(() => {
@@ -243,21 +281,27 @@ export default function ExpensesClient({
       isSameMonth(item.date, now)
     );
 
-    const totalSpent = currentMonthItems.reduce((sum, item) => sum + item.amount, 0);
+    const totalSpent = currentMonthItems
+      .filter(item => !item.isIncome)
+      .reduce((sum, item) => sum + item.amount, 0);
+      
+    const totalIncome = currentMonthItems
+      .filter(item => item.isIncome)
+      .reduce((sum, item) => sum + item.amount, 0);
+
     const dailyAverage = daysPassed > 0 ? totalSpent / daysPassed : 0;
     
     const tripSpent = currentMonthItems
-      .filter(item => item.type === "expense" || !!item.tripId)
+      .filter(item => (item.type === "expense" || !!item.tripId) && !item.isIncome)
       .reduce((sum, item) => sum + item.amount, 0);
 
-    return { totalSpent, dailyAverage, tripSpent };
+    return { totalSpent, totalIncome, dailyAverage, tripSpent };
   }, [unifiedItems, daysPassed, now]);
 
   // Calculate total balance (converted to USD)
   const totalBalanceUSD = useMemo(() => {
     return accounts.reduce((sum, account) => {
       const amount = convertToUSD(account.balance, account.currency);
-      // Subtract liabilities (Credit Cards, Loans)
       if (account.type === "credit_card" || account.type === "loan" || account.type === "debt") {
         return sum - amount;
       }
@@ -265,7 +309,7 @@ export default function ExpensesClient({
     }, 0);
   }, [accounts]);
 
-  // Group by date
+  // Group by date (Today, Yesterday, etc.)
   const groupedItems = useMemo(() => {
     const groups: Record<string, UnifiedExpenseItem[]> = {};
     filteredItems.forEach(item => {
@@ -276,78 +320,115 @@ export default function ExpensesClient({
     return groups;
   }, [filteredItems]);
 
+  // Calculate category breakdown for current month
+  const categoryBreakdown = useMemo(() => {
+    const currentMonthItems = unifiedItems.filter(item => 
+      isSameMonth(item.date, now) && !item.isIncome
+    );
+
+    const categoryMap = new Map<string, number>();
+    currentMonthItems.forEach(item => {
+      const existing = categoryMap.get(item.category) || 0;
+      categoryMap.set(item.category, existing + item.amount);
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([name, value]) => ({ name, value: Math.abs(value) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+  }, [unifiedItems, now]);
+
+  const COLORS = [
+    "#8B5CF6", "#EC4899", "#F59E0B", "#10B981", 
+    "#3B82F6", "#EF4444", "#06B6D4", "#6366F1"
+  ];
+
+  const getDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    return format(date, "EEEE, MMM d");
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Expenses</h1>
-          <p className="text-zinc-500 mt-1 flex items-center gap-2">
+          <h1 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight">Expenses</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 font-medium">
             <Calendar className="w-4 h-4" />
             {format(now, "MMMM yyyy")}
           </p>
         </div>
-        <Link
-          href="/expenses/add"
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-all font-medium shadow-lg shadow-zinc-200 active:scale-95"
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all font-bold shadow-lg shadow-zinc-200 dark:shadow-zinc-900 active:scale-95 hover:shadow-xl"
         >
           <Plus className="w-5 h-5" />
           <span>Add Transaction</span>
-        </Link>
+        </button>
       </div>
+
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        accounts={accounts}
+        trips={trips}
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-zinc-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-zinc-900" />
+            <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl">
+              <TrendingUp className="w-5 h-5 text-zinc-900 dark:text-white" />
             </div>
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">This Month</span>
+            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">This Month</span>
           </div>
-          <div className="text-2xl font-bold text-zinc-900 mb-1">
-            ${monthlyStats.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="text-3xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight">
+            ${monthlyStats.totalSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-zinc-500">Total Spent (USD Est.)</div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">Total Spent</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-2xl">
+              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Daily Avg</span>
+            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Daily Avg</span>
           </div>
-          <div className="text-2xl font-bold text-zinc-900 mb-1">
-            ${monthlyStats.dailyAverage.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="text-3xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight">
+            ${monthlyStats.dailyAverage.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-zinc-500">Per Day</div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">Per Day</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Plane className="w-5 h-5 text-purple-600" />
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/50 rounded-2xl">
+              <Plane className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Travel</span>
+            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Travel</span>
           </div>
-          <div className="text-2xl font-bold text-zinc-900 mb-1">
-            ${monthlyStats.tripSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="text-3xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight">
+            ${monthlyStats.tripSpent.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-zinc-500">On Trips</div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">On Trips</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-emerald-50 rounded-lg">
-              <Wallet className="w-5 h-5 text-emerald-600" />
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 rounded-2xl">
+              <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Net Worth</span>
+            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Net Worth</span>
           </div>
-          <div className="text-2xl font-bold text-zinc-900 mb-1">
+          <div className="text-3xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight">
             ${totalBalanceUSD.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-zinc-500">Total Balance (USD Est.)</div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">Total Balance</div>
         </div>
       </div>
 
@@ -355,54 +436,123 @@ export default function ExpensesClient({
         {/* Main List */}
         <div className="lg:col-span-2 space-y-6">
           {/* Filter Bar */}
-          <div className="bg-white p-2 rounded-xl border border-zinc-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between sticky top-4 z-10">
-            <div className="flex p-1 bg-zinc-100 rounded-lg w-full sm:w-auto">
-              <button
-                onClick={() => setFilter("all")}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  filter === "all" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilter("general")}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  filter === "general" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                }`}
-              >
-                General
-              </button>
-              <button
-                onClick={() => setFilter("trip")}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  filter === "trip" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                }`}
-              >
-                Trips
-              </button>
+          <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm space-y-3 sticky top-24 z-10 backdrop-blur-xl bg-white/80 dark:bg-zinc-900/80">
+            <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
+              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-full sm:w-auto">
+                <button
+                  onClick={() => setFilter("all")}
+                  className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    filter === "all" ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter("general")}
+                  className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    filter === "general" ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  General
+                </button>
+                <button
+                  onClick={() => setFilter("trip")}
+                  className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    filter === "trip" ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  Trips
+                </button>
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto pl-2 pr-2 sm:pl-0 sm:pr-2">
+                <div className="relative flex-1 sm:w-64 group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-600 dark:group-focus-within:text-zinc-300 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border-transparent focus:bg-white dark:focus:bg-zinc-700 border focus:border-zinc-200 dark:focus:border-zinc-600 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    showFilters || selectedCategory || amountRange.min || amountRange.max || dateRange.start || dateRange.end
+                      ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-md"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search expenses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-zinc-50 border-transparent focus:bg-white border focus:border-zinc-200 rounded-lg text-sm outline-none transition-all"
-              />
-            </div>
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-1.5">Category</label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl font-medium text-zinc-900 dark:text-white focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700"
+                  >
+                    <option value="">All Categories</option>
+                    {Array.from(new Set(unifiedItems.map(item => item.category))).map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-1.5">Min Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amountRange.min}
+                    onChange={(e) => setAmountRange({ ...amountRange, min: e.target.value })}
+                    placeholder="0.00"
+                    className="w-full px-3 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-1.5">Max Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amountRange.max}
+                    onChange={(e) => setAmountRange({ ...amountRange, max: e.target.value })}
+                    placeholder="∞"
+                    className="w-full px-3 py-2.5 text-sm bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between items-end h-full">
+                    <button
+                      onClick={() => {
+                        setSelectedCategory("");
+                        setAmountRange({ min: "", max: "" });
+                        setDateRange({ start: "", end: "" });
+                      }}
+                      className="w-full px-4 py-2.5 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Transactions */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {Object.entries(groupedItems).map(([dateKey, items]) => (
               <div key={dateKey} className="space-y-3">
-                <h3 className="text-sm font-semibold text-zinc-500 pl-1 sticky top-16 bg-zinc-50/95 backdrop-blur-sm py-2 z-0">
-                  {format(new Date(dateKey), "EEEE, MMM d")}
+                <h3 className="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider pl-2">
+                  {getDateLabel(dateKey)}
                 </h3>
-                <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden divide-y divide-zinc-50/50 dark:divide-zinc-800">
                   {items.map((item, i) => {
                     const categoryInfo = EXPENSE_CATEGORIES.find(c => c.name === item.category);
                     const trip = item.tripId ? trips.find(t => t.id === item.tripId) : null;
@@ -411,51 +561,51 @@ export default function ExpensesClient({
                     return (
                       <div 
                         key={item.id} 
-                        className={`p-4 flex items-center gap-4 hover:bg-zinc-50 transition-colors ${
-                          i !== items.length - 1 ? "border-b border-zinc-50" : ""
-                        }`}
+                        className="group p-4 flex items-center gap-4 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50 transition-all cursor-default"
                       >
                         {/* Icon */}
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${categoryInfo?.color || "bg-zinc-100 text-zinc-500"}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl shadow-sm ${categoryInfo?.color || "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"}`}>
                           {categoryInfo?.icon || "📦"}
                         </div>
 
                         {/* Details */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <h4 className="font-semibold text-zinc-900 truncate">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-bold text-zinc-900 dark:text-white truncate text-[15px]">
                               {item.description}
                             </h4>
                             <div className="text-right">
-                              <div className="font-bold text-zinc-900">
-                                {getCurrencySymbol(item.originalCurrency)}{item.originalAmount.toFixed(2)}
+                              <div className={`font-bold text-[15px] ${item.isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-900 dark:text-white"}`}>
+                                {item.isIncome ? "+" : ""}{getCurrencySymbol(item.originalCurrency)}{item.originalAmount.toFixed(2)}
                               </div>
-                              {item.originalCurrency !== "USD" && (
-                                <div className="text-[10px] text-zinc-400 font-medium">
-                                  ~${item.amount.toFixed(2)} USD
-                                </div>
-                              )}
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
-                            <span className="capitalize">{item.category}</span>
-                            {isTrip ? (
-                              <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded text-[10px] font-medium">
-                                <Plane className="w-3 h-3" />
-                                {trip?.destination || item.location || "Trip"}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded text-[10px] font-medium">
-                                <Home className="w-3 h-3" />
-                                Life
-                              </span>
-                            )}
-                            {item.accountName && (
-                              <>
-                                <span className="text-zinc-300">•</span>
-                                <span>{item.accountName}</span>
-                              </>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                              <span className="capitalize">{item.category}</span>
+                              {isTrip ? (
+                                <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                  <Plane className="w-3 h-3" />
+                                  {trip?.destination || item.location || "Trip"}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                  <Home className="w-3 h-3" />
+                                  Personal
+                                </span>
+                              )}
+                              {item.accountName && (
+                                <>
+                                  <span className="text-zinc-300 dark:text-zinc-600">•</span>
+                                  <span>{item.accountName}</span>
+                                </>
+                              )}
+                            </div>
+                            {item.originalCurrency !== "USD" && (
+                              <div className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">
+                                ~${item.amount.toFixed(2)} USD
+                              </div>
                             )}
                           </div>
                         </div>
@@ -466,12 +616,12 @@ export default function ExpensesClient({
               </div>
             ))}
             {Object.keys(groupedItems).length === 0 && (
-               <div className="text-center py-20 bg-white rounded-3xl border border-zinc-100 border-dashed">
-                <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Filter className="w-8 h-8 text-zinc-300" />
+               <div className="text-center py-24">
+                <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Filter className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
                 </div>
-                <h3 className="text-lg font-medium text-zinc-900">No transactions found</h3>
-                <p className="text-zinc-500 text-sm">Try adjusting filters or search</p>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">No transactions found</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">Try adjusting filters or search to find what you're looking for.</p>
                </div>
             )}
           </div>
@@ -480,19 +630,19 @@ export default function ExpensesClient({
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Accounts */}
-          <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-lg">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <CreditCard className="w-5 h-5" /> Accounts
+          <div className="bg-zinc-900 dark:bg-zinc-800 text-white p-6 rounded-[24px] shadow-xl">
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-zinc-400" /> Your Accounts
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {accounts.map(account => (
-                <div key={account.id} className="flex justify-between items-center p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors cursor-pointer">
+                <div key={account.id} className="flex justify-between items-center p-3.5 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer border border-white/5 group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
                       {account.type === "checking" ? "🏦" : account.type === "credit_card" ? "💳" : "💰"}
                     </div>
                     <div>
-                      <div className="font-medium text-sm">{account.name}</div>
+                      <div className="font-bold text-sm">{account.name}</div>
                       <div className="text-xs text-zinc-400 capitalize">{account.type.replace("_", " ")}</div>
                     </div>
                   </div>
@@ -501,7 +651,7 @@ export default function ExpensesClient({
                       {getCurrencySymbol(account.currency)}{account.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     {account.currency !== "USD" && (
-                      <div className="text-[10px] text-zinc-400">
+                      <div className="text-[10px] text-zinc-500">
                         ~${convertToUSD(account.balance, account.currency).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </div>
                     )}
@@ -509,56 +659,73 @@ export default function ExpensesClient({
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-2.5 bg-white text-zinc-900 rounded-lg text-sm font-bold hover:bg-zinc-100 transition-colors">
+            <button className="w-full mt-6 py-3 bg-white text-zinc-900 rounded-xl text-sm font-bold hover:bg-zinc-100 transition-colors">
               Manage Accounts
             </button>
           </div>
 
-          {/* Category Breakdown (Mini) */}
-          {budget && (
-            <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <h2 className="text-lg font-bold text-zinc-900 mb-4 flex items-center gap-2">
-                <PieChart className="w-5 h-5" /> Categories
+          {/* Category Breakdown Chart */}
+          {categoryBreakdown.length > 0 && (
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-zinc-400 dark:text-zinc-500" /> Top Categories
               </h2>
-              <div className="space-y-3">
-                {budget.envelopes.slice(0, 5).map(env => {
-                   const percent = Math.min((env.spent / env.allocated) * 100, 100);
-                   return (
-                    <div key={env.id}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium text-zinc-700">{env.category}</span>
-                        <span className="text-zinc-500">${env.spent.toFixed(0)} / ${env.allocated.toFixed(0)}</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${percent > 100 ? "bg-red-500" : "bg-zinc-900"}`}
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                    </div>
-                   );
-                })}
+              <div className="h-64 mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={categoryBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {categoryBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
               </div>
-              <Link href="/expenses/budget" className="block mt-4 text-center text-sm font-medium text-zinc-600 hover:text-zinc-900">
-                View Full Budget
-              </Link>
+              <div className="space-y-3">
+                {categoryBreakdown.slice(0, 5).map((cat, idx) => (
+                  <div key={cat.name} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                      />
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">{cat.name}</span>
+                    </div>
+                    <span className="text-zinc-900 dark:text-white font-bold">${cat.value.toFixed(0)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Recurring */}
           {recurringTransactions.length > 0 && (
-            <div className="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
-              <h2 className="text-lg font-bold text-zinc-900 mb-4 flex items-center gap-2">
-                 <Calendar className="w-5 h-5" /> Upcoming
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[24px] border border-zinc-100 dark:border-zinc-800 shadow-sm">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+                 <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-500" /> Upcoming
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recurringTransactions.slice(0, 3).map(rec => (
-                  <div key={rec.id} className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-purple-500" />
-                      <span className="text-sm font-medium text-zinc-700">{rec.name}</span>
+                  <div key={rec.id} className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-zinc-800 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                        <Repeat className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-bold text-zinc-900 dark:text-white">{rec.name}</span>
                     </div>
-                    <span className="text-sm font-bold text-zinc-900">${rec.amount}</span>
+                    <span className="text-sm font-bold text-zinc-900 dark:text-white">${rec.amount}</span>
                   </div>
                 ))}
               </div>

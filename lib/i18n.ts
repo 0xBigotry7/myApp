@@ -262,6 +262,14 @@ export const translations = {
     ovulationExpected: "ovulation expected",
     periodExpected: "period expected",
     onYourPeriod: "on your period",
+    cravings: "Cravings",
+    insomnia: "Insomnia",
+    hotFlashes: "Hot Flashes",
+    dizziness: "Dizziness",
+    loving: "Loving",
+    moody: "Moody",
+    sensitive: "Sensitive",
+    motivated: "Motivated",
 
     // Life Timeline
     timeline: "Timeline",
@@ -672,6 +680,14 @@ export const translations = {
     ovulationExpected: "预计排卵",
     periodExpected: "预计经期",
     onYourPeriod: "经期中",
+    cravings: "食欲增加",
+    insomnia: "失眠",
+    hotFlashes: "潮热",
+    dizziness: "头晕",
+    loving: "恋爱中",
+    moody: "情绪多变",
+    sensitive: "敏感",
+    motivated: "有动力",
 
     // Life Timeline
     timeline: "时间线",

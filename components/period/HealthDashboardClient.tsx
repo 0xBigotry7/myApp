@@ -67,19 +67,19 @@ export default function HealthDashboardClient({
   if (cycles.length === 0) {
     return (
       <>
-        <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-zinc-200">
-          <div className="w-20 h-20 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+        <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+          <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
             🌸
           </div>
-          <h3 className="text-2xl font-bold text-zinc-900 mb-3">
+          <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3">
             {t.noCyclesYet}
           </h3>
-          <p className="text-zinc-500 mb-8 max-w-md mx-auto">
+          <p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-md mx-auto">
             {t.startTrackingPeriod}
           </p>
           <button
             onClick={() => setShowStartPeriod(true)}
-            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-8 py-3 rounded-full hover:bg-zinc-800 transition-all duration-200 font-medium shadow-sm"
+            className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 font-medium shadow-sm"
           >
             <span className="text-xl leading-none">+</span>
             {t.logFirstPeriod}

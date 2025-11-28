@@ -8,7 +8,7 @@ async function main() {
     where: { email: "BABER" },
     select: { id: true, email: true, name: true },
   });
-  
+
   console.log("BABER user:", baberUser);
 
   // Get all trips with owner details
@@ -24,7 +24,7 @@ async function main() {
         select: {
           userId: true,
           user: {
-            select: { email: true, name: true },
+            select: { email: true, name: true, id: true },
           },
         },
       },
@@ -36,7 +36,7 @@ async function main() {
     console.log(`\nTrip: ${trip.name}`);
     console.log(`  Owner ID: ${trip.ownerId}`);
     console.log(`  Owner: ${trip.owner.email} (${trip.owner.name})`);
-    console.log(`  Members: ${trip.members.map((m) => `${m.user.email} (${m.user.userId})`).join(", ")}`);
+    console.log(`  Members: ${trip.members.map((m) => `${m.user.email} (${m.user.id})`).join(", ")}`);
   });
 
   // Check if BABER's trips would be found

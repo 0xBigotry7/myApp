@@ -13,7 +13,7 @@ export default async function ConverterPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-zinc-50">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors">
         <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-16">
           <CurrencyConverter />
         </div>

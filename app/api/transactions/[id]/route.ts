@@ -79,6 +79,7 @@ export async function PATCH(
       location,
       latitude,
       longitude,
+      currency,
     } = body;
 
     // Get existing transaction
@@ -150,6 +151,7 @@ export async function PATCH(
         ...(location !== undefined && { location }),
         ...(latitude !== undefined && { latitude }),
         ...(longitude !== undefined && { longitude }),
+        ...(currency !== undefined && { currency }),
       },
       include: {
         account: {

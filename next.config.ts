@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable experimental optimizations
+  experimental: {
+    // Optimize package imports - reduces bundle size significantly
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "framer-motion",
+      "recharts",
+      "@dnd-kit/core",
+      "@dnd-kit/sortable",
+    ],
+  },
+  
   images: {
     remotePatterns: [
       {
@@ -44,13 +57,31 @@ const nextConfig: NextConfig = {
     unoptimized: false,
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
+    // Optimize image loading
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
+
   // Suppress external image optimization errors
   logging: {
     fetches: {
       fullUrl: false,
     },
   },
+
+  // Compiler optimizations
+  compiler: {
+    // Remove console.log in production
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  },
+
+  // Enable React strict mode for better development
+  reactStrictMode: true,
+
+  // Power pack - compress responses
+  compress: true,
 };
 
 export default nextConfig;
