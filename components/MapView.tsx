@@ -291,37 +291,37 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Map Controls */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Map View</h2>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">Map View</h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
               {mappedEvents.length} mapped • {unmappedEvents.length} unmapped • {events.length - mappedEvents.length - unmappedEvents.length} without location
             </p>
-            <p className="text-xs text-gray-500 mt-1 hidden sm:block">
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1 hidden sm:block">
               💡 Drag to pan • Scroll to zoom • Click markers to view events
             </p>
-            <p className="text-xs text-gray-500 mt-1 sm:hidden">
+            <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1 sm:hidden">
               💡 Drag & pinch to zoom
             </p>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto flex-wrap">
             {/* Zoom Controls */}
-            <div className="flex items-center gap-1 sm:gap-2 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 sm:gap-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
               <button
                 onClick={() => setZoom((prev) => Math.max(1, prev - 0.5))}
-                className="px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-white rounded-md transition-colors text-sm font-medium"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 title="Zoom Out"
               >
                 −
               </button>
-              <span className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-gray-700">
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {zoom.toFixed(1)}x
               </span>
               <button
                 onClick={() => setZoom((prev) => Math.min(5, prev + 0.5))}
-                className="px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-white rounded-md transition-colors text-sm font-medium"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-white dark:hover:bg-zinc-700 rounded-md transition-colors text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 title="Zoom In"
               >
                 +
@@ -330,17 +330,17 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
             <button
               onClick={() => { setZoom(1); setCenter([0, 20]); }}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs sm:text-sm font-medium transition-colors text-zinc-700 dark:text-zinc-300"
             >
               Reset
             </button>
 
-            <label className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showConnections}
                 onChange={(e) => setShowConnections(e.target.checked)}
-                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 dark:bg-zinc-700 dark:border-zinc-600"
               />
               <span className="hidden sm:inline">Show Connections</span>
               <span className="sm:hidden">Lines</span>
@@ -350,8 +350,8 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
       </div>
 
       {/* Map */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-6 overflow-hidden">
-        <div className="relative w-full overflow-hidden h-[400px] sm:h-[500px]">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-3 sm:p-6 overflow-hidden">
+        <div className="relative w-full overflow-hidden h-[400px] sm:h-[500px] rounded-xl bg-zinc-100 dark:bg-zinc-800">
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
@@ -359,6 +359,7 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
             }}
             width={800}
             height={500}
+            className="dark:[&_path]:fill-zinc-700 dark:[&_path]:stroke-zinc-600"
           >
             <ZoomableGroup
               zoom={zoom}
@@ -468,7 +469,7 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
           {/* Tooltip */}
           {tooltipEvent && (
-            <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-xs z-10">
+            <div className="absolute top-4 left-4 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 p-4 max-w-xs z-10">
               <div className="flex items-start gap-3">
                 {tooltipEvent.photos.length > 0 && (
                   <img
@@ -478,14 +479,14 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 text-sm truncate">
+                  <h4 className="font-semibold text-zinc-900 dark:text-white text-sm truncate">
                     {tooltipEvent.title}
                   </h4>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                     {format(new Date(tooltipEvent.date), "MMM d, yyyy")}
                   </p>
                   {tooltipEvent.location && (
-                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-1 flex items-center gap-1">
                       <span>📍</span>
                       {tooltipEvent.location}
                     </p>
@@ -499,22 +500,22 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
       {/* Events by location list */}
       {mappedEvents.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Events by Location</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">Events by Location</h3>
           <div className="space-y-2">
             {Array.from(eventsByLocation.entries()).map(([key, locationEvents]) => {
               const location = locationEvents[0].location;
               return (
                 <div
                   key={key}
-                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span>📍</span>
-                      <span className="font-semibold text-gray-900">{location}</span>
+                      <span className="font-semibold text-zinc-900 dark:text-white">{location}</span>
                     </div>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
                       {locationEvents.length} event{locationEvents.length !== 1 ? "s" : ""}
                     </span>
                   </div>
@@ -528,7 +529,7 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
                           ${
                             selectedEvent === event.id
                               ? "bg-purple-600 text-white"
-                              : "bg-white text-gray-700 hover:bg-purple-50"
+                              : "bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-purple-50 dark:hover:bg-purple-900/30"
                           }
                         `}
                       >
@@ -545,12 +546,12 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
       {/* Unmapped events (locations not recognized) */}
       {unmappedEvents.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
               Unmapped Locations ({unmappedEvents.length})
             </h3>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-500">
               These locations are not in our database
             </span>
           </div>
@@ -558,18 +559,18 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
             {unmappedEvents.map((event) => (
               <div
                 key={event.id}
-                className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded-lg"
               >
                 <div className="flex items-start gap-2">
                   <span className="text-lg">📍</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 text-sm truncate">
+                    <div className="font-semibold text-zinc-900 dark:text-white text-sm truncate">
                       {event.title}
                     </div>
-                    <div className="text-xs text-gray-600 mt-1">
+                    <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                       {event.location}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">
                       {format(new Date(event.date), "MMM d, yyyy")}
                     </div>
                   </div>
@@ -582,10 +583,10 @@ export default function MapView({ events, onEventClick }: MapViewProps) {
 
       {/* No location events message */}
       {mappedEvents.length === 0 && unmappedEvents.length === 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-12 text-center">
           <div className="text-6xl mb-4">🗺️</div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No Events with Locations</h3>
-          <p className="text-gray-600">
+          <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">No Events with Locations</h3>
+          <p className="text-zinc-600 dark:text-zinc-400">
             Add location information to your events to see them on the map!
           </p>
         </div>

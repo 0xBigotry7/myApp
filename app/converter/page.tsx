@@ -13,8 +13,8 @@ export default async function ConverterPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-16">
           <CurrencyConverter />
         </div>
       </div>

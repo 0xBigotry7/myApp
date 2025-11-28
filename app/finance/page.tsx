@@ -88,14 +88,14 @@ export default async function FinancePage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Header */}
           <div className="mb-10">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
               💰 Finance Dashboard
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-zinc-400">
               Shared household financial overview and budget tracking
             </p>
             <div className="flex gap-2 mt-3">
@@ -130,30 +130,30 @@ export default async function FinancePage() {
             </div>
 
             {/* This Month Income */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">This Month Income</p>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">This Month Income</p>
                 <span className="text-2xl">📈</span>
               </div>
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 ${thisMonthIncome.toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-zinc-500">
                 {thisMonthTransactions.filter((t) => t.amount > 0).length}{" "}
                 transactions
               </p>
             </div>
 
             {/* This Month Expenses */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">This Month Expenses</p>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">This Month Expenses</p>
                 <span className="text-2xl">📉</span>
               </div>
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 ${thisMonthExpenses.toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-zinc-500">
                 {thisMonthTransactions.filter((t) => t.amount < 0).length}{" "}
                 transactions
               </p>
@@ -161,14 +161,14 @@ export default async function FinancePage() {
 
             {/* Net Cash Flow */}
             <div
-              className={`bg-white rounded-2xl shadow-lg p-6 border-l-4 ${
+              className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6 border-l-4 ${
                 thisMonthIncome - thisMonthExpenses >= 0
                   ? "border-green-500"
                   : "border-red-500"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-600">Net Cash Flow</p>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">Net Cash Flow</p>
                 <span className="text-2xl">
                   {thisMonthIncome - thisMonthExpenses >= 0 ? "✅" : "⚠️"}
                 </span>
@@ -195,22 +195,22 @@ export default async function FinancePage() {
             {/* Left Column - 2/3 width */}
             <div className="lg:col-span-2 space-y-8">
               {/* Spending Breakdown */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
                   <span>📊</span> Spending Breakdown
                 </h2>
 
                 {/* Trip vs Regular Expenses */}
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">
                       Regular Expenses
                     </span>
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       ${regularExpenses.toFixed(2)}
                     </span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-500"
                       style={{
@@ -224,14 +224,14 @@ export default async function FinancePage() {
 
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">
                       ✈️ Travel Expenses
                     </span>
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       ${tripExpenses.toFixed(2)}
                     </span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-500"
                       style={{
@@ -242,19 +242,19 @@ export default async function FinancePage() {
                 </div>
 
                 {/* Top Categories */}
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 mt-6">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-3 mt-6">
                   Top Spending Categories
                 </h3>
                 <div className="space-y-3">
                   {topCategories.map(([category, amount]) => (
                     <div key={category}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-700">{category}</span>
-                        <span className="text-sm font-semibold">
+                        <span className="text-sm text-gray-700 dark:text-zinc-300">{category}</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
                           ${amount.toFixed(2)}
                         </span>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-green-400 to-blue-500"
                           style={{
@@ -268,14 +268,14 @@ export default async function FinancePage() {
               </div>
 
               {/* Recent Transactions */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold flex items-center gap-2">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
                     <span>📝</span> Recent Transactions
                   </h2>
                   <Link
                     href="/transactions"
-                    className="text-sm text-blue-600 hover:underline font-medium"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                   >
                     View All →
                   </Link>
@@ -283,7 +283,7 @@ export default async function FinancePage() {
 
                 <div className="space-y-3">
                   {recentTransactions.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-zinc-400">
                       <p>No transactions yet</p>
                       <p className="text-sm mt-1">
                         Click the + button to add your first transaction
@@ -295,7 +295,7 @@ export default async function FinancePage() {
                       return (
                         <div
                           key={txn.id}
-                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border-l-4"
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors border-l-4"
                           style={{ borderLeftColor: userBadge.color }}
                         >
                           <div className="flex items-center gap-3">
@@ -310,10 +310,10 @@ export default async function FinancePage() {
                               </span>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-white">
                                 {txn.merchantName || txn.category}
                               </p>
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-400">
                                 <span
                                   className="font-semibold px-1.5 py-0.5 rounded text-white"
                                   style={{ backgroundColor: userBadge.color }}
@@ -353,14 +353,14 @@ export default async function FinancePage() {
             {/* Right Column - 1/3 width */}
             <div className="space-y-8">
               {/* Accounts List */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold flex items-center gap-2">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
                     <span>🏦</span> Accounts
                   </h2>
                   <Link
                     href="/accounts"
-                    className="text-sm text-blue-600 hover:underline font-medium"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                   >
                     Manage →
                   </Link>
@@ -369,10 +369,10 @@ export default async function FinancePage() {
                 {accounts.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-2">🏦</div>
-                    <p className="text-sm text-gray-600 mb-3">No accounts yet</p>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 mb-3">No accounts yet</p>
                     <Link
                       href="/accounts"
-                      className="text-sm text-blue-600 hover:underline"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Create your first account
                     </Link>
@@ -384,7 +384,7 @@ export default async function FinancePage() {
                       return (
                         <div
                           key={acc.id}
-                          className="p-3 rounded-lg border hover:border-blue-300 transition-colors"
+                          className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
                         >
                           <div className="flex items-center gap-3 mb-2">
                             <div
@@ -395,7 +395,7 @@ export default async function FinancePage() {
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-gray-900 dark:text-white">
                                   {acc.name}
                                 </p>
                                 <span
@@ -405,16 +405,16 @@ export default async function FinancePage() {
                                   {userBadge.initial}
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-zinc-400">
                                 {acc.type.replace("_", " ")}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-xl font-bold text-gray-900">
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">
                               ${acc.balance.toFixed(2)}
                             </p>
-                            <p className="text-xs text-gray-500">{acc.currency}</p>
+                            <p className="text-xs text-gray-500 dark:text-zinc-400">{acc.currency}</p>
                           </div>
                         </div>
                       );
@@ -424,24 +424,24 @@ export default async function FinancePage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-purple-100">
-                <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-2xl shadow-lg p-6 border border-purple-100 dark:border-purple-900/30">
+                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Quick Actions</h2>
                 <div className="space-y-3">
                   <Link
                     href="/transactions"
-                    className="block w-full p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium"
+                    className="block w-full p-3 bg-white dark:bg-zinc-800 rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium text-gray-900 dark:text-white"
                   >
                     📊 View All Transactions
                   </Link>
                   <Link
                     href="/accounts"
-                    className="block w-full p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium"
+                    className="block w-full p-3 bg-white dark:bg-zinc-800 rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium text-gray-900 dark:text-white"
                   >
                     🏦 Manage Accounts
                   </Link>
                   <Link
                     href="/"
-                    className="block w-full p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium"
+                    className="block w-full p-3 bg-white dark:bg-zinc-800 rounded-lg shadow hover:shadow-md transition-shadow text-center font-medium text-gray-900 dark:text-white"
                   >
                     ✈️ View Trips
                   </Link>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, memo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import Image from "next/image";
+import { Calendar, MapPin, Sparkles } from "lucide-react";
 
 interface TripCardProps {
   trip: {
@@ -20,21 +21,41 @@ interface TripCardProps {
   };
 }
 
-export default function TripCard({ trip }: TripCardProps) {
+function TripCard({ trip }: TripCardProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(
     trip.destinationImageUrl || null
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement>(null);
 
+  // Intersection Observer for lazy loading
   useEffect(() => {
-    // Generate image if not already generated
-    if (!imageUrl && !isGenerating) {
-      generateImage();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100px", threshold: 0.1 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
     }
+
+    return () => observer.disconnect();
   }, []);
 
-  const generateImage = async () => {
+  // Only generate image on explicit user action - NOT on mount
+  const generateImage = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isGenerating) return;
     setIsGenerating(true);
+    
     try {
       const response = await fetch("/api/ai/generate-destination-image", {
         method: "POST",
@@ -45,9 +66,8 @@ export default function TripCard({ trip }: TripCardProps) {
       if (response.ok) {
         const data = await response.json();
         setImageUrl(data.imageUrl);
-
-        // Save image URL to database
-        await fetch(`/api/trips/${trip.id}/update-image`, {
+        // Update in background - don't await
+        fetch(`/api/trips/${trip.id}/update-image`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl: data.imageUrl }),
@@ -58,164 +78,123 @@ export default function TripCard({ trip }: TripCardProps) {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [trip.destination, trip.id, isGenerating]);
 
   const daysUntilTrip = Math.ceil(
     (new Date(trip.startDate).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   );
-  const daysOfTrip = Math.ceil(
+  
+  const durationDays = Math.ceil(
     (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
       (1000 * 60 * 60 * 24)
   );
 
   return (
     <Link
+      ref={cardRef}
       href={`/trips/${trip.id}`}
-      className="group relative flex h-full w-full flex-col overflow-hidden rounded-3xl shadow-lg transition-all duration-300 hover:shadow-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 md:hover:scale-[1.02]"
+      className="group relative flex flex-col overflow-hidden rounded-[32px] bg-white dark:bg-zinc-900 shadow-lg shadow-zinc-200/50 dark:shadow-zinc-900/50 transition-all duration-300 hover:shadow-2xl hover:shadow-zinc-200/80 dark:hover:shadow-zinc-900/80 hover:-translate-y-1 ring-1 ring-zinc-100 dark:ring-zinc-800 will-change-transform"
     >
-      {/* Background Image with Overlay */}
-      <div className="relative h-56 overflow-hidden sm:h-64 xl:h-72">
+      {/* Image Container */}
+      <div className="relative h-72 w-full overflow-hidden bg-zinc-900">
         {isGenerating ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 animate-pulse flex items-center justify-center">
-            <div className="text-white text-center">
-              <div className="text-5xl mb-3 animate-bounce">✨</div>
-              <p className="font-semibold">Generating anime art...</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+            <div className="text-center">
+              <div className="mb-3 text-4xl animate-pulse">✨</div>
+              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Generating view...</p>
             </div>
           </div>
-        ) : imageUrl ? (
-          <>
-            <Image
-              src={imageUrl}
-              alt={trip.destination}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-700"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          </>
+        ) : imageUrl && isVisible ? (
+          <Image
+            src={imageUrl}
+            alt={trip.destination}
+            fill
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAQMEAQUAAAAAAAAAAAAAAQACAwQFERIGITFBUWH/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMRIf/aAAwDAQACEQMRAD8AzGx8ap7hQwVMsz2Pkja9zQ3oCSNhQREqpI1CZJcUuqyxP//Z"
+          />
+        ) : !imageUrl ? (
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex flex-col items-center justify-center gap-3">
+            <span className="text-6xl opacity-30">✈️</span>
+            <button
+              onClick={generateImage}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold border border-white/20 transition-colors"
+            >
+              <Sparkles size={14} className="text-yellow-300" />
+              Generate Image
+            </button>
+          </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          </div>
+          <div className="absolute inset-0 bg-zinc-900 animate-pulse" />
         )}
+        
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent opacity-60" />
 
-        {/* Days Until Trip Badge */}
-        {daysUntilTrip > 0 && (
-          <div className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-lg backdrop-blur-sm sm:right-4 sm:top-4 sm:text-sm">
-            In {daysUntilTrip} days
-          </div>
-        )}
+        {/* Status Badge */}
+        <div className="absolute top-5 right-5">
+          {daysUntilTrip > 0 ? (
+            <div className="rounded-full bg-white/20 px-4 py-1.5 text-xs font-bold text-white backdrop-blur-md border border-white/20 shadow-lg">
+              {daysUntilTrip} days away
+            </div>
+          ) : daysUntilTrip <= 0 && Math.abs(daysUntilTrip) <= durationDays ? (
+            <div className="rounded-full bg-emerald-500/90 px-4 py-1.5 text-xs font-bold text-white backdrop-blur-md shadow-lg shadow-emerald-900/20">
+              Active Trip
+            </div>
+          ) : (
+            <div className="rounded-full bg-zinc-800/80 px-4 py-1.5 text-xs font-bold text-zinc-300 backdrop-blur-md border border-white/10">
+              Completed
+            </div>
+          )}
+        </div>
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
-          <div className="space-y-3">
-            <div>
-              <h2 className="mb-1 text-2xl font-bold text-white transition-colors group-hover:text-yellow-300 drop-shadow-lg sm:text-3xl">
-                {trip.destination}
-              </h2>
-              {trip.name && trip.name !== trip.destination && (
-                <p className="text-sm font-medium text-white/90 drop-shadow sm:text-base">
-                  {trip.name}
-                </p>
-              )}
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+          <h2 className="text-3xl font-black text-white tracking-tight mb-2 drop-shadow-sm">
+            {trip.destination}
+          </h2>
+          
+          <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-zinc-200 mb-6">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-zinc-400" />
+              {format(new Date(trip.startDate), "MMM d")} - {format(new Date(trip.endDate), "MMM d")}
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs text-white/90 drop-shadow sm:text-sm">
-              <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                <span>📅</span>
-                <span className="font-medium whitespace-nowrap">
-                  {format(new Date(trip.startDate), "MMM d")} - {format(new Date(trip.endDate), "MMM d")}
-                </span>
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                <span>⏱️</span>
-                <span className="font-medium whitespace-nowrap">{daysOfTrip} days</span>
-              </span>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-zinc-400" />
+              {durationDays} days
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Budget Info Card */}
-      <div className="bg-white p-4 sm:p-5">
-        <div className="space-y-3 sm:space-y-4">
-          {/* Budget Overview */}
-          <div className="flex flex-col items-start justify-between gap-1 sm:flex-row sm:items-center">
-            <span className="text-xs font-medium text-gray-500 sm:text-sm">Total Budget</span>
-            <span className="text-lg font-bold text-transparent bg-gradient-sunset-pink bg-clip-text sm:text-xl">
-              ${trip.totalBudget.toLocaleString()}
-            </span>
-          </div>
-
-          {/* Progress Bar */}
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs text-gray-500">Budget Used</span>
-              <span
-                className={`text-sm font-bold ${
-                  trip.percentUsed > 100 ? "text-red-600" : "text-gray-900"
-                }`}
-              >
+          {/* Budget Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-bold tracking-wide uppercase">
+              <span className="text-zinc-400">Budget Used</span>
+              <span className={trip.percentUsed > 100 ? "text-rose-400" : "text-white"}>
                 {trip.percentUsed.toFixed(0)}%
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
+            <div className="h-1.5 w-full rounded-full bg-white/20 overflow-hidden backdrop-blur-sm">
               <div
-                className={`h-3 rounded-full transition-all duration-700 ${
-                  trip.percentUsed > 100
-                    ? "bg-gradient-to-r from-red-500 to-red-600"
-                    : trip.percentUsed > 80
-                    ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                    : "bg-gradient-sunset-pink"
+                className={`h-full rounded-full transition-all duration-700 ease-out ${
+                  trip.percentUsed > 100 ? "bg-rose-500" : "bg-white"
                 }`}
-                style={{
-                  width: `${Math.min(trip.percentUsed, 100)}%`,
-                }}
+                style={{ width: `${Math.min(trip.percentUsed, 100)}%` }}
               />
             </div>
-          </div>
-
-          {/* Spent and Remaining */}
-          <div className="grid grid-cols-1 gap-3 pt-3 border-t border-gray-100 sm:grid-cols-2">
-            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-3">
-              <p className="mb-1 text-xs font-medium text-blue-600">Spent</p>
-              <p
-                className={`text-lg font-bold ${
-                  trip.percentUsed > 100 ? "text-red-600" : "text-blue-900"
-                }`}
-              >
-                ${trip.totalSpent.toLocaleString()}
-              </p>
-            </div>
-            <div
-              className={`rounded-xl p-3 ${
-              trip.remaining < 0
-                ? "bg-gradient-to-br from-red-50 to-red-100"
-                : "bg-gradient-to-br from-green-50 to-green-100"
-              }`}
-            >
-              <p
-                className={`mb-1 text-xs font-medium ${
-                trip.remaining < 0 ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {trip.remaining < 0 ? "Over" : "Remaining"}
-              </p>
-              <p
-                className={`text-lg font-bold ${
-                trip.remaining < 0 ? "text-red-600" : "text-green-900"
-                }`}
-              >
-                ${Math.abs(trip.remaining).toLocaleString()}
-              </p>
+            <div className="flex justify-between text-xs pt-1">
+              <span className="text-zinc-400 font-medium">${trip.totalSpent.toLocaleString()} spent</span>
+              <span className="text-zinc-300 font-bold">${Math.abs(trip.remaining).toLocaleString()} left</span>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Hover Effect Indicator */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl border-4 border-transparent transition-all duration-300 group-hover:border-yellow-400" />
     </Link>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export default memo(TripCard);

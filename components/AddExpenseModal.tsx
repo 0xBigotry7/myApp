@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import ExpenseInputForm from "./ExpenseInputForm";
 
 interface AddExpenseModalProps {
@@ -33,15 +34,20 @@ export default function AddExpenseModal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSuccess = () => {
     onClose();
     router.refresh();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -77,6 +83,7 @@ export default function AddExpenseModal({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

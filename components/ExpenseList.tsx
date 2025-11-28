@@ -3,10 +3,18 @@
 import { format } from "date-fns";
 import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
-import { useState } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AccommodationExpenseCardCompact from "./AccommodationExpenseCardCompact";
 import EditExpenseModal from "./EditExpenseModal";
+import { 
+  Edit2, 
+  Trash2, 
+  Receipt, 
+  MapPin, 
+  Calendar, 
+  User,
+} from "lucide-react";
 
 interface Expense {
   id: string;
@@ -46,14 +54,15 @@ interface ExpenseListProps {
   defaultLocation?: string;
 }
 
-export default function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLocation }: ExpenseListProps) {
+function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLocation }: ExpenseListProps) {
   const locale = useLocale();
   const t = getTranslations(locale);
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  const getCurrencySymbol = (currency: string) => {
+  // Memoize currency symbols map
+  const getCurrencySymbol = useCallback((currency: string) => {
     const symbols: Record<string, string> = {
       USD: "$",
       EUR: "€",
@@ -63,9 +72,9 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
       THB: "฿",
     };
     return symbols[currency] || "$";
-  };
+  }, []);
 
-  const handleDelete = async (expenseId: string) => {
+  const handleDelete = useCallback(async (expenseId: string) => {
     if (!confirm("Are you sure you want to delete this expense?")) {
       return;
     }
@@ -87,100 +96,116 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
     } finally {
       setDeletingId(null);
     }
-  };
-
-  // Helper function to get user color
-  const getUserColor = (userEmail: string) => {
-    if (!currentUserEmail) {
-      // If no current user, alternate between colors based on unique users
-      const uniqueUsers = Array.from(new Set(expenses.map(e => e.user.email)));
-      const userIndex = uniqueUsers.indexOf(userEmail);
-      return userIndex % 2 === 0
-        ? { bg: "bg-blue-50/60 hover:bg-blue-50/80 border border-blue-100/50", badge: "bg-blue-100/70 text-blue-700" }
-        : { bg: "bg-pink-50/60 hover:bg-pink-50/80 border border-pink-100/50", badge: "bg-pink-100/70 text-pink-700" };
-    }
-
-    // Current user gets light blue, others get light pink
-    return userEmail === currentUserEmail
-      ? { bg: "bg-blue-50/60 hover:bg-blue-50/80 border border-blue-100/50", badge: "bg-blue-100/70 text-blue-700", icon: "👤" }
-      : { bg: "bg-pink-50/60 hover:bg-pink-50/80 border border-pink-100/50", badge: "bg-pink-100/70 text-pink-700", icon: "💝" };
-  };
+  }, [router]);
+  
+  const handleCloseModal = useCallback(() => setEditingExpense(null), []);
 
   if (expenses.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4">{t.recentExpenses}</h3>
-        <p className="text-gray-500 text-center py-8">{t.noExpensesYet}</p>
+      <div className="bg-white rounded-[24px] border border-zinc-100 p-12 text-center">
+        <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Receipt className="w-8 h-8 text-zinc-300" />
+        </div>
+        <h3 className="text-xl font-bold text-zinc-900 mb-2">{t.recentExpenses}</h3>
+        <p className="text-zinc-500 font-medium">{t.noExpensesYet}</p>
       </div>
     );
   }
 
-  // Check if expense is an accommodation
   const isAccommodation = (expense: Expense) => {
     return expense.category === "Accommodation" || expense.accommodationName != null;
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold mb-4">{t.recentExpenses}</h3>
-      <div className="space-y-3">
+    <div className="bg-white rounded-[24px] border border-zinc-100 shadow-sm overflow-hidden">
+      <div className="px-8 py-6 border-b border-zinc-100 flex items-center gap-3">
+        <div className="p-2 bg-zinc-100 rounded-xl text-zinc-500">
+          <Receipt className="w-5 h-5" />
+        </div>
+        <h3 className="text-xl font-bold text-zinc-900">{t.recentExpenses}</h3>
+      </div>
+      
+      <div className="divide-y divide-zinc-50">
         {expenses.map((expense) => {
-          const colors = getUserColor(expense.user.email);
-
-          // Render accommodation expenses with compact card
           if (isAccommodation(expense)) {
             return (
-              <AccommodationExpenseCardCompact
-                key={expense.id}
-                expense={expense}
-                userColor={colors}
-                onEdit={() => router.push(`/trips/${tripId}/edit-accommodation/${expense.id}`)}
-                onDelete={() => handleDelete(expense.id)}
-              />
+              <div key={expense.id} className="p-4 sm:p-6 hover:bg-zinc-50/50 transition-colors">
+                <AccommodationExpenseCardCompact
+                  expense={expense}
+                  userColor={{ bg: "bg-zinc-50", badge: "bg-zinc-200 text-zinc-800" }}
+                  onEdit={() => router.push(`/trips/${tripId}/edit-accommodation/${expense.id}`)}
+                  onDelete={() => handleDelete(expense.id)}
+                />
+              </div>
             );
           }
 
-          // Render regular expenses
           return (
             <div
               key={expense.id}
-              className={`flex justify-between items-start p-4 rounded-xl transition-all ${colors.bg} group`}
+              className="group relative flex items-start p-4 sm:p-6 hover:bg-zinc-50/80 transition-all"
             >
-              <div className="flex-1 min-w-0 mr-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-base sm:text-lg whitespace-nowrap">
+              {/* Category Icon */}
+              <div className="mr-5 mt-1 hidden sm:block">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-zinc-400 border border-zinc-100 shadow-sm group-hover:scale-105 transition-transform">
+                  <Receipt className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 mr-4">
+                <div className="flex items-center flex-wrap gap-3 mb-1.5">
+                  <span className="font-black text-lg text-zinc-900 tracking-tight">
                     {getCurrencySymbol(expense.currency)}{expense.amount.toFixed(2)}
                   </span>
-                  <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg font-medium ${colors.badge} truncate`}>
+                  <span className="px-2.5 py-1 rounded-lg bg-zinc-100 text-xs font-bold text-zinc-600 uppercase tracking-wide">
                     {translateCategory(expense.category, locale)}
                   </span>
                 </div>
+                
                 {expense.note && (
-                  <p className="text-sm text-gray-600 mt-1 break-words line-clamp-2">{expense.note}</p>
+                  <p className="text-sm font-medium text-zinc-600 mt-1 break-words line-clamp-2">
+                    {expense.note}
+                  </p>
                 )}
-                <div className="flex gap-3 text-xs text-gray-500 mt-1 flex-wrap">
-                  <span className="whitespace-nowrap">{format(new Date(expense.date), "MMM d, yyyy")}</span>
-                  <span className="flex items-center gap-1">
-                    {colors.icon && <span>{colors.icon}</span>}
-                    <span className="truncate">{t.addedBy} {expense.user.name}</span>
+                
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-zinc-400 mt-3">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {format(new Date(expense.date), "MMM d, yyyy")}
                   </span>
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    {expense.user.name}
+                  </span>
+                  {expense.location && (
+                    <span className="flex items-center gap-1.5 text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded-md">
+                      <MapPin className="w-3 h-3" />
+                      {expense.location}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+
+              {/* Actions - Floating on desktop, always visible on mobile but subtle */}
+              <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto">
                 <button
                   onClick={() => setEditingExpense(expense)}
-                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all touch-manipulation md:opacity-0 md:group-hover:opacity-100"
+                  className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                   title="Edit"
                 >
-                  ✏️
+                  <Edit2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(expense.id)}
                   disabled={deletingId === expense.id}
-                  className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-lg transition-all disabled:opacity-50 touch-manipulation md:opacity-0 md:group-hover:opacity-100"
+                  className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                   title="Delete"
                 >
-                  {deletingId === expense.id ? "⏳" : "🗑️"}
+                  {deletingId === expense.id ? (
+                    <span className="animate-spin block w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -192,7 +217,7 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
       {editingExpense && !isAccommodation(editingExpense) && (
         <EditExpenseModal
           isOpen={true}
-          onClose={() => setEditingExpense(null)}
+          onClose={handleCloseModal}
           expense={editingExpense}
           tripId={tripId}
           categories={categories}
@@ -202,3 +227,6 @@ export default function ExpenseList({ expenses, currentUserEmail, tripId, catego
     </div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export default memo(ExpenseList);

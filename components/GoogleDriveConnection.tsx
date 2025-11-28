@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle, CheckCircle2, Cloud, ExternalLink, HardDrive, LogOut, RefreshCw } from "lucide-react";
 
 interface GoogleDriveConnectionProps {
   isConnected: boolean;
@@ -50,97 +51,108 @@ export default function GoogleDriveConnection({
 
   if (isConnected) {
     return (
-      <div className="space-y-4">
-        <div className="p-4 bg-green-50 border-2 border-green-200 rounded-xl">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">✅</span>
+      <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo_%282020-present%29.svg" alt="Google Drive" className="w-7 h-7" />
+            </div>
             <div>
-              <p className="font-bold text-green-900">Connected</p>
-              <p className="text-sm text-green-700">
-                Your trip photos are saved to your Google Drive
-              </p>
+              <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                Google Drive
+                <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Connected
+                </span>
+              </h3>
+              <p className="text-sm text-zinc-500">Photos are automatically backed up to your Drive</p>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          {folderId && (
+        <div className="p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {folderId && (
+              <button
+                onClick={handleOpenFolder}
+                className="flex-1 px-4 py-3 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open Folder in Drive
+              </button>
+            )}
             <button
-              onClick={handleOpenFolder}
-              className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              className="flex-1 px-4 py-3 bg-white border border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              📁 Open Folder in Drive
+              {isDisconnecting ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
             </button>
-          )}
-          <button
-            onClick={handleDisconnect}
-            disabled={isDisconnecting}
-            className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
-          >
-            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-          </button>
-        </div>
+          </div>
 
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-900">
-            <strong>💡 Tip:</strong> All photos you upload through the app are stored in your personal Google Drive.
-            You and your wife can access them anytime, even after disconnecting the app.
-          </p>
+          <div className="bg-blue-50 rounded-xl p-4 flex gap-3 text-sm text-blue-900">
+            <AlertCircle className="w-5 h-5 shrink-0 text-blue-600" />
+            <div>
+              <p className="font-bold mb-1">Your photos are safe</p>
+              <p className="opacity-90">
+                Even if you disconnect, all photos remain in your personal Google Drive. You maintain full ownership and control of your data.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">⚠️</span>
-          <div>
-            <p className="font-bold text-yellow-900">Not Connected</p>
-            <p className="text-sm text-yellow-800">
-              Connect your Google Drive to save trip photos permanently
-            </p>
+    <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <div className="p-6 sm:p-8">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-zinc-100 rounded-2xl flex items-center justify-center p-3">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo_%282020-present%29.svg" alt="Google Drive" className="w-full h-full" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900">Connect Google Drive</h3>
+              <p className="text-sm text-zinc-500">Secure cloud storage for your memories</p>
+            </div>
+          </div>
+          <div className="hidden sm:block px-3 py-1 bg-zinc-100 rounded-full text-xs font-bold text-zinc-500">
+            Recommended
           </div>
         </div>
-      </div>
 
-      <button
-        onClick={handleConnect}
-        className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold text-lg hover:shadow-lg transition-all flex items-center justify-center gap-3"
-      >
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12.545 10.239l3.448 5.97h-6.895l3.447-5.97zm5.707 0l-3.448-5.97-6.896 11.94h3.448l3.448-5.97h3.448zm-11.413 0h-6.896l3.448 5.97 3.448-5.97z" />
-        </svg>
-        Connect Google Drive
-      </button>
+        <div className="grid sm:grid-cols-2 gap-6 mb-8">
+          <ul className="space-y-3 text-sm text-zinc-600">
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Unlimited photo storage (via Google)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Access photos outside the app</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Automatic backup & sync</span>
+            </li>
+          </ul>
+          <div className="bg-zinc-50 rounded-xl p-4 text-xs text-zinc-500 leading-relaxed">
+            We use Google Drive to store your photos securely. This ensures you always own your data and can access your memories even if you stop using our app.
+          </div>
+        </div>
 
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-        <p className="text-sm text-gray-700 mb-3">
-          <strong>Why connect Google Drive?</strong>
-        </p>
-        <ul className="text-sm text-gray-600 space-y-2">
-          <li className="flex items-start gap-2">
-            <span>✓</span>
-            <span>Your photos are saved to YOUR personal Google Drive</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>✓</span>
-            <span>Free unlimited storage with Google Photos quality</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>✓</span>
-            <span>Access photos anytime, even outside the app</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>✓</span>
-            <span>Automatically backed up by Google</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>✓</span>
-            <span>You control the photos - delete or share as you wish</span>
-          </li>
-        </ul>
+        <button
+          onClick={handleConnect}
+          className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-bold text-base shadow-lg shadow-zinc-200 transition-all flex items-center justify-center gap-2 active:scale-95"
+        >
+          <HardDrive className="w-5 h-5" />
+          Connect Google Drive Account
+        </button>
       </div>
     </div>
   );
