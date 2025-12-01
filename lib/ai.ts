@@ -159,8 +159,76 @@ Return ONLY a valid JSON array with this structure:
     return insights as ExpenseInsight[];
   } catch (error) {
     console.error("Error analyzing expenses:", error);
-    throw new Error("Failed to analyze expenses");
+    
+    // Fallback: Generate simple rule-based insights without AI
+    return generateFallbackInsights(totalBudget, spent, categoryBreakdown, daysRemaining);
   }
+}
+
+// Fallback function for when AI is unavailable
+function generateFallbackInsights(
+  totalBudget: number,
+  totalSpent: number,
+  categoryBreakdown: { category: string; spent: number; budget: number }[],
+  daysRemaining: number
+): ExpenseInsight[] {
+  const insights: ExpenseInsight[] = [];
+  const percentUsed = (totalSpent / totalBudget) * 100;
+  const remaining = totalBudget - totalSpent;
+  const dailyBudget = daysRemaining > 0 ? remaining / daysRemaining : 0;
+
+  // Overall budget insight
+  if (percentUsed > 100) {
+    insights.push({
+      message: `You've exceeded your total budget by $${(totalSpent - totalBudget).toFixed(0)}`,
+      severity: "alert",
+      recommendation: "Consider reducing expenses or adjusting your budget for the remaining trip."
+    });
+  } else if (percentUsed > 80) {
+    insights.push({
+      message: `You've used ${percentUsed.toFixed(0)}% of your budget with ${daysRemaining} days remaining`,
+      severity: "warning",
+      recommendation: `Try to keep daily spending under $${dailyBudget.toFixed(0)} to stay on track.`
+    });
+  } else if (percentUsed > 50) {
+    insights.push({
+      message: `Good progress! You've used ${percentUsed.toFixed(0)}% of your budget`,
+      severity: "info",
+      recommendation: `You have about $${dailyBudget.toFixed(0)} per day for the rest of your trip.`
+    });
+  }
+
+  // Category-specific insights
+  for (const cat of categoryBreakdown) {
+    const catPercent = cat.budget > 0 ? (cat.spent / cat.budget) * 100 : 0;
+    
+    if (catPercent > 100) {
+      insights.push({
+        message: `${cat.category} is over budget by $${(cat.spent - cat.budget).toFixed(0)}`,
+        severity: "alert",
+        category: cat.category,
+        recommendation: `Consider cutting back on ${cat.category.toLowerCase()} spending.`
+      });
+    } else if (catPercent > 90 && daysRemaining > 3) {
+      insights.push({
+        message: `${cat.category} budget is almost depleted (${catPercent.toFixed(0)}% used)`,
+        severity: "warning",
+        category: cat.category,
+        recommendation: `Only $${(cat.budget - cat.spent).toFixed(0)} remaining for ${cat.category.toLowerCase()}.`
+      });
+    }
+  }
+
+  // Daily spending insight
+  if (daysRemaining > 0 && dailyBudget > 0) {
+    insights.push({
+      message: `Daily budget available: $${dailyBudget.toFixed(0)}`,
+      severity: "info",
+      recommendation: `Spread your remaining $${remaining.toFixed(0)} over ${daysRemaining} days.`
+    });
+  }
+
+  return insights.slice(0, 5); // Limit to 5 insights
 }
 
 export async function suggestDestinations(

@@ -17,16 +17,26 @@ import {
   Sparkles,
   Loader2,
   Globe,
+  Spade,
+  RefreshCw,
+  Activity,
+  Settings,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import Counter from "@/components/ui/Counter";
 import LiveClock from "@/components/dashboard/LiveClock";
+import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { handleSignOut } from "@/app/actions";
 import { useState, useCallback, memo } from "react";
 
 interface DashboardProps {
   user: {
     name?: string | null;
+    email?: string | null;
     image?: string | null;
   };
   stats: {
@@ -78,6 +88,8 @@ function DashboardClient({ user, stats, t }: DashboardProps) {
   const { activeTrip, upcomingTrip, lastTrip, tripStatus, totalNetWorth, visitedCount, recentExpenses = [], recentMemory, greeting } = stats;
   const featuredTrip = activeTrip || upcomingTrip || lastTrip;
   const firstName = user.name?.split(' ')[0] || "Traveler";
+  const userInitial = user?.name?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U";
+  const userDisplayName = user?.name ?? user?.email ?? "User";
 
   // State for AI Image Generation
   const [tripImage, setTripImage] = useState<string | null>(
@@ -429,6 +441,90 @@ function DashboardClient({ user, stats, t }: DashboardProps) {
             </Link>
           </motion.div>
 
+          {/* My Trips */}
+          <motion.div variants={item} className="col-span-1 h-full">
+            <Link href="/trips" className="block h-full">
+              <SpotlightCard className="h-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl hover:border-indigo-200/50 dark:hover:border-indigo-800/50">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30 transition-all duration-500" />
+                <div className="p-6 h-full flex flex-col justify-between relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div className="p-3.5 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-500 dark:text-indigo-400 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 ring-4 ring-indigo-50/50 dark:ring-indigo-900/30">
+                      <Plane size={24} />
+                    </div>
+                    <ArrowRight size={20} className="text-zinc-300 dark:text-zinc-600 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white group-hover:text-indigo-900 dark:group-hover:text-indigo-300 transition-colors">My Trips</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">View all adventures</p>
+                  </div>
+                </div>
+              </SpotlightCard>
+            </Link>
+          </motion.div>
+
+          {/* Poker */}
+          <motion.div variants={item} className="col-span-1 h-full">
+            <Link href="/poker" className="block h-full">
+              <SpotlightCard className="h-full bg-gradient-to-br from-emerald-900 to-emerald-950 border-emerald-800 hover:border-emerald-700">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                <div className="p-6 h-full flex flex-col justify-between relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div className="p-3.5 bg-white/10 text-white rounded-2xl backdrop-blur-md group-hover:scale-110 transition-transform duration-300 border border-white/10 ring-4 ring-white/5">
+                      <Spade size={24} />
+                    </div>
+                    <ArrowRight size={20} className="text-emerald-400/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Poker Night</h3>
+                    <p className="text-emerald-300/70 text-sm">Track games & stats</p>
+                  </div>
+                </div>
+              </SpotlightCard>
+            </Link>
+          </motion.div>
+
+          {/* Converter */}
+          <motion.div variants={item} className="col-span-1 h-full">
+            <Link href="/converter" className="block h-full">
+              <SpotlightCard className="h-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl hover:border-cyan-200/50 dark:hover:border-cyan-800/50">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 dark:bg-cyan-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-cyan-500/20 dark:group-hover:bg-cyan-500/30 transition-all duration-500" />
+                <div className="p-6 h-full flex flex-col justify-between relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div className="p-3.5 bg-cyan-50 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400 rounded-2xl group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 ring-4 ring-cyan-50/50 dark:ring-cyan-900/30">
+                      <RefreshCw size={24} />
+                    </div>
+                    <ArrowRight size={20} className="text-zinc-300 dark:text-zinc-600 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white group-hover:text-cyan-900 dark:group-hover:text-cyan-300 transition-colors">Converter</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">Currency exchange</p>
+                  </div>
+                </div>
+              </SpotlightCard>
+            </Link>
+          </motion.div>
+
+          {/* Health */}
+          <motion.div variants={item} className="col-span-1 h-full">
+            <Link href="/health" className="block h-full">
+              <SpotlightCard className="h-full bg-gradient-to-br from-pink-50/50 to-purple-50/50 dark:from-pink-950/30 dark:to-purple-950/30 backdrop-blur-xl border-pink-100/50 dark:border-pink-900/30 hover:border-pink-200 dark:hover:border-pink-800">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 dark:bg-pink-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-pink-500/20 dark:group-hover:bg-pink-500/30 transition-all duration-500" />
+                <div className="p-6 h-full flex flex-col justify-between relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div className="p-3.5 bg-white dark:bg-zinc-800 text-pink-500 dark:text-pink-400 rounded-2xl shadow-sm group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 ring-4 ring-pink-50 dark:ring-pink-900/30">
+                      <Activity size={24} />
+                    </div>
+                    <ArrowRight size={20} className="text-zinc-300 dark:text-zinc-600 group-hover:text-pink-600 dark:group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white group-hover:text-pink-900 dark:group-hover:text-pink-300 transition-colors">Health</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">Track wellness</p>
+                  </div>
+                </div>
+              </SpotlightCard>
+            </Link>
+          </motion.div>
+
           {/* New Trip Shortcut */}
           <motion.div variants={item} className="col-span-1 h-full">
             <Link href="/trips/new" className="block h-full">
@@ -445,6 +541,57 @@ function DashboardClient({ user, stats, t }: DashboardProps) {
             </Link>
           </motion.div>
 
+        </motion.div>
+
+        {/* User Profile & Settings Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mt-8 mb-4"
+        >
+          <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 p-4 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* User Info */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg shadow-lg">
+                  {userInitial}
+                </div>
+                <div>
+                  <p className="font-semibold text-zinc-900 dark:text-white">{userDisplayName}</p>
+                  {user?.email && user?.name && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <LanguageSwitcher />
+                
+                <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700 mx-1" />
+                
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <Settings size={18} />
+                  <span className="hidden sm:inline">Settings</span>
+                </Link>
+                
+                <form action={handleSignOut}>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut size={18} />
+                    <span className="hidden sm:inline">Sign Out</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 

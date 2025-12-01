@@ -33,15 +33,7 @@ export default async function TripDetailPage({
           },
         }
       },
-      // Legacy expenses (for migration compatibility - will be removed once fully migrated)
-      expenses: {
-        include: {
-          user: { select: { id: true, name: true, email: true } },
-        },
-        orderBy: { date: "desc" },
-        take: 10,
-      },
-      // Unified transactions - limit to 10 initially
+      // Transactions (Expense table deprecated)
       transactions: {
         include: {
           user: { select: { id: true, name: true, email: true } },
@@ -50,7 +42,7 @@ export default async function TripDetailPage({
           },
         },
         orderBy: { date: "desc" },
-        take: 10,
+        // Load all transactions for the trip (no limit)
       },
       activities: {
         orderBy: [{ date: "asc" }, { order: "asc" }],
@@ -66,7 +58,6 @@ export default async function TripDetailPage({
       // Get counts for pagination info
       _count: {
         select: {
-          expenses: true,
           transactions: true,
           posts: true,
           activities: true,
@@ -101,34 +92,36 @@ export default async function TripDetailPage({
     return amount * rate;
   };
 
-  // Calculate total spent (combining legacy expenses and transactions during migration)
-  // TODO: Remove legacy expense calculation once migration is complete
-  const legacyExpenseTotal = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
-  const transactionTotal = trip.transactions.reduce((sum, tx) => {
-    const currency = tx.currency || tx.account.currency;
-    return sum + convertToUSD(Math.abs(tx.amount), currency);
+  // Convert transactions to expense format for display (Expense table deprecated)
+  const allExpenses = trip.transactions
+    .filter((tx: any) => tx.amount < 0) // Only show expenses (negative amounts)
+    .map((tx: any) => ({
+      id: tx.id,
+      amount: Math.abs(tx.amount), // Expenses are positive amounts
+      category: tx.category || "Other",
+      currency: tx.currency || tx.account?.currency || "USD",
+      date: tx.date,
+      note: tx.description || tx.merchantName || null,
+      location: tx.location || trip.destination || null,
+      receiptUrl: null,
+      isTransaction: true, // Flag to identify as transaction for deletion/editing
+      accountId: tx.accountId, // Include for editing
+      user: tx.user || { name: "Unknown", email: "" },
+    }))
+    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Calculate total spent from merged expenses
+  const totalSpent = allExpenses.reduce((sum, exp) => {
+    return sum + convertToUSD(exp.amount, exp.currency);
   }, 0);
-  
-  // Use the larger to avoid double-counting during migration period
-  const totalSpent = Math.max(legacyExpenseTotal, transactionTotal);
   const remaining = trip.totalBudget - totalSpent;
   const percentUsed = (totalSpent / trip.totalBudget) * 100;
 
-  // Calculate spending by category (combining legacy and new during migration)
+  // Calculate spending by category from merged expenses
   const categorySpending = trip.budgetCategories.map((bc) => {
-    const legacySpent = trip.expenses
+    const spent = allExpenses
       .filter((exp) => exp.category === bc.category)
       .reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
-    
-    const txSpent = trip.transactions
-      .filter((tx) => tx.category === bc.category)
-      .reduce((sum, tx) => {
-        const currency = tx.currency || tx.account.currency;
-        return sum + convertToUSD(Math.abs(tx.amount), currency);
-      }, 0);
-    
-    // Use the larger to avoid double-counting during migration
-    const spent = Math.max(legacySpent, txSpent);
     
     return {
       category: bc.category,
@@ -160,7 +153,10 @@ export default async function TripDetailPage({
         {/* Tabbed Content */}
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
           <TripPageTabs
-            trip={trip}
+            trip={{
+              ...trip,
+              expenses: allExpenses, // Pass merged expenses including transactions
+            }}
             categorySpending={categorySpending}
             householdUsers={householdUsers}
             currentUserEmail={session.user.email || undefined}

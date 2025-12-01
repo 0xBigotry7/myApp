@@ -33,7 +33,7 @@ async function main() {
         },
       },
       _count: {
-        select: { expenses: true },
+        select: { transactions: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -43,13 +43,13 @@ async function main() {
     console.log(`  - ${trip.name} (${trip.destination})`);
     console.log(`    Owner: ${trip.owner.email} (${trip.owner.name})`);
     console.log(`    Members: ${trip.members.length}`);
-    console.log(`    Expenses: ${trip._count.expenses}`);
+    console.log(`    Transactions: ${trip._count.transactions}`);
     console.log(`    Budget: $${trip.totalBudget}`);
     console.log(`    Dates: ${trip.startDate.toISOString().split("T")[0]} to ${trip.endDate.toISOString().split("T")[0]}`);
   });
 
-  // Check expenses
-  const expenses = await prisma.expense.findMany({
+  // Check transactions
+  const transactions = await prisma.transaction.findMany({
     select: {
       id: true,
       amount: true,
@@ -59,10 +59,11 @@ async function main() {
       date: true,
     },
     take: 10,
+    orderBy: { date: "desc" },
   });
-  console.log(`\nFound ${expenses.length} expenses (showing first 10):`);
-  expenses.forEach((exp) => {
-    console.log(`  - $${exp.amount} (${exp.category}) - Trip: ${exp.tripId}`);
+  console.log(`\nFound ${transactions.length} transactions (showing first 10):`);
+  transactions.forEach((tx) => {
+    console.log(`  - $${tx.amount} (${tx.category}) - Trip: ${tx.tripId || "none"}`);
   });
 }
 
@@ -74,4 +75,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

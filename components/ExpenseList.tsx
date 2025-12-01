@@ -3,10 +3,11 @@
 import { format } from "date-fns";
 import { useLocale } from "@/components/LanguageSwitcher";
 import { getTranslations, translateCategory } from "@/lib/i18n";
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AccommodationExpenseCardCompact from "./AccommodationExpenseCardCompact";
 import EditExpenseModal from "./EditExpenseModal";
+import EditTransactionModal from "./EditTransactionModal";
 import { 
   Edit2, 
   Trash2, 
@@ -40,10 +41,26 @@ interface Expense {
   latitude?: number | null;
   longitude?: number | null;
   confirmationNumber?: string | null;
+  // Transaction fields (for unified transactions)
+  isTransaction?: boolean; // Flag to identify if this is a transaction vs legacy expense
+  accountId?: string; // Account ID for transactions
   user: {
     name: string;
     email: string;
   };
+}
+
+interface Account {
+  id: string;
+  name: string;
+  type: string;
+  currency: string;
+}
+
+interface Trip {
+  id: string;
+  name: string;
+  destination: string;
 }
 
 interface ExpenseListProps {
@@ -60,6 +77,32 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<any | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+
+  // Fetch accounts and trips for the edit modal
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [accountsRes, tripsRes] = await Promise.all([
+          fetch("/api/accounts"),
+          fetch("/api/trips"),
+        ]);
+        if (accountsRes.ok) {
+          const data = await accountsRes.json();
+          setAccounts(data.accounts || data || []);
+        }
+        if (tripsRes.ok) {
+          const data = await tripsRes.json();
+          setTrips(data.trips || data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data for edit modal:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Memoize currency symbols map
   const getCurrencySymbol = useCallback((currency: string) => {
@@ -74,14 +117,19 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
     return symbols[currency] || "$";
   }, []);
 
-  const handleDelete = useCallback(async (expenseId: string) => {
+  const handleDelete = useCallback(async (expenseId: string, isTransaction?: boolean) => {
     if (!confirm("Are you sure you want to delete this expense?")) {
       return;
     }
 
     setDeletingId(expenseId);
     try {
-      const response = await fetch(`/api/expenses/${expenseId}`, {
+      // Use transaction API if it's a transaction, otherwise use expense API
+      const apiPath = isTransaction 
+        ? `/api/transactions/${expenseId}`
+        : `/api/expenses/${expenseId}`;
+      
+      const response = await fetch(apiPath, {
         method: "DELETE",
       });
 
@@ -188,15 +236,41 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
 
               {/* Actions - Floating on desktop, always visible on mobile but subtle */}
               <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto">
+                {expense.isTransaction ? (
+                  // For transactions, open edit modal
+                  <button
+                    onClick={() => {
+                      setEditingTransaction({
+                        id: expense.id,
+                        amount: -expense.amount, // Convert back to negative for expense
+                        category: expense.category,
+                        description: expense.note,
+                        date: new Date(expense.date).toISOString(),
+                        accountId: expense.accountId || accounts[0]?.id || "",
+                        tripId: tripId,
+                        location: expense.location,
+                        isTripRelated: true,
+                        isRecurring: false,
+                        currency: expense.currency,
+                      });
+                    }}
+                    className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                ) : (
+                  // For legacy expenses, use the modal
+                  <button
+                    onClick={() => setEditingExpense(expense)}
+                    className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                )}
                 <button
-                  onClick={() => setEditingExpense(expense)}
-                  className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
-                  title="Edit"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(expense.id)}
+                  onClick={() => handleDelete(expense.id, expense.isTransaction)}
                   disabled={deletingId === expense.id}
                   className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-xl transition-all"
                   title="Delete"
@@ -213,7 +287,7 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
         })}
       </div>
 
-      {/* Edit Expense Modal */}
+      {/* Edit Expense Modal (for legacy expenses) */}
       {editingExpense && !isAccommodation(editingExpense) && (
         <EditExpenseModal
           isOpen={true}
@@ -224,6 +298,16 @@ function ExpenseList({ expenses, currentUserEmail, tripId, categories, defaultLo
           defaultLocation={defaultLocation}
         />
       )}
+
+      {/* Edit Transaction Modal (for unified transactions) */}
+      <EditTransactionModal
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        accounts={accounts}
+        trips={trips}
+        onSuccess={() => router.refresh()}
+      />
     </div>
   );
 }

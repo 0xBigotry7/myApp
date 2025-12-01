@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { getTranslations, type Locale } from "@/lib/i18n";
 import { differenceInDays, format, addDays } from "date-fns";
-import { Droplets, Sparkles, Moon, Sun, Heart } from "lucide-react";
+import { Droplets, Sparkles, Moon, Sun, Heart, CalendarCheck } from "lucide-react";
 
 interface Props {
   currentCycle: any;
@@ -180,12 +180,24 @@ export default function CyclePhaseRing({
 
   const phaseInfo = PHASE_INFO[cycleInfo.phase];
 
-  // SVG Ring calculations
-  const size = 280;
-  const strokeWidth = 20;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progressOffset = circumference - (cycleInfo.progress / 100) * circumference;
+  // SVG Ring calculations - responsive sizing
+  const desktopSize = 280;
+  const mobileSize = 200;
+  const strokeWidth = 16;
+  
+  // Use CSS media query logic via a simpler approach - render both and hide with CSS
+  const getCircleProps = (size: number) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const progressOffset = circumference - (cycleInfo.progress / 100) * circumference;
+    return { size, radius, circumference, progressOffset };
+  };
+  
+  const desktop = getCircleProps(desktopSize);
+  const mobile = getCircleProps(mobileSize);
+
+  // Check if period needs to be ended (cycle exists but no end date set)
+  const needsEndDate = currentCycle && !currentCycle.endDate;
 
   // Phase segments for the ring
   const menstrualEnd = (avgPeriodLength / avgCycleLength) * 100;
@@ -193,127 +205,136 @@ export default function CyclePhaseRing({
   const ovulationEnd = ((avgCycleLength - 14) / avgCycleLength) * 100;
   const pmsStart = ((avgCycleLength - 5) / avgCycleLength) * 100;
 
+  // Render a cycle ring SVG
+  const renderRing = (props: { size: number; radius: number; circumference: number; progressOffset: number }, className: string) => (
+    <div className={`relative flex-shrink-0 ${className}`}>
+      <svg width={props.size} height={props.size} className="transform -rotate-90">
+        {/* Background track with phase colors */}
+        <defs>
+          <linearGradient id={`phaseGradient-${props.size}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#E11D48" />
+            <stop offset={`${menstrualEnd}%`} stopColor="#E11D48" />
+            <stop offset={`${menstrualEnd}%`} stopColor="#0EA5E9" />
+            <stop offset={`${ovulationStart}%`} stopColor="#0EA5E9" />
+            <stop offset={`${ovulationStart}%`} stopColor="#10B981" />
+            <stop offset={`${ovulationEnd}%`} stopColor="#10B981" />
+            <stop offset={`${ovulationEnd}%`} stopColor="#8B5CF6" />
+            <stop offset={`${pmsStart}%`} stopColor="#8B5CF6" />
+            <stop offset={`${pmsStart}%`} stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+        </defs>
+
+        {/* Outer decorative ring */}
+        <circle
+          cx={props.size / 2}
+          cy={props.size / 2}
+          r={props.radius + 6}
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeOpacity="0.3"
+        />
+
+        {/* Background ring with phase indicators */}
+        <circle
+          cx={props.size / 2}
+          cy={props.size / 2}
+          r={props.radius}
+          fill="none"
+          stroke="white"
+          strokeWidth={strokeWidth}
+          strokeOpacity="0.5"
+        />
+
+        {/* Progress ring */}
+        {currentCycle && (
+          <circle
+            cx={props.size / 2}
+            cy={props.size / 2}
+            r={props.radius}
+            fill="none"
+            stroke={phaseInfo.color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={props.circumference}
+            strokeDashoffset={props.progressOffset}
+            className="transition-all duration-1000 ease-out"
+            style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
+          />
+        )}
+
+        {/* Inner decorative ring */}
+        <circle
+          cx={props.size / 2}
+          cy={props.size / 2}
+          r={props.radius - 12}
+          fill="none"
+          stroke="white"
+          strokeWidth="1"
+          strokeOpacity="0.4"
+        />
+      </svg>
+
+      {/* Center content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div
+          className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-1 sm:mb-2 shadow-lg"
+          style={{ backgroundColor: `${phaseInfo.color}20`, color: phaseInfo.color }}
+        >
+          <span className="[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-6 sm:[&>svg]:h-6">{phaseInfo.icon}</span>
+        </div>
+        {currentCycle ? (
+          <>
+            <div className="text-3xl sm:text-5xl font-black text-zinc-800 dark:text-white leading-none">
+              {cycleInfo.dayOfCycle}
+            </div>
+            <div className="text-[10px] sm:text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-0.5 sm:mt-1">
+              {locale === "zh" ? "周期第几天" : "Day of Cycle"}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-2xl sm:text-4xl mb-1 sm:mb-2">🌸</div>
+            <div className="text-[10px] sm:text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              {locale === "zh" ? "开始追踪" : "Start Tracking"}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <div className={`relative overflow-hidden rounded-[32px] p-8 shadow-xl border border-white/60 dark:border-zinc-800 bg-gradient-to-br ${phaseInfo.bgGradient} dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900`}>
+    <div className={`relative overflow-hidden rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-xl border border-white/60 dark:border-zinc-800 bg-gradient-to-br ${phaseInfo.bgGradient} dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900`}>
       {/* Decorative elements */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/30 dark:bg-white/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/40 dark:bg-white/5 rounded-full blur-2xl pointer-events-none" />
       <div className="absolute top-1/2 right-0 w-32 h-32 bg-rose-200/20 dark:bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
 
       <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-8">
-          {/* Cycle Ring */}
-          <div className="relative flex-shrink-0">
-            <svg width={size} height={size} className="transform -rotate-90">
-              {/* Background track with phase colors */}
-              <defs>
-                <linearGradient id="phaseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#E11D48" />
-                  <stop offset={`${menstrualEnd}%`} stopColor="#E11D48" />
-                  <stop offset={`${menstrualEnd}%`} stopColor="#0EA5E9" />
-                  <stop offset={`${ovulationStart}%`} stopColor="#0EA5E9" />
-                  <stop offset={`${ovulationStart}%`} stopColor="#10B981" />
-                  <stop offset={`${ovulationEnd}%`} stopColor="#10B981" />
-                  <stop offset={`${ovulationEnd}%`} stopColor="#8B5CF6" />
-                  <stop offset={`${pmsStart}%`} stopColor="#8B5CF6" />
-                  <stop offset={`${pmsStart}%`} stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#F59E0B" />
-                </linearGradient>
-              </defs>
-
-              {/* Outer decorative ring */}
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius + 8}
-                fill="none"
-                stroke="white"
-                strokeWidth="2"
-                strokeOpacity="0.3"
-              />
-
-              {/* Background ring with phase indicators */}
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke="white"
-                strokeWidth={strokeWidth}
-                strokeOpacity="0.5"
-              />
-
-              {/* Progress ring */}
-              {currentCycle && (
-                <circle
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={phaseInfo.color}
-                  strokeWidth={strokeWidth}
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={progressOffset}
-                  className="transition-all duration-1000 ease-out"
-                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
-                />
-              )}
-
-              {/* Inner decorative ring */}
-              <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius - 14}
-                fill="none"
-                stroke="white"
-                strokeWidth="1"
-                strokeOpacity="0.4"
-              />
-            </svg>
-
-            {/* Center content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-lg"
-                style={{ backgroundColor: `${phaseInfo.color}20`, color: phaseInfo.color }}
-              >
-                {phaseInfo.icon}
-              </div>
-              {currentCycle ? (
-                <>
-                  <div className="text-5xl font-black text-zinc-800 dark:text-white leading-none">
-                    {cycleInfo.dayOfCycle}
-                  </div>
-                  <div className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-1">
-                    {locale === "zh" ? "周期第几天" : "Day of Cycle"}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-4xl mb-2">🌸</div>
-                  <div className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                    {locale === "zh" ? "开始追踪" : "Start Tracking"}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+        <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-8">
+          {/* Cycle Ring - Mobile */}
+          {renderRing(mobile, "sm:hidden")}
+          {/* Cycle Ring - Desktop */}
+          {renderRing(desktop, "hidden sm:block")}
 
           {/* Info Panel */}
-          <div className="flex-1 text-center lg:text-left">
+          <div className="flex-1 text-center lg:text-left w-full">
             <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-4"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-3 sm:mb-4"
               style={{ backgroundColor: `${phaseInfo.color}15`, color: phaseInfo.color }}
             >
-              {phaseInfo.icon}
+              <span className="[&>svg]:w-3 [&>svg]:h-3 sm:[&>svg]:w-4 sm:[&>svg]:h-4">{phaseInfo.icon}</span>
               <span>{locale === "zh" ? getChinesePhase(cycleInfo.phase) : phaseInfo.name}</span>
             </div>
 
-            <h2 className="text-2xl lg:text-3xl font-black text-zinc-800 dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-zinc-800 dark:text-white mb-2">
               {currentCycle ? (
                 cycleInfo.isPeriodActive ? (
                   locale === "zh" ? "经期进行中" : "On Your Period"
+                ) : needsEndDate ? (
+                  locale === "zh" ? "别忘了结束经期" : "Don't Forget to End Period"
                 ) : cycleInfo.daysUntilNextPeriod !== null && cycleInfo.daysUntilNextPeriod <= 3 ? (
                   locale === "zh" ? "经期即将到来" : "Period Coming Soon"
                 ) : (
@@ -324,7 +345,7 @@ export default function CyclePhaseRing({
               )}
             </h2>
 
-            <p className="text-zinc-600 dark:text-zinc-400 mb-6 max-w-md">
+            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 mb-4 sm:mb-6 max-w-md">
               {currentCycle && cycleInfo.nextPeriodDate ? (
                 <>
                   {locale === "zh" ? "下次经期预计" : "Next period expected"}{" "}
@@ -346,26 +367,26 @@ export default function CyclePhaseRing({
 
             {/* Quick Stats */}
             {currentCycle && (
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/40 dark:border-zinc-700/40">
-                  <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3 text-center border border-white/40 dark:border-zinc-700/40">
+                  <div className="text-[10px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-0.5 sm:mb-1">
                     {locale === "zh" ? "周期" : "Cycle"}
                   </div>
-                  <div className="text-xl font-black text-zinc-800 dark:text-white">{avgCycleLength}</div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{locale === "zh" ? "天" : "days"}</div>
+                  <div className="text-lg sm:text-xl font-black text-zinc-800 dark:text-white">{avgCycleLength}</div>
+                  <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">{locale === "zh" ? "天" : "days"}</div>
                 </div>
-                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/40 dark:border-zinc-700/40">
-                  <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3 text-center border border-white/40 dark:border-zinc-700/40">
+                  <div className="text-[10px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-0.5 sm:mb-1">
                     {locale === "zh" ? "经期" : "Period"}
                   </div>
-                  <div className="text-xl font-black text-zinc-800 dark:text-white">{avgPeriodLength}</div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{locale === "zh" ? "天" : "days"}</div>
+                  <div className="text-lg sm:text-xl font-black text-zinc-800 dark:text-white">{avgPeriodLength}</div>
+                  <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">{locale === "zh" ? "天" : "days"}</div>
                 </div>
-                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/40 dark:border-zinc-700/40">
-                  <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                <div className="bg-white/60 dark:bg-zinc-800/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3 text-center border border-white/40 dark:border-zinc-700/40">
+                  <div className="text-[10px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-0.5 sm:mb-1">
                     {locale === "zh" ? "排卵" : "Ovulation"}
                   </div>
-                  <div className="text-lg font-bold text-zinc-800 dark:text-white">
+                  <div className="text-base sm:text-lg font-bold text-zinc-800 dark:text-white">
                     {cycleInfo.ovulationDate
                       ? format(cycleInfo.ovulationDate, locale === "zh" ? "M/d" : "M/d")
                       : "-"}
@@ -374,22 +395,35 @@ export default function CyclePhaseRing({
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3">
-              {currentCycle && cycleInfo.isPeriodActive ? (
+            {/* Action Buttons - Now shows End Period if cycle has no end date */}
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {/* Show End Period button if period is active OR if cycle exists without end date */}
+              {currentCycle && (cycleInfo.isPeriodActive || needsEndDate) && (
                 <button
                   onClick={onEndPeriod}
-                  className="flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-md text-zinc-800 rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md text-zinc-800 dark:text-white rounded-xl sm:rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm sm:text-base"
                 >
-                  <Moon className="w-5 h-5 text-violet-500" />
-                  {locale === "zh" ? "结束经期" : "End Period"}
+                  {needsEndDate && !cycleInfo.isPeriodActive ? (
+                    <>
+                      <CalendarCheck className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                      {locale === "zh" ? "标记结束日期" : "Mark End Date"}
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
+                      {locale === "zh" ? "结束经期" : "End Period"}
+                    </>
+                  )}
                 </button>
-              ) : (
+              )}
+              
+              {/* Show Start Period button when no current cycle OR cycle is complete */}
+              {(!currentCycle || !needsEndDate) && (
                 <button
                   onClick={onStartPeriod}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-bold shadow-lg shadow-rose-200 hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl sm:rounded-2xl font-bold shadow-lg shadow-rose-200 dark:shadow-rose-900/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all text-sm sm:text-base"
                 >
-                  <Droplets className="w-5 h-5" />
+                  <Droplets className="w-4 h-4 sm:w-5 sm:h-5" />
                   {currentCycle
                     ? locale === "zh" ? "新周期开始" : "Start New Cycle"
                     : locale === "zh" ? "记录第一次经期" : "Log First Period"}
@@ -401,15 +435,15 @@ export default function CyclePhaseRing({
 
         {/* Phase Tips */}
         {currentCycle && (
-          <div className="mt-8 pt-6 border-t border-white/40 dark:border-zinc-700/40">
-            <h3 className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
+          <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-white/40 dark:border-zinc-700/40">
+            <h3 className="text-xs sm:text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2 sm:mb-3">
               💡 {locale === "zh" ? "本阶段小贴士" : "Tips for This Phase"}
             </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               {phaseInfo.tips.map((tip, i) => (
                 <div
                   key={i}
-                  className="bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm rounded-xl p-3 text-sm text-zinc-700 dark:text-zinc-300 border border-white/40 dark:border-zinc-700/40"
+                  className="bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 border border-white/40 dark:border-zinc-700/40"
                 >
                   {locale === "zh" ? translateTip(tip) : tip}
                 </div>

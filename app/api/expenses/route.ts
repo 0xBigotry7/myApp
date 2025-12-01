@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { convertCurrency } from "@/lib/currency";
 
+// This route now creates transactions instead of expenses (Expense table deprecated)
 export async function POST(request: Request) {
   const session = await auth();
 
@@ -13,28 +14,15 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      tripId, amount, category, currency, date, note, accountId, location, receiptUrl,
-      transportationMethod, fromLocation, toLocation,
-      // Accommodation fields
-      accommodationName, accommodationType, checkInDate, checkOutDate, numberOfNights,
-      googlePlaceId, hotelAddress, hotelPhone, hotelWebsite, hotelRating, hotelPhotos,
-      latitude, longitude, confirmationNumber,
-      // Category-specific fields
-      transportationDistance, transportationDuration, ticketReference, numberOfPassengers,
-      partySize, mealType, cuisineType, restaurantName, hasReservation,
-      activityType, activityName, activityDuration, numberOfTickets, activityReference, hasGuide,
-      storeName, shoppingCategory, numberOfItems, hasReturnPolicy, isGift, giftRecipient,
-      otherSubcategory, expenseRating
+      tripId, amount, category, currency, date, note, accountId, location,
     } = body;
 
-    // Parse date correctly - if it's just a date string (YYYY-MM-DD), treat it as local timezone at noon
+    // Parse date correctly
     let parsedDate: Date;
     if (date && typeof date === 'string') {
       if (date.includes('T') || date.includes('Z')) {
-        // Already has time info, use as-is
         parsedDate = new Date(date);
       } else {
-        // Just a date string - parse as local date at noon to avoid timezone issues
         const [year, month, day] = date.split('-').map(Number);
         parsedDate = new Date(year, month - 1, day, 12, 0, 0, 0);
       }
@@ -51,13 +39,10 @@ export async function POST(request: Request) {
           { members: { some: { userId: session.user.id } } }
         ]
       },
-      include: {
-        members: true,
-      },
     });
 
     if (!trip) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Trip not found or unauthorized" }, { status: 401 });
     }
 
     // Get user's default account or first active account if accountId not provided
@@ -70,121 +55,71 @@ export async function POST(request: Request) {
       userAccountId = defaultAccount?.id;
     }
 
-    // Parse accommodation dates if provided
-    let parsedCheckInDate: Date | null = null;
-    let parsedCheckOutDate: Date | null = null;
-
-    if (checkInDate) {
-      parsedCheckInDate = new Date(checkInDate);
-    }
-    if (checkOutDate) {
-      parsedCheckOutDate = new Date(checkOutDate);
+    if (!userAccountId) {
+      return NextResponse.json({ error: "No account found" }, { status: 400 });
     }
 
-    // Create expense and transaction together in a transaction
-    const expense = await prisma.expense.create({
-      data: {
-        tripId,
-        userId: session.user.id,
-        amount,
-        category,
-        currency,
-        date: parsedDate,
-        note: note || null,
-        location: location || null,
-        receiptUrl: receiptUrl || null,
-        transportationMethod: transportationMethod || null,
-        fromLocation: fromLocation || null,
-        toLocation: toLocation || null,
-        // Accommodation fields
-        accommodationName: accommodationName || null,
-        accommodationType: accommodationType || null,
-        checkInDate: parsedCheckInDate,
-        checkOutDate: parsedCheckOutDate,
-        numberOfNights: numberOfNights || null,
-        googlePlaceId: googlePlaceId || null,
-        hotelAddress: hotelAddress || null,
-        hotelPhone: hotelPhone || null,
-        hotelWebsite: hotelWebsite || null,
-        hotelRating: hotelRating || null,
-        hotelPhotos: hotelPhotos || [],
-        latitude: latitude || null,
-        longitude: longitude || null,
-        confirmationNumber: confirmationNumber || null,
-        // Category-specific fields
-        transportationDistance: transportationDistance ?? null,
-        transportationDuration: transportationDuration ?? null,
-        ticketReference: ticketReference ?? null,
-        numberOfPassengers: numberOfPassengers ?? null,
-        partySize: partySize ?? null,
-        mealType: mealType ?? null,
-        cuisineType: cuisineType ?? null,
-        restaurantName: restaurantName ?? null,
-        hasReservation: hasReservation ?? null,
-        activityType: activityType ?? null,
-        activityName: activityName ?? null,
-        activityDuration: activityDuration ?? null,
-        numberOfTickets: numberOfTickets ?? null,
-        activityReference: activityReference ?? null,
-        hasGuide: hasGuide ?? null,
-        storeName: storeName ?? null,
-        shoppingCategory: shoppingCategory ?? null,
-        numberOfItems: numberOfItems ?? null,
-        hasReturnPolicy: hasReturnPolicy ?? null,
-        isGift: isGift ?? null,
-        giftRecipient: giftRecipient ?? null,
-        otherSubcategory: otherSubcategory ?? null,
-        expenseRating: expenseRating ?? null,
-      },
-      include: {
-        user: true,
-      },
+    const account = await prisma.account.findUnique({
+      where: { id: userAccountId },
     });
 
-    // Create corresponding transaction if account exists
-    if (userAccountId) {
-      const account = await prisma.account.findUnique({
-        where: { id: userAccountId },
-      });
-
-      if (account) {
-        // Calculate amount in account currency
-        const amountInAccountCurrency = convertCurrency(
-          Number(amount), 
-          currency || "USD", 
-          account.currency
-        );
-
-        // Create transaction and update balance atomically
-        await prisma.$transaction([
-          // Create transaction (negative amount for expense)
-          prisma.transaction.create({
-            data: {
-              userId: session.user.id,
-              accountId: userAccountId,
-              amount: -Math.abs(amountInAccountCurrency), // Always negative for expenses, converted
-              category: category || "Travel",
-              description: note || `Trip expense: ${trip.name}`,
-              date: parsedDate,
-              isTripRelated: true,
-              tripId: tripId,
-              location: trip.destination,
-            },
-          }),
-          // Update account balance using decrement
-          prisma.account.update({
-            where: { id: userAccountId },
-            data: {
-              balance: {
-                decrement: Math.abs(amountInAccountCurrency) // Converted amount
-              }
-            },
-          }),
-        ]);
-      }
+    if (!account) {
+      return NextResponse.json({ error: "Account not found" }, { status: 400 });
     }
 
-    return NextResponse.json(expense);
+    // Calculate amount in account currency
+    const expenseCurrency = currency || "USD";
+    const amountInAccountCurrency = convertCurrency(
+      Number(amount), 
+      expenseCurrency, 
+      account.currency
+    );
+
+    // Create transaction and update balance atomically
+    const [transaction] = await prisma.$transaction([
+      prisma.transaction.create({
+        data: {
+          userId: session.user.id,
+          accountId: userAccountId,
+          amount: -Math.abs(amountInAccountCurrency),
+          currency: expenseCurrency,
+          category: category || "Other",
+          description: note || `Trip expense: ${trip.name}`,
+          date: parsedDate,
+          isTripRelated: true,
+          tripId: tripId,
+          location: location || trip.destination,
+        },
+        include: {
+          user: true,
+          account: true,
+          trip: true,
+        },
+      }),
+      prisma.account.update({
+        where: { id: userAccountId },
+        data: {
+          balance: {
+            decrement: Math.abs(amountInAccountCurrency)
+          }
+        },
+      }),
+    ]);
+
+    // Return in a format compatible with old expense response
+    return NextResponse.json({
+      id: transaction.id,
+      tripId: transaction.tripId,
+      userId: transaction.userId,
+      amount: Math.abs(transaction.amount),
+      category: transaction.category,
+      currency: transaction.currency,
+      date: transaction.date,
+      note: transaction.description,
+      location: transaction.location,
+      user: transaction.user,
+      isTransaction: true,
+    });
   } catch (error) {
     console.error("Error creating expense:", error);
     return NextResponse.json(

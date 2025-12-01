@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Set the project root to avoid lockfile detection issues
+  outputFileTracingRoot: path.join(__dirname),
   // Enable experimental optimizations
   experimental: {
     // Optimize package imports - reduces bundle size significantly

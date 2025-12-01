@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -143,37 +143,42 @@ export default function EditTransactionModal({
     }
   }, [transaction]);
 
-  // Close on escape
+  // Store scroll position and handle modal
+  const scrollPositionRef = useRef(0);
+  
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isLoading) onClose();
     };
+    
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
-      // Prevent body scroll - works on iOS too
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
+      
+      // Save current scroll position
+      scrollPositionRef.current = window.scrollY;
+      
+      // Scroll to top so modal is visible (since it's centered at top)
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      
+      // Lock scroll
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     }
+    
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      // Restore scroll position
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      document.documentElement.style.overflow = '';
+      
+      // Restore scroll position when modal closes
+      if (scrollPositionRef.current > 0) {
+        window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' });
       }
     };
   }, [isOpen, isLoading, onClose]);
 
   const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -226,47 +231,53 @@ export default function EditTransactionModal({
     }
   };
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted || !isOpen) {
+    return null;
+  }
 
   const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   const selectedCategory = CATEGORIES[category] || CATEGORIES.Other;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999]">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => !isLoading && onClose()}
       />
 
-      {/* Modal Container - positions modal at top */}
-      <div className="fixed inset-0 flex items-start justify-center p-4 pt-6 sm:pt-8 pointer-events-none overflow-y-auto">
-        {/* Modal */}
-        <div className="pointer-events-auto relative bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 fade-in duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Modal - positioned at top with margin */}
+      <div 
+        className="fixed left-1/2 bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl max-h-[85vh] overflow-auto flex flex-col"
+        style={{
+          top: '20px',
+          transform: 'translateX(-50%)',
+        }}
+      >
         {/* Success Overlay */}
         {showSuccess && (
-          <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-              <Check className="w-8 h-8 text-emerald-600" />
+          <div className="absolute inset-0 z-50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-4">
+              <Check className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-lg font-bold text-zinc-900">Transaction Updated!</p>
+            <p className="text-lg font-bold text-zinc-900 dark:text-white">Transaction Updated!</p>
           </div>
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-zinc-100 shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-zinc-100 rounded-xl">
-              <Receipt className="w-5 h-5 text-zinc-600" />
+            <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+              <Receipt className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900">Edit Transaction</h2>
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Edit Transaction</h2>
           </div>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="p-2 hover:bg-zinc-100 rounded-xl transition-colors disabled:opacity-50"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors disabled:opacity-50"
           >
-            <X className="w-5 h-5 text-zinc-400" />
+            <X className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
           </button>
         </div>
 
@@ -275,20 +286,20 @@ export default function EditTransactionModal({
           <div className="p-6 space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl animate-in slide-in-from-top-2 duration-200">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                <p className="text-sm text-red-700 font-medium">{error}</p>
+              <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800 rounded-xl animate-in slide-in-from-top-2 duration-200">
+                <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
+                <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
               </div>
             )}
 
             {/* Type Toggle */}
-            <div className="flex p-1 bg-zinc-100 rounded-xl">
+            <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
               <button
                 type="button"
                 onClick={() => { setIsIncome(false); setCategory(""); }}
                 className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${!isIncome
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
                   }`}
               >
                 Expense
@@ -297,8 +308,8 @@ export default function EditTransactionModal({
                 type="button"
                 onClick={() => { setIsIncome(true); setCategory(""); }}
                 className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${isIncome
-                    ? "bg-white text-emerald-600 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                    ? "bg-white dark:bg-zinc-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
                   }`}
               >
                 Income
@@ -307,7 +318,7 @@ export default function EditTransactionModal({
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Amount</label>
+              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Amount</label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                 <input
@@ -317,9 +328,9 @@ export default function EditTransactionModal({
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
                   required
-                  className={`w-full pl-12 pr-4 py-4 bg-zinc-50 border border-zinc-200 rounded-xl text-2xl font-bold focus:ring-2 focus:border-transparent transition-all ${isIncome
-                      ? "text-emerald-600 focus:ring-emerald-500"
-                      : "text-zinc-900 focus:ring-zinc-300"
+                  className={`w-full pl-12 pr-4 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-2xl font-bold focus:ring-2 focus:border-transparent transition-all ${isIncome
+                      ? "text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500"
+                      : "text-zinc-900 dark:text-white focus:ring-zinc-300 dark:focus:ring-zinc-600"
                     }`}
                 />
               </div>
@@ -327,7 +338,7 @@ export default function EditTransactionModal({
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Category</label>
+              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Category</label>
               <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1">
                 {categories.map((cat) => {
                   const config = CATEGORIES[cat] || CATEGORIES.Other;
@@ -339,11 +350,11 @@ export default function EditTransactionModal({
                       onClick={() => setCategory(cat)}
                       className={`p-3 rounded-xl text-center transition-all duration-200 ${isSelected
                           ? `${config.color.split(' ').slice(0, 2).join(' ')} ring-2 ${config.color.split(' ')[2]} scale-105`
-                          : "bg-zinc-50 hover:bg-zinc-100"
+                          : "bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
                         }`}
                     >
                       <div className="text-xl mb-1">{config.icon}</div>
-                      <div className="text-[10px] font-semibold text-zinc-600 truncate">
+                      <div className={`text-[10px] font-semibold truncate ${isSelected ? '' : 'text-zinc-600 dark:text-zinc-400'}`}>
                         {cat.split("/")[0]}
                       </div>
                     </button>
@@ -355,7 +366,7 @@ export default function EditTransactionModal({
             {/* Merchant & Description */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-zinc-700 mb-2">Merchant</label>
+                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Merchant</label>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
@@ -363,12 +374,12 @@ export default function EditTransactionModal({
                     value={merchantName}
                     onChange={(e) => setMerchantName(e.target.value)}
                     placeholder="e.g., Walmart"
-                    className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-zinc-200 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-600 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-zinc-700 mb-2">Date</label>
+                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
@@ -376,7 +387,7 @@ export default function EditTransactionModal({
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-zinc-200 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-zinc-900 dark:text-white focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-600 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -384,7 +395,7 @@ export default function EditTransactionModal({
 
             {/* Account */}
             <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Account</label>
+              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Account</label>
               <div className="grid grid-cols-2 gap-2">
                 {accounts.slice(0, 4).map((account) => (
                   <button
@@ -392,8 +403,8 @@ export default function EditTransactionModal({
                     type="button"
                     onClick={() => setAccountId(account.id)}
                     className={`flex items-center gap-2 p-3 rounded-xl text-left transition-all ${accountId === account.id
-                        ? "bg-zinc-900 text-white"
-                        : "bg-zinc-50 hover:bg-zinc-100"
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                        : "bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white"
                       }`}
                   >
                     <span className="text-lg">
@@ -401,7 +412,7 @@ export default function EditTransactionModal({
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm truncate">{account.name}</div>
-                      <div className={`text-xs ${accountId === account.id ? "text-white/60" : "text-zinc-400"}`}>
+                      <div className={`text-xs ${accountId === account.id ? "text-white/60 dark:text-zinc-900/60" : "text-zinc-400"}`}>
                         {account.currency}
                       </div>
                     </div>
@@ -413,14 +424,14 @@ export default function EditTransactionModal({
             {/* Trip Association */}
             {trips.length > 0 && (
               <div>
-                <label className="block text-sm font-bold text-zinc-700 mb-2">Link to Trip (Optional)</label>
+                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Link to Trip (Optional)</label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setTripId(null)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${!tripId
-                        ? "bg-zinc-900 text-white"
-                        : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                        : "bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
                       }`}
                   >
                     <Home className="w-4 h-4" />
@@ -433,7 +444,7 @@ export default function EditTransactionModal({
                       onClick={() => setTripId(trip.id)}
                       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${tripId === trip.id
                           ? "bg-purple-600 text-white"
-                          : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                          : "bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"
                         }`}
                     >
                       <Plane className="w-4 h-4" />
@@ -446,7 +457,7 @@ export default function EditTransactionModal({
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Notes (Optional)</label>
+              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Notes (Optional)</label>
               <div className="relative">
                 <FileText className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
                 <textarea
@@ -454,14 +465,14 @@ export default function EditTransactionModal({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Add any additional details..."
                   rows={2}
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-zinc-200 focus:border-transparent transition-all resize-none"
+                  className="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-600 focus:border-transparent transition-all resize-none"
                 />
               </div>
             </div>
 
             {/* Location */}
             <div>
-              <label className="block text-sm font-bold text-zinc-700 mb-2">Location (Optional)</label>
+              <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Location (Optional)</label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
@@ -469,27 +480,27 @@ export default function EditTransactionModal({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g., New York, NY"
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-zinc-200 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-600 focus:border-transparent transition-all"
                 />
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 shrink-0">
+          <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50 shrink-0">
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 py-3.5 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-bold hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                className="flex-1 py-3.5 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 rounded-xl font-bold hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !amount || !category || !accountId}
-                className="flex-1 py-3.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-3.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <RefreshCw className="w-5 h-5 animate-spin" />
@@ -503,7 +514,6 @@ export default function EditTransactionModal({
             </div>
           </div>
         </form>
-      </div>
       </div>
     </div>,
     document.body

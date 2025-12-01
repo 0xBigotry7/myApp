@@ -36,11 +36,19 @@ export default async function TripsPage() {
       totalBudget: true,
       destinationImageUrl: true,
       createdAt: true,
-      // Use aggregation to get expense totals instead of loading all expenses
-      expenses: {
+      // Use transactions only (Expense table deprecated)
+      transactions: {
+        where: {
+          amount: { lt: 0 } // Only expenses (negative amounts)
+        },
         select: {
           amount: true,
           currency: true,
+          account: {
+            select: {
+              currency: true,
+            }
+          }
         }
       }
     },
@@ -64,7 +72,12 @@ export default async function TripsPage() {
   };
 
   const tripsWithStats = trips.map((trip) => {
-    const totalSpent = trip.expenses.reduce((sum, exp) => sum + convertToUSD(exp.amount, exp.currency), 0);
+    // Sum transactions (amounts are negative for expenses, so use Math.abs)
+    const totalSpent = trip.transactions.reduce((sum, tx) => {
+      const txCurrency = tx.currency || tx.account?.currency || 'USD';
+      return sum + convertToUSD(Math.abs(tx.amount), txCurrency);
+    }, 0);
+    
     const remaining = trip.totalBudget - totalSpent;
     const percentUsed = trip.totalBudget > 0 ? (totalSpent / trip.totalBudget) * 100 : 0;
 

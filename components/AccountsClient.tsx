@@ -17,6 +17,7 @@ import {
   ArrowDownRight
 } from "lucide-react";
 import AddAccountModal from "./AddAccountModal";
+import { convertCurrency } from "@/lib/currency";
 
 interface Account {
   id: string;
@@ -48,11 +49,13 @@ export default function AccountsClient({ initialAccounts }: AccountsClientProps)
   const totalBalance = accounts
     .filter((acc) => acc.isActive)
     .reduce((sum, acc) => {
+      // Convert account balance from its currency to USD for accurate net worth calculation
+      const amountInUSD = convertCurrency(acc.balance, acc.currency, "USD");
       // Subtract credit card debt from net worth
       if (acc.type === 'credit_card') {
-        return sum - Math.abs(acc.balance);
+        return sum - Math.abs(amountInUSD);
       }
-      return sum + acc.balance;
+      return sum + amountInUSD;
     }, 0);
 
   const getAccountStyle = (type: string) => {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// This route now uses transactions instead of expenses (Expense table deprecated)
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -60,9 +61,9 @@ export async function GET(request: Request) {
           })
         : Promise.resolve([]),
 
-      // Expenses (if travel included) - from all household trips
+      // Trip-related Transactions (if travel included) - from all household trips
       sources.includes("travel") && tripIds.length > 0
-        ? prisma.expense.findMany({
+        ? prisma.transaction.findMany({
             where: {
               tripId: { in: tripIds },
               date: Object.keys(dateFilter).length > 0 ? dateFilter : undefined,
@@ -75,11 +76,12 @@ export async function GET(request: Request) {
           })
         : Promise.resolve([]),
 
-      // Transactions (if finance included)
+      // Finance Transactions (if finance included) - non-trip transactions
       sources.includes("finance")
         ? prisma.transaction.findMany({
             where: {
               userId,
+              tripId: null, // Only non-trip transactions for finance
               date: Object.keys(dateFilter).length > 0 ? dateFilter : undefined,
               amount: { gte: 100 }, // Only show significant transactions
             },
@@ -128,7 +130,7 @@ export async function GET(request: Request) {
         : Promise.resolve([]),
     ]);
 
-    const [tripPosts, expenses, transactions, healthLogs, lifeEvents] = results;
+    const [tripPosts, tripTransactions, financeTransactions, healthLogs, lifeEvents] = results;
 
     // Transform to unified timeline format
     const timelineItems: any[] = [
@@ -151,32 +153,30 @@ export async function GET(request: Request) {
         isEditable: true,
       })),
 
-      ...expenses.map((expense) => ({
-        id: `expense-${expense.id}`,
-        originalId: expense.id,
+      // Trip transactions shown as expenses
+      ...tripTransactions.map((tx) => ({
+        id: `expense-${tx.id}`,
+        originalId: tx.id,
         source: "expense",
-        type: expense.category,
-        date: expense.date,
-        title: `${expense.category}: $${expense.amount}`,
-        content: expense.note,
-        photos: expense.receiptUrl ? [expense.receiptUrl] : [],
-        location: expense.location || expense.trip?.destination || null,
+        type: tx.category,
+        date: tx.date,
+        title: `${tx.category}: $${Math.abs(tx.amount).toFixed(2)}`,
+        content: tx.description,
+        photos: tx.receiptUrl ? [tx.receiptUrl] : [],
+        location: tx.location || tx.trip?.destination || null,
         metadata: {
-          amount: expense.amount,
-          currency: expense.currency,
-          category: expense.category,
-          tripId: expense.tripId,
-          tripName: expense.trip?.name,
-          tripDestination: expense.trip?.destination,
-          transportationMethod: expense.transportationMethod,
-          fromLocation: expense.fromLocation,
-          toLocation: expense.toLocation,
+          amount: Math.abs(tx.amount),
+          currency: tx.currency,
+          category: tx.category,
+          tripId: tx.tripId,
+          tripName: tx.trip?.name,
+          tripDestination: tx.trip?.destination,
         },
-        user: expense.user,
+        user: tx.user,
         isEditable: true,
       })),
 
-      ...transactions.map((tx) => ({
+      ...financeTransactions.map((tx) => ({
         id: `transaction-${tx.id}`,
         originalId: tx.id,
         source: "transaction",

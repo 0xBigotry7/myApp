@@ -2,13 +2,11 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { format, isSameMonth, isToday, isYesterday, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, isSameMonth, isToday, isYesterday, endOfMonth, subMonths } from "date-fns";
 import Link from "next/link";
 import { 
   Plus, 
   Wallet, 
-  TrendingUp,
   TrendingDown, 
   Calendar, 
   Filter, 
@@ -21,42 +19,22 @@ import {
   ChevronLeft,
   ChevronDown,
   List,
-  Bell,
   Activity,
-  AlertTriangle,
-  CheckCircle2,
   Edit3,
   Trash2,
-  MoreHorizontal,
   X,
   RefreshCw,
-  Sparkles,
   ArrowUpRight,
   ArrowDownRight,
   Receipt,
-  Eye,
   Tag,
   Loader2,
   Repeat,
 } from "lucide-react";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis } from "recharts";
 import AddTransactionModal from "./AddTransactionModal";
-import BudgetManager from "./BudgetManager";
-import SubscriptionsView from "./SubscriptionsView";
 import EditTransactionModal from "./EditTransactionModal";
-
-// Dynamically import heavy chart analytics component to reduce initial bundle
-const SpendingTrends = dynamic(() => import("./SpendingTrends"), {
-  loading: () => (
-    <div className="h-96 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 rounded-2xl animate-pulse">
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 text-zinc-400 animate-spin mx-auto mb-2" />
-        <p className="text-sm text-zinc-400">Loading insights...</p>
-      </div>
-    </div>
-  ),
-  ssr: false,
-});
+import { convertCurrency } from "@/lib/currency";
 
 // ============================================================================
 // TYPES
@@ -94,36 +72,6 @@ interface Transaction {
   } | null;
 }
 
-interface BudgetEnvelope {
-  id: string;
-  category: string;
-  allocated: number;
-  spent: number;
-  rollover: number;
-  icon?: string;
-  color?: string;
-}
-
-interface Budget {
-  id: string;
-  month: number;
-  year: number;
-  totalIncome: number;
-  totalAllocated: number;
-  envelopes: BudgetEnvelope[];
-}
-
-interface RecurringTransaction {
-  id: string;
-  name: string;
-  amount: number;
-  category: string;
-  frequency: string;
-  nextDate: string;
-  merchantName?: string;
-  isActive: boolean;
-}
-
 interface Trip {
   id: string;
   name: string;
@@ -133,10 +81,8 @@ interface Trip {
 }
 
 interface ExpensesClientEnhancedProps {
-  budget: Budget | null;
   accounts: Account[];
   transactions: Transaction[];
-  recurringTransactions: RecurringTransaction[];
   trips: Trip[];
   currentMonth: number;
   currentYear: number;
@@ -187,8 +133,6 @@ const CATEGORIES = {
 
 const CHART_COLORS = ["#8B5CF6", "#EC4899", "#F59E0B", "#10B981", "#3B82F6", "#EF4444", "#06B6D4", "#6366F1"];
 
-type ViewMode = "transactions" | "budget" | "trends" | "bills";
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -196,6 +140,38 @@ type ViewMode = "transactions" | "budget" | "trends" | "bills";
 const toUSD = (amount: number, currency: string): number => amount * (CURRENCY_RATES[currency] || 1);
 const getSymbol = (currency: string) => CURRENCY_SYMBOLS[currency] || currency;
 const getCategory = (name: string) => CATEGORIES[name as keyof typeof CATEGORIES] || CATEGORIES.Other;
+
+// Helper function to infer currency from trip destination
+const inferCurrencyFromDestination = (destination?: string | null): string | null => {
+  if (!destination) return null;
+  const dest = destination.toLowerCase();
+  
+  if (dest.includes('thailand') || dest.includes('phuket') || dest.includes('bangkok') || dest.includes('chiang mai') || dest.includes('pattaya') || dest.includes('krabi')) {
+    return 'THB';
+  } else if (dest.includes('japan') || dest.includes('tokyo') || dest.includes('osaka') || dest.includes('kyoto')) {
+    return 'JPY';
+  } else if (dest.includes('china') || dest.includes('beijing') || dest.includes('shanghai')) {
+    return 'CNY';
+  } else if (dest.includes('korea') || dest.includes('seoul')) {
+    return 'KRW';
+  } else if (dest.includes('uk') || dest.includes('london') || dest.includes('england') || dest.includes('britain')) {
+    return 'GBP';
+  } else if (dest.includes('europe') || dest.includes('paris') || dest.includes('berlin') || dest.includes('rome') || dest.includes('spain') || dest.includes('italy') || dest.includes('france') || dest.includes('germany')) {
+    return 'EUR';
+  } else if (dest.includes('singapore')) {
+    return 'SGD';
+  } else if (dest.includes('australia') || dest.includes('sydney') || dest.includes('melbourne')) {
+    return 'AUD';
+  } else if (dest.includes('canada') || dest.includes('toronto') || dest.includes('vancouver')) {
+    return 'CAD';
+  } else if (dest.includes('hong kong')) {
+    return 'HKD';
+  } else if (dest.includes('india') || dest.includes('mumbai') || dest.includes('delhi')) {
+    return 'INR';
+  }
+  
+  return null;
+};
 
 const formatCurrency = (amount: number, currency: string = "USD", compact: boolean = false) => {
   const symbol = getSymbol(currency);
@@ -283,7 +259,9 @@ const StatCard = ({
               ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" 
               : "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
           }`}>
-            {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {/* Arrow shows direction of change: up = increased, down = decreased */}
+            {/* Color shows good/bad: green = positive (good for spending = decreased), red = negative (bad for spending = increased) */}
+            {trend.positive ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
             {Math.abs(trend.value)}%
           </div>
         )}
@@ -498,10 +476,8 @@ const MiniAreaChart = ({ data }: { data: number[] }) => {
 // ============================================================================
 
 export default function ExpensesClientEnhanced({
-  budget,
   accounts,
   transactions,
-  recurringTransactions,
   trips,
   currentMonth,
   currentYear,
@@ -510,7 +486,6 @@ export default function ExpensesClientEnhanced({
   monthlyStats: initialMonthlyStats,
 }: ExpensesClientEnhancedProps) {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<ViewMode>("transactions");
   const [filter, setFilter] = useState<"all" | "trip" | "general">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -519,13 +494,115 @@ export default function ExpensesClientEnhanced({
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date(currentYear, currentMonth - 1));
+  const [monthlyStatsFromAPI, setMonthlyStatsFromAPI] = useState<{
+    totalSpent: number;
+    totalIncome: number;
+    tripSpent: number;
+    net: number;
+    dailyAverage: number;
+    transactionCount: number;
+  } | null>(null);
+  const [prevMonthStatsFromAPI, setPrevMonthStatsFromAPI] = useState<{
+    totalSpent: number;
+  } | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [netWorthFromAPI, setNetWorthFromAPI] = useState<number | null>(null);
+  const [isLoadingNetWorth, setIsLoadingNetWorth] = useState(false);
+  const [accountBalancesFromAPI, setAccountBalancesFromAPI] = useState<Record<string, number>>({});
 
-  // Pagination state
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>(transactions);
+  // Fetch monthly stats from API when month changes (current and previous month)
+  useEffect(() => {
+    const fetchMonthlyStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        const month = selectedMonth.getMonth() + 1;
+        const year = selectedMonth.getFullYear();
+        
+        // Calculate previous month
+        const prevMonth = subMonths(selectedMonth, 1);
+        const prevMonthNum = prevMonth.getMonth() + 1;
+        const prevYear = prevMonth.getFullYear();
+        
+        // Fetch both current and previous month stats
+        const [currentResponse, prevResponse] = await Promise.all([
+          fetch(`/api/expenses/monthly-stats?month=${month}&year=${year}`),
+          fetch(`/api/expenses/monthly-stats?month=${prevMonthNum}&year=${prevYear}`),
+        ]);
+        
+        if (currentResponse.ok) {
+          const stats = await currentResponse.json();
+          setMonthlyStatsFromAPI(stats);
+        }
+        
+        if (prevResponse.ok) {
+          const prevStats = await prevResponse.json();
+          setPrevMonthStatsFromAPI({ totalSpent: prevStats.totalSpent });
+        }
+      } catch (error) {
+        console.error("Failed to fetch monthly stats:", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchMonthlyStats();
+  }, [selectedMonth]);
+
+  // Fetch Net Worth and account balances from API (calculated from all transactions)
+  useEffect(() => {
+    const fetchNetWorth = async () => {
+      setIsLoadingNetWorth(true);
+      try {
+        const response = await fetch(`/api/expenses/net-worth`);
+        if (response.ok) {
+          const data = await response.json();
+          setNetWorthFromAPI(data.netWorth);
+          // Store calculated account balances for display
+          const balancesMap: Record<string, number> = {};
+          data.accounts.forEach((acc: any) => {
+            balancesMap[acc.id] = acc.balance; // Use calculated balance from transactions
+          });
+          setAccountBalancesFromAPI(balancesMap);
+        }
+      } catch (error) {
+        console.error("Failed to fetch net worth:", error);
+        // On error, clear the API data so we don't show stale data
+        setNetWorthFromAPI(null);
+        setAccountBalancesFromAPI({});
+      } finally {
+        setIsLoadingNetWorth(false);
+      }
+    };
+
+    // Only fetch if we have accounts
+    if (accounts.length > 0) {
+      fetchNetWorth();
+    }
+  }, [accounts.length]); // Re-fetch when number of accounts changes
+
+  // Helper to deduplicate transactions by ID
+  const deduplicateTransactions = useCallback((txs: Transaction[]): Transaction[] => {
+    const seen = new Map<string, Transaction>();
+    for (const tx of txs) {
+      if (!seen.has(tx.id)) {
+        seen.set(tx.id, tx);
+      }
+    }
+    return Array.from(seen.values());
+  }, []);
+
+  // Pagination state - deduplicate initial transactions
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>(() => deduplicateTransactions(transactions));
   const [cursor, setCursor] = useState<string | null>(nextCursor || null);
   const [hasMore, setHasMore] = useState(hasMoreTransactions ?? false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(5); // Show only 5 initially
+
+  // Update transactions when prop changes (e.g., offline data loads)
+  useEffect(() => {
+    const deduped = deduplicateTransactions(transactions);
+    setAllTransactions(deduped);
+  }, [transactions, deduplicateTransactions]);
 
   const now = new Date();
   const daysPassed = now.getDate();
@@ -545,7 +622,10 @@ export default function ExpensesClientEnhanced({
       const response = await fetch(`/api/transactions?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setAllTransactions(prev => [...prev, ...data.transactions]);
+        setAllTransactions(prev => {
+          const combined = [...prev, ...data.transactions];
+          return deduplicateTransactions(combined);
+        });
         setCursor(data.nextCursor);
         setHasMore(data.hasMore);
       }
@@ -554,7 +634,7 @@ export default function ExpensesClientEnhanced({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [cursor, hasMore, isLoadingMore]);
+  }, [cursor, hasMore, isLoadingMore, deduplicateTransactions]);
 
   // Show more transactions already loaded
   const showMoreLoaded = useCallback(() => {
@@ -573,7 +653,22 @@ export default function ExpensesClientEnhanced({
 
   const processedTransactions = useMemo(() => {
     return allTransactions.map(t => {
-      const currency = t.currency || t.account?.currency || 'USD';
+      // Determine currency: use transaction currency if set, otherwise infer from trip destination
+      let currency = t.currency;
+      
+      // If no currency set, try to infer from trip destination (check both isTripRelated flag and tripId)
+      if (!currency && (t.isTripRelated || t.tripId) && t.trip?.destination) {
+        const inferredCurrency = inferCurrencyFromDestination(t.trip.destination);
+        if (inferredCurrency) {
+          currency = inferredCurrency;
+        }
+      }
+      
+      // Fall back to account currency or USD if still not determined
+      if (!currency) {
+        currency = t.account?.currency || 'USD';
+      }
+      
       return {
         ...t,
         amountUSD: toUSD(Math.abs(t.amount), currency),
@@ -616,8 +711,55 @@ export default function ExpensesClientEnhanced({
     return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
   }, [displayedTransactions]);
 
-  // Monthly statistics
+  // Monthly statistics - use API data if available (includes ALL transactions for the month)
   const monthlyStats = useMemo(() => {
+    // If we have API stats, use those (they include ALL transactions for the month)
+    if (monthlyStatsFromAPI) {
+      // Still calculate daily spending from loaded transactions for the chart
+      const monthItems = processedTransactions.filter(item => isSameMonth(new Date(item.date), selectedMonth));
+      const expenses = monthItems.filter(item => !item.isIncome);
+      
+      const dailySpending: number[] = [];
+      for (let i = 1; i <= (isSameMonth(selectedMonth, now) ? daysPassed : daysInMonth); i++) {
+        const dayExpenses = expenses.filter(item => new Date(item.date).getDate() === i);
+        dailySpending.push(dayExpenses.reduce((sum, item) => sum + item.amountUSD, 0));
+      }
+
+      // Calculate previous month for comparison (use API data if available, otherwise fallback to loaded transactions)
+      const prevMonthSpent = prevMonthStatsFromAPI?.totalSpent ?? (() => {
+        const prevMonth = subMonths(selectedMonth, 1);
+        const prevMonthItems = processedTransactions.filter(item => isSameMonth(new Date(item.date), prevMonth));
+        return prevMonthItems.filter(item => !item.isIncome).reduce((sum, item) => sum + item.amountUSD, 0);
+      })();
+      
+      // Calculate percentage change, but cap it at reasonable values to avoid misleading huge percentages
+      // Only show trend if previous month had meaningful spending (> $10) to avoid misleading percentages
+      let spentChange = 0;
+      if (prevMonthSpent > 10) {
+        spentChange = ((monthlyStatsFromAPI.totalSpent - prevMonthSpent) / prevMonthSpent) * 100;
+        // Cap at ±500% to avoid showing misleading huge percentages
+        if (spentChange > 500) spentChange = 500;
+        if (spentChange < -500) spentChange = -500;
+      } else if (prevMonthSpent > 0 && monthlyStatsFromAPI.totalSpent > 0) {
+        // If previous month had very little spending but current month has spending, show as increase
+        // but don't show a percentage (just show as increase)
+        spentChange = 100; // Show as 100% increase max
+      }
+
+      return {
+        totalSpent: monthlyStatsFromAPI.totalSpent,
+        totalIncome: monthlyStatsFromAPI.totalIncome,
+        tripSpent: monthlyStatsFromAPI.tripSpent,
+        net: monthlyStatsFromAPI.net,
+        dailyAverage: monthlyStatsFromAPI.dailyAverage,
+        spentChange,
+        prevMonthSpent, // Include for display
+        transactionCount: monthlyStatsFromAPI.transactionCount,
+        dailySpending,
+      };
+    }
+
+    // Fallback: calculate from loaded transactions (for initial load or if API fails)
     const monthItems = processedTransactions.filter(item => isSameMonth(new Date(item.date), selectedMonth));
     const expenses = monthItems.filter(item => !item.isIncome);
     const income = monthItems.filter(item => item.isIncome);
@@ -630,7 +772,20 @@ export default function ExpensesClientEnhanced({
     const prevMonth = subMonths(selectedMonth, 1);
     const prevMonthItems = processedTransactions.filter(item => isSameMonth(new Date(item.date), prevMonth));
     const prevMonthSpent = prevMonthItems.filter(item => !item.isIncome).reduce((sum, item) => sum + item.amountUSD, 0);
-    const spentChange = prevMonthSpent > 0 ? ((totalSpent - prevMonthSpent) / prevMonthSpent) * 100 : 0;
+    
+    // Calculate percentage change, but cap it at reasonable values to avoid misleading huge percentages
+    // Only show trend if previous month had meaningful spending (> $10) to avoid misleading percentages
+    let spentChange = 0;
+    if (prevMonthSpent > 10) {
+      spentChange = ((totalSpent - prevMonthSpent) / prevMonthSpent) * 100;
+      // Cap at ±500% to avoid showing misleading huge percentages
+      if (spentChange > 500) spentChange = 500;
+      if (spentChange < -500) spentChange = -500;
+    } else if (prevMonthSpent > 0 && totalSpent > 0) {
+      // If previous month had very little spending but current month has spending, show as increase
+      // but don't show a percentage (just show as increase)
+      spentChange = 100; // Show as 100% increase max
+    }
 
     // Daily data for mini chart
     const dailySpending: number[] = [];
@@ -646,10 +801,11 @@ export default function ExpensesClientEnhanced({
       net: totalIncome - totalSpent,
       dailyAverage: daysPassed > 0 ? totalSpent / daysPassed : 0,
       spentChange,
+      prevMonthSpent, // Include for display
       transactionCount: monthItems.length,
       dailySpending,
     };
-  }, [processedTransactions, selectedMonth, daysPassed, daysInMonth, now]);
+  }, [monthlyStatsFromAPI, prevMonthStatsFromAPI, processedTransactions, selectedMonth, daysPassed, daysInMonth, now]);
 
   // Category breakdown
   const categoryBreakdown = useMemo(() => {
@@ -664,29 +820,19 @@ export default function ExpensesClientEnhanced({
       .slice(0, 8);
   }, [filteredTransactions]);
 
-  // Total balance
+  // Total balance (Net Worth) - use API calculation if available (calculated from all transactions)
+  // Don't show incorrect data initially - wait for API response
   const totalBalance = useMemo(() => {
-    return accounts.reduce((sum, account) => {
-      const amount = toUSD(account.balance, account.currency);
-      return ["credit_card", "loan", "debt"].includes(account.type) ? sum - amount : sum + amount;
-    }, 0);
-  }, [accounts]);
+    // If we have API-calculated net worth, use that (it's calculated from all transactions)
+    if (netWorthFromAPI !== null) {
+      return netWorthFromAPI;
+    }
+    
+    // Don't show corrupted balance initially - return 0 or null until API loads
+    // This prevents the flash of wrong data
+    return 0;
+  }, [accounts, netWorthFromAPI]);
 
-  // Budget alerts
-  const budgetAlerts = useMemo(() => {
-    if (!budget?.envelopes) return [];
-    return budget.envelopes
-      .filter(env => {
-        const total = env.allocated + env.rollover;
-        return total > 0 && (env.spent / total) >= 0.8;
-      })
-      .map(env => ({
-        category: env.category,
-        percent: Math.round((env.spent / (env.allocated + env.rollover)) * 100),
-        remaining: env.allocated + env.rollover - env.spent,
-      }))
-      .sort((a, b) => b.percent - a.percent);
-  }, [budget]);
 
   // ============================================================================
   // HANDLERS
@@ -694,9 +840,42 @@ export default function ExpensesClientEnhanced({
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    // Refetch monthly stats (current and previous month)
+    const month = selectedMonth.getMonth() + 1;
+    const year = selectedMonth.getFullYear();
+    
+    // Calculate previous month
+    const prevMonth = subMonths(selectedMonth, 1);
+    const prevMonthNum = prevMonth.getMonth() + 1;
+    const prevYear = prevMonth.getFullYear();
+    
+    try {
+      const [statsResponse, prevStatsResponse, netWorthResponse] = await Promise.all([
+        fetch(`/api/expenses/monthly-stats?month=${month}&year=${year}`),
+        fetch(`/api/expenses/monthly-stats?month=${prevMonthNum}&year=${prevYear}`),
+        fetch(`/api/expenses/net-worth`),
+      ]);
+      
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        setMonthlyStatsFromAPI(stats);
+      }
+      
+      if (prevStatsResponse.ok) {
+        const prevStats = await prevStatsResponse.json();
+        setPrevMonthStatsFromAPI({ totalSpent: prevStats.totalSpent });
+      }
+      
+      if (netWorthResponse.ok) {
+        const netWorthData = await netWorthResponse.json();
+        setNetWorthFromAPI(netWorthData.netWorth);
+      }
+    } catch (error) {
+      console.error("Failed to refresh stats:", error);
+    }
     router.refresh();
     setTimeout(() => setIsRefreshing(false), 1000);
-  }, [router]);
+  }, [router, selectedMonth]);
 
   const handleDeleteTransaction = useCallback(async (id: string) => {
     if (!confirm("Delete this transaction? This action cannot be undone.")) return;
@@ -777,87 +956,8 @@ export default function ExpensesClientEnhanced({
       </header>
 
       <div className="mt-6 space-y-6">
-        {/* Enhanced Budget Alerts */}
-        {budgetAlerts.length > 0 && (
-          <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-red-950/30 border-2 border-amber-200 dark:border-amber-800 rounded-2xl p-6 shadow-lg animate-in fade-in slide-in-from-top-2 duration-500 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50 shadow-md">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-amber-900 dark:text-amber-100">Budget Alerts</h3>
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">Categories approaching limit</p>
-                </div>
-              </div>
-              <span className="text-xs font-black text-amber-900 dark:text-amber-100 bg-white/80 dark:bg-zinc-900/80 px-3 py-1.5 rounded-full border-2 border-amber-300 dark:border-amber-700 shadow-sm">
-                {budgetAlerts.length} {budgetAlerts.length === 1 ? 'alert' : 'alerts'}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2.5">
-              {budgetAlerts.map(alert => {
-                const category = getCategory(alert.category);
-                return (
-                  <button
-                    key={alert.category}
-                    className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md border-2 ${
-                      alert.percent >= 100 
-                        ? "bg-gradient-to-r from-red-100 to-red-200 dark:from-red-950/50 dark:to-red-900/50 text-red-800 dark:text-red-200 border-red-300 dark:border-red-800 hover:shadow-lg hover:shadow-red-200/50 dark:hover:shadow-red-900/50" 
-                        : "bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-950/50 dark:to-orange-950/50 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800 hover:shadow-lg hover:shadow-amber-200/50 dark:hover:shadow-amber-900/50"
-                    }`}
-                    onClick={() => setActiveView("budget")}
-                  >
-                    <span className="text-lg">{category.icon}</span>
-                    <span>{alert.category}</span>
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${
-                      alert.percent >= 100 
-                        ? "bg-red-300 dark:bg-red-900 text-red-900 dark:text-red-100" 
-                        : "bg-amber-300 dark:bg-amber-900 text-amber-900 dark:text-amber-100"
-                    }`}>
-                      {alert.percent}%
-                    </span>
-                    <span className="text-xs font-semibold opacity-75">
-                      {formatCurrency(Math.abs(alert.remaining), "USD", true)} {alert.remaining >= 0 ? 'left' : 'over'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs */}
-        <nav className="flex gap-1.5 p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-2xl overflow-x-auto no-scrollbar">
-          {[
-            { id: "transactions", label: "Transactions", icon: List },
-            { id: "budget", label: "Budget", icon: Wallet },
-            { id: "trends", label: "Insights", icon: Sparkles },
-            { id: "bills", label: "Bills", icon: Bell },
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeView === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveView(tab.id as ViewMode)}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                  isActive
-                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-800/50"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-zinc-900 dark:text-white" : ""}`} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* ================================================================ */}
-        {/* TRANSACTIONS VIEW */}
-        {/* ================================================================ */}
-        {activeView === "transactions" && (
-          <div className="space-y-6">
+        {/* Transactions View */}
+        <div className="space-y-6">
             {/* Enhanced Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
@@ -865,7 +965,9 @@ export default function ExpensesClientEnhanced({
                 label="Total Spent"
                 value={formatCurrency(monthlyStats.totalSpent, "USD", true)}
                 trend={monthlyStats.spentChange !== 0 ? { value: Math.abs(Math.round(monthlyStats.spentChange)), positive: monthlyStats.spentChange < 0 } : undefined}
-                subValue={`${monthlyStats.transactionCount} transactions`}
+                subValue={monthlyStats.prevMonthSpent > 0 
+                  ? `vs ${formatCurrency(monthlyStats.prevMonthSpent, "USD", true)} last month`
+                  : `${monthlyStats.transactionCount} transactions`}
                 color="zinc"
               />
               <StatCard
@@ -885,7 +987,7 @@ export default function ExpensesClientEnhanced({
               <StatCard
                 icon={Wallet}
                 label="Net Worth"
-                value={formatCurrency(totalBalance, "USD", true)}
+                value={isLoadingNetWorth ? "..." : formatCurrency(totalBalance, "USD", true)}
                 subValue={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
                 color="emerald"
                 onClick={() => router.push('/accounts')}
@@ -1133,7 +1235,11 @@ export default function ExpensesClientEnhanced({
                   
                   <div className="space-y-2.5 mb-5">
                     {accounts.slice(0, 4).map(account => {
-                      const isNegative = account.balance < 0;
+                      // Use calculated balance from API if available, otherwise fall back to account balance
+                      const calculatedBalance = accountBalancesFromAPI[account.id] !== undefined 
+                        ? accountBalancesFromAPI[account.id] 
+                        : account.balance;
+                      const isNegative = calculatedBalance < 0;
                       return (
                         <div 
                           key={account.id} 
@@ -1150,8 +1256,14 @@ export default function ExpensesClientEnhanced({
                           </div>
                           <div className="text-right">
                             <div className={`font-black text-sm ${isNegative ? "text-red-300" : "text-white"}`}>
-                              {formatCurrency(account.balance, account.currency)}
+                              {formatCurrency(calculatedBalance, account.currency)}
                             </div>
+                            {/* Show USD conversion if different currency */}
+                            {account.currency !== "USD" && (
+                              <div className="text-[10px] text-zinc-400 mt-0.5">
+                                ≈ {formatCurrency(convertCurrency(calculatedBalance, account.currency, "USD"), "USD")}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -1162,7 +1274,11 @@ export default function ExpensesClientEnhanced({
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-zinc-300">Total Balance</span>
                       <span className={`text-2xl font-black ${totalBalance < 0 ? "text-red-300" : "text-white"}`}>
-                        {formatCurrency(totalBalance)}
+                        {isLoadingNetWorth ? (
+                          <span className="text-sm">Loading...</span>
+                        ) : (
+                          formatCurrency(totalBalance)
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1280,46 +1396,6 @@ export default function ExpensesClientEnhanced({
               </div>
             </div>
           </div>
-        )}
-
-        {/* ================================================================ */}
-        {/* BUDGET VIEW */}
-        {/* ================================================================ */}
-        {activeView === "budget" && (
-          <BudgetManager
-            initialBudget={budget}
-            currentMonth={currentMonth}
-            currentYear={currentYear}
-            onBudgetUpdate={() => router.refresh()}
-          />
-        )}
-
-        {/* ================================================================ */}
-        {/* TRENDS VIEW */}
-        {/* ================================================================ */}
-        {activeView === "trends" && (
-          <SpendingTrends />
-        )}
-
-        {/* ================================================================ */}
-        {/* BILLS VIEW */}
-        {/* ================================================================ */}
-        {activeView === "bills" && (
-          <SubscriptionsView
-            recurringTransactions={recurringTransactions}
-            onAdd={() => {/* TODO */}}
-            onEdit={() => {/* TODO */}}
-            onDelete={async (id) => {
-              if (!confirm("Delete this recurring bill?")) return;
-              try {
-                await fetch(`/api/recurring/${id}`, { method: "DELETE" });
-                router.refresh();
-              } catch (error) {
-                console.error("Failed to delete:", error);
-              }
-            }}
-          />
-        )}
       </div>
 
       {/* Modals */}

@@ -16,11 +16,11 @@ async function main() {
       if (user) {
         // Check if user has any data
         const tripCount = await prisma.trip.count({ where: { ownerId: user.id } });
-        const expenseCount = await prisma.expense.count({ where: { userId: user.id } });
+        const transactionCount = await prisma.transaction.count({ where: { userId: user.id } });
         const postCount = await prisma.tripPost.count({ where: { userId: user.id } });
 
-        if (tripCount > 0 || expenseCount > 0 || postCount > 0) {
-          console.log(`Skipping user ${email} because they have associated data (Trips: ${tripCount}, Expenses: ${expenseCount}, Posts: ${postCount})`);
+        if (tripCount > 0 || transactionCount > 0 || postCount > 0) {
+          console.log(`Skipping user ${email} because they have associated data (Trips: ${tripCount}, Transactions: ${transactionCount}, Posts: ${postCount})`);
         } else {
           // Delete poker games first (no cascade on these relations)
           const pokerGames = await prisma.pokerGame.deleteMany({

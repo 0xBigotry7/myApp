@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { convertCurrency } from "@/lib/currency";
 
 // GET all transactions for current user with pagination support
 export async function GET(req: NextRequest) {
@@ -236,26 +237,74 @@ export async function POST(request: Request) {
     const parsedCheckInDate = checkInDate ? new Date(checkInDate) : null;
     const parsedCheckOutDate = checkOutDate ? new Date(checkOutDate) : null;
 
-    // Create transaction with all fields
-    const transaction = await prisma.transaction.create({
-      data: {
-        userId: session.user.id,
-        accountId,
-        amount,
-        category,
-        merchantName,
-        description,
-        date: parsedDate,
-        tags: tags || [],
-        isTripRelated: !!tripId,
-        tripId: tripId || null,
-        isRecurring: isRecurring || false,
-        recurringTransactionId,
-        receiptUrl,
-        location,
-        latitude,
-        longitude,
-        currency: currency || null,
+    // Determine transaction currency (use provided currency, or infer from trip destination, or default to account currency)
+    let transactionCurrency = currency || account.currency || "USD";
+    
+    // If transaction is trip-related and no currency specified, try to infer from trip destination
+    if (!currency && tripId) {
+      const trip = await prisma.trip.findFirst({
+        where: {
+          id: tripId,
+          OR: [
+            { ownerId: session.user.id },
+            { members: { some: { userId: session.user.id } } }
+          ]
+        },
+        select: { destination: true },
+      });
+      
+      if (trip?.destination) {
+        const dest = trip.destination.toLowerCase();
+        if (dest.includes('thailand') || dest.includes('phuket') || dest.includes('bangkok')) {
+          transactionCurrency = 'THB';
+        } else if (dest.includes('japan') || dest.includes('tokyo') || dest.includes('osaka')) {
+          transactionCurrency = 'JPY';
+        } else if (dest.includes('china') || dest.includes('beijing') || dest.includes('shanghai')) {
+          transactionCurrency = 'CNY';
+        } else if (dest.includes('korea') || dest.includes('seoul')) {
+          transactionCurrency = 'KRW';
+        } else if (dest.includes('uk') || dest.includes('london') || dest.includes('england')) {
+          transactionCurrency = 'GBP';
+        } else if (dest.includes('europe') || dest.includes('paris') || dest.includes('berlin') || dest.includes('rome')) {
+          transactionCurrency = 'EUR';
+        } else if (dest.includes('singapore')) {
+          transactionCurrency = 'SGD';
+        } else if (dest.includes('australia') || dest.includes('sydney')) {
+          transactionCurrency = 'AUD';
+        } else if (dest.includes('canada') || dest.includes('toronto')) {
+          transactionCurrency = 'CAD';
+        }
+      }
+    }
+
+    // Convert transaction amount to account currency for balance update only
+    const amountInAccountCurrency = convertCurrency(
+      amount,
+      transactionCurrency,
+      account.currency
+    );
+
+    // Create transaction and update balance atomically
+    const [transaction] = await prisma.$transaction([
+      prisma.transaction.create({
+        data: {
+          userId: session.user.id,
+          accountId,
+          amount: amount, // Store original amount in transaction currency
+          category,
+          merchantName,
+          description,
+          date: parsedDate,
+          tags: tags || [],
+          isTripRelated: !!tripId,
+          tripId: tripId || null,
+          isRecurring: isRecurring || false,
+          recurringTransactionId,
+          receiptUrl,
+          location,
+          latitude,
+          longitude,
+          currency: transactionCurrency, // Store original transaction currency
         // Transportation fields
         transportationMethod: transportationMethod || null,
         fromLocation: fromLocation || null,
@@ -320,14 +369,17 @@ export async function POST(request: Request) {
           },
         },
       },
-    });
-
-    // Update account balance
-    const newBalance = account.balance + amount;
-    await prisma.account.update({
-      where: { id: accountId },
-      data: { balance: newBalance },
-    });
+      }),
+      // Update account balance with converted amount
+      prisma.account.update({
+        where: { id: accountId },
+        data: {
+          balance: {
+            increment: amountInAccountCurrency
+          }
+        },
+      }),
+    ]);
 
     return NextResponse.json(transaction);
   } catch (error) {

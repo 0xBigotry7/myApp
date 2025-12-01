@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// This route now uses transactions instead of expenses (Expense table deprecated)
 export async function GET() {
   try {
     const session = await auth();
@@ -26,7 +27,7 @@ export async function GET() {
     // Fetch counts in parallel
     const [
       tripPostsCount,
-      expensesCount,
+      tripTransactionsCount,
       healthLogsCount,
       lifeEventsCount,
       totalSpent,
@@ -35,13 +36,13 @@ export async function GET() {
         ? prisma.tripPost.count({ where: { tripId: { in: tripIds } } })
         : Promise.resolve(0),
       tripIds.length > 0
-        ? prisma.expense.count({ where: { tripId: { in: tripIds } } })
+        ? prisma.transaction.count({ where: { tripId: { in: tripIds } } })
         : Promise.resolve(0),
       prisma.dailyLog.count({ where: { userId } }),
       prisma.lifeEvent.count({ where: { userId } }),
       tripIds.length > 0
-        ? prisma.expense.aggregate({
-            where: { tripId: { in: tripIds } },
+        ? prisma.transaction.aggregate({
+            where: { tripId: { in: tripIds }, amount: { lt: 0 } },
             _sum: { amount: true },
           })
         : Promise.resolve({ _sum: { amount: 0 } }),
@@ -56,7 +57,7 @@ export async function GET() {
       }).filter(Boolean)
     );
 
-    const totalMemories = tripPostsCount + expensesCount + healthLogsCount + lifeEventsCount;
+    const totalMemories = tripPostsCount + tripTransactionsCount + healthLogsCount + lifeEventsCount;
 
     // Calculate photo count from trip posts
     const tripPosts =
@@ -81,14 +82,14 @@ export async function GET() {
     return NextResponse.json({
       totalMemories,
       breakdown: {
-        travel: tripPostsCount + expensesCount,
-        finance: 0, // No transaction tracking yet
+        travel: tripPostsCount + tripTransactionsCount,
+        finance: 0,
         health: healthLogsCount,
         lifeEvents: lifeEventsCount,
       },
       countriesVisited: uniqueDestinations.size,
       photosUploaded: totalPhotoCount + lifeEventPhotoCount,
-      totalSpent: totalSpent._sum.amount || 0,
+      totalSpent: Math.abs(totalSpent._sum.amount || 0),
     });
   } catch (error) {
     console.error("Error fetching timeline stats:", error);

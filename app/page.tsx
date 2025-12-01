@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Navbar from "@/components/Navbar";
 import { getServerLocale } from "@/lib/locale-server";
 import { getTranslations } from "@/lib/i18n";
 import DashboardClient from "@/components/dashboard/DashboardClient";
@@ -36,7 +35,7 @@ export default async function Dashboard() {
           { endDate: { gte: now } }
         ]
       },
-      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+      include: { _count: { select: { transactions: true, activities: true, places: true } } }
     }),
 
     // 2. Upcoming trip
@@ -48,7 +47,7 @@ export default async function Dashboard() {
         ]
       },
       orderBy: { startDate: 'asc' },
-      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+      include: { _count: { select: { transactions: true, activities: true, places: true } } }
     }),
 
     // 3. Most recent past trip
@@ -57,7 +56,7 @@ export default async function Dashboard() {
         OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }]
       },
       orderBy: { endDate: 'desc' },
-      include: { _count: { select: { expenses: true, activities: true, places: true } } }
+      include: { _count: { select: { transactions: true, activities: true, places: true } } }
     }),
 
     // 4. Finance accounts
@@ -66,16 +65,16 @@ export default async function Dashboard() {
       select: { balance: true, currency: true } // Only select needed fields
     }),
 
-    // 5. Recent expenses
-    prisma.expense.findMany({
-      where: { userId: session.user.id },
+    // 5. Recent expenses (now using transactions)
+    prisma.transaction.findMany({
+      where: { userId: session.user.id, amount: { lt: 0 } },
       orderBy: { date: 'desc' },
       take: 5,
       select: {
         id: true,
         amount: true,
         category: true,
-        note: true,
+        description: true,
         date: true,
         trip: { select: { name: true } }
       }
@@ -110,14 +109,11 @@ export default async function Dashboard() {
   const featuredTrip = activeTrip || (!activeTrip ? upcomingTrip : null) || (!activeTrip && !upcomingTrip ? lastTrip : null);
   const tripStatus = (activeTrip ? 'active' : upcomingTrip && !activeTrip ? 'upcoming' : 'past') as 'active' | 'upcoming' | 'past';
 
-  // Simple currency conversion for display (USD base)
-  const conversionRates: Record<string, number> = {
-    USD: 1, EUR: 1.09, GBP: 1.27, JPY: 0.0067, CNY: 0.138, THB: 0.029,
-  };
-
+  // Convert all account balances to USD for accurate net worth calculation
+  const { convertCurrency } = await import("@/lib/currency");
   const totalNetWorth = accounts.reduce((sum, acc) => {
-    const rate = conversionRates[acc.currency] || 1;
-    return sum + (acc.balance * rate);
+    const amountInUSD = convertCurrency(acc.balance, acc.currency, "USD");
+    return sum + amountInUSD;
   }, 0);
 
   const visitedCountries = new Set(visitedDestinations.map(d => d.country)).size;
@@ -142,13 +138,10 @@ export default async function Dashboard() {
   };
 
   return (
-    <>
-      <Navbar />
       <DashboardClient
         user={session.user}
         stats={stats}
         t={t}
       />
-    </>
   );
 }

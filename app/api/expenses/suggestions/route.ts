@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// This route now uses only transactions (Expense table deprecated)
 export async function GET() {
   try {
     const session = await auth();
@@ -16,62 +17,33 @@ export async function GET() {
     const recentTransactions = await prisma.transaction.findMany({
       where: {
         userId: session.user.id,
-        merchantName: { not: null },
         date: { gte: thirtyDaysAgo },
       },
       select: {
         merchantName: true,
         category: true,
         amount: true,
-      },
-      orderBy: { date: "desc" },
-      take: 100,
-    });
-
-    // Get recent expenses
-    const recentExpenses = await prisma.expense.findMany({
-      where: {
-        userId: session.user.id,
-        location: { not: null },
-        date: { gte: thirtyDaysAgo },
-      },
-      select: {
         location: true,
-        category: true,
-        amount: true,
+        description: true,
       },
       orderBy: { date: "desc" },
-      take: 50,
+      take: 150,
     });
 
     // Extract unique merchants with frequency
     const merchantMap = new Map<string, { count: number; lastAmount: number; category: string }>();
     
     recentTransactions.forEach((t) => {
-      if (t.merchantName) {
-        const existing = merchantMap.get(t.merchantName);
+      const merchantName = t.merchantName || t.location || t.description;
+      if (merchantName) {
+        const existing = merchantMap.get(merchantName);
         if (existing) {
           existing.count++;
         } else {
-          merchantMap.set(t.merchantName, {
+          merchantMap.set(merchantName, {
             count: 1,
             lastAmount: Math.abs(t.amount),
             category: t.category,
-          });
-        }
-      }
-    });
-
-    recentExpenses.forEach((e) => {
-      if (e.location) {
-        const existing = merchantMap.get(e.location);
-        if (existing) {
-          existing.count++;
-        } else {
-          merchantMap.set(e.location, {
-            count: 1,
-            lastAmount: e.amount,
-            category: e.category,
           });
         }
       }
@@ -89,21 +61,16 @@ export async function GET() {
       categoryMap.set(t.category, (categoryMap.get(t.category) || 0) + 1);
     });
 
-    recentExpenses.forEach((e) => {
-      categoryMap.set(e.category, (categoryMap.get(e.category) || 0) + 1);
-    });
-
     const categories = Array.from(categoryMap.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
     // Get common amounts (rounded to nearest 5 or 10)
-    const amounts = [...recentTransactions, ...recentExpenses]
+    const amounts = recentTransactions
       .map((t) => Math.abs(t.amount))
       .filter((amt) => amt > 0)
       .map((amt) => {
-        // Round to nearest 5 for amounts < 50, nearest 10 for larger amounts
         if (amt < 50) {
           return Math.round(amt / 5) * 5;
         }
@@ -135,6 +102,3 @@ export async function GET() {
     );
   }
 }
-
-
-

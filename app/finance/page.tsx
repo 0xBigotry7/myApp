@@ -5,6 +5,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import QuickAddTransaction from "@/components/QuickAddTransaction";
 import { getHouseholdUserIds, getUserBadge } from "@/lib/household";
+import { convertCurrency } from "@/lib/currency";
 
 // Revalidate every 30 seconds for fresher data
 export const revalidate = 30;
@@ -56,8 +57,11 @@ export default async function FinancePage() {
     }),
   ]);
 
-  // Calculate financial metrics
-  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  // Calculate financial metrics - convert all accounts to USD for accurate total balance
+  const totalBalance = accounts.reduce((sum, acc) => {
+    const amountInUSD = convertCurrency(acc.balance, acc.currency, "USD");
+    return sum + amountInUSD;
+  }, 0);
 
   // All transactions are already filtered to this month
   const thisMonthTransactions = allTransactions;

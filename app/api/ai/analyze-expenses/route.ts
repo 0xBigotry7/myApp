@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { analyzeExpenses } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
 import { differenceInDays } from "date-fns";
+import { convertCurrency } from "@/lib/currency";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,11 +22,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch trip with expenses and budget categories
+    // Fetch trip with transactions and budget categories
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
       include: {
-        expenses: true,
+        transactions: {
+          include: {
+            account: { select: { currency: true } },
+          },
+        },
         budgetCategories: true,
       },
     });
@@ -37,14 +42,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate total spent
-    const totalSpent = trip.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    // Calculate total spent from transactions (convert to USD)
+    const totalSpent = trip.transactions.reduce((sum, tx) => {
+      const currency = tx.currency || tx.account?.currency || "USD";
+      const amountUSD = convertCurrency(Math.abs(tx.amount), currency, "USD");
+      return sum + amountUSD;
+    }, 0);
 
-    // Calculate category breakdown
+    // Calculate category breakdown from transactions
     const categoryBreakdown = trip.budgetCategories.map((budgetCat) => {
-      const categorySpent = trip.expenses
-        .filter((exp) => exp.category === budgetCat.category)
-        .reduce((sum, exp) => sum + exp.amount, 0);
+      const categorySpent = trip.transactions
+        .filter((tx) => tx.category === budgetCat.category)
+        .reduce((sum, tx) => {
+          const currency = tx.currency || tx.account?.currency || "USD";
+          const amountUSD = convertCurrency(Math.abs(tx.amount), currency, "USD");
+          return sum + amountUSD;
+        }, 0);
 
       return {
         category: budgetCat.category,

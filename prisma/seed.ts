@@ -57,6 +57,19 @@ async function main() {
     },
   });
 
+  // Create sample account for BABER
+  const account = await prisma.account.create({
+    data: {
+      userId: baber1.id,
+      name: "Main Account",
+      type: "checking",
+      balance: 3650,
+      currency: "USD",
+      icon: "💳",
+      color: "#3b82f6",
+    },
+  });
+
   // Create a sample trip for BABER
   const trip = await prisma.trip.create({
     data: {
@@ -72,23 +85,27 @@ async function main() {
             { userId: baber2.id, role: "member" }
         ]
       },
-      expenses: {
+      transactions: {
         create: [
           {
-            amount: 1200,
+            amount: -1200,
             category: "Transportation",
             currency: "USD",
             date: new Date("2025-04-01"),
-            note: "Flights to Tokyo",
+            description: "Flights to Tokyo",
             userId: baber1.id,
+            accountId: account.id,
+            isTripRelated: true,
           },
           {
-            amount: 150,
-            category: "Food",
+            amount: -150,
+            category: "Food & Dining",
             currency: "USD",
             date: new Date("2025-04-02"),
-            note: "Sushi Dinner",
+            description: "Sushi Dinner",
             userId: baber1.id,
+            accountId: account.id,
+            isTripRelated: true,
           },
         ],
       },

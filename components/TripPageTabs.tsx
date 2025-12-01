@@ -53,7 +53,6 @@ interface TripPageTabsProps {
   remaining: number;
   percentUsed: number;
   counts?: {
-    expenses: number;
     transactions: number;
     posts: number;
     activities: number;
@@ -165,7 +164,7 @@ export default function TripPageTabs({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {[
                 { label: "Moments", value: counts?.posts || trip.posts.length, icon: ImageIcon },
-                { label: "Expenses", value: counts?.expenses || trip.expenses.length, icon: Receipt },
+                { label: "Expenses", value: counts?.transactions || trip.expenses.length, icon: Receipt },
                 { 
                   label: "Places", 
                   value: new Set([...trip.posts.map((p: any) => p.location).filter(Boolean), ...trip.expenses.map((e: any) => e.location).filter(Boolean)]).size,
@@ -195,7 +194,7 @@ export default function TripPageTabs({
               
               {/* Show More Button for Timeline */}
               {(trip.expenses.length > displayLimit || trip.posts.length > displayLimit || 
-                (counts && (counts.expenses > displayLimit || counts.posts > displayLimit))) && (
+                (counts && (counts.transactions > displayLimit || counts.posts > displayLimit))) && (
                 <div className="mt-6 text-center">
                   <button
                     onClick={loadMore}
@@ -376,7 +375,7 @@ export default function TripPageTabs({
             />
 
             {/* Show More for Expenses */}
-            {(trip.expenses.length > displayLimit || (counts && counts.expenses > displayLimit)) && (
+            {(trip.expenses.length > displayLimit || (counts && counts.transactions > displayLimit)) && (
               <div className="text-center">
                 <button
                   onClick={loadMore}
@@ -396,7 +395,7 @@ export default function TripPageTabs({
                   )}
                 </button>
                 <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-                  Showing {Math.min(displayLimit, trip.expenses.length)} of {counts?.expenses || trip.expenses.length} expenses
+                  Showing {Math.min(displayLimit, trip.expenses.length)} of {counts?.transactions || trip.expenses.length} expenses
                 </p>
               </div>
             )}

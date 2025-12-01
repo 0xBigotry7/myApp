@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { 
   useOfflineTransactions, 
   useOfflineAccounts, 
@@ -14,11 +14,8 @@ import { initDB, putMany, STORES } from "@/lib/offline-db";
 interface ExpensesOfflineWrapperProps {
   // Initial data from server (for first paint)
   initialData: {
-    budget: any;
     accounts: any[];
     transactions: any[];
-    expenses: any[];
-    recurringTransactions: any[];
     trips: any[];
     currentMonth: number;
     currentYear: number;
@@ -97,9 +94,21 @@ export default function ExpensesOfflineWrapper({ initialData }: ExpensesOfflineW
   }, [refetchTransactions]);
 
   // Use offline data if available and hydrated, otherwise use initial data
-  const transactions = isHydrated && offlineTransactions.length > 0 
-    ? offlineTransactions 
-    : initialData.transactions;
+  // Deduplicate transactions by ID to prevent duplicate key errors
+  const transactions = useMemo(() => {
+    const txList = isHydrated && offlineTransactions.length > 0 
+      ? offlineTransactions 
+      : initialData.transactions;
+    
+    // Deduplicate by ID, keeping the most recent version
+    const seen = new Map<string, any>();
+    for (const tx of txList) {
+      if (!seen.has(tx.id) || new Date(tx.updatedAt || tx.createdAt || 0) > new Date(seen.get(tx.id).updatedAt || seen.get(tx.id).createdAt || 0)) {
+        seen.set(tx.id, tx);
+      }
+    }
+    return Array.from(seen.values());
+  }, [isHydrated, offlineTransactions, initialData.transactions]);
     
   const accounts = isHydrated && offlineAccounts.length > 0 
     ? offlineAccounts 
@@ -122,10 +131,8 @@ export default function ExpensesOfflineWrapper({ initialData }: ExpensesOfflineW
       </div>
       
       <ExpensesClientEnhanced
-        budget={initialData.budget}
         accounts={accounts}
         transactions={transactions}
-        recurringTransactions={initialData.recurringTransactions}
         trips={trips}
         currentMonth={initialData.currentMonth}
         currentYear={initialData.currentYear}

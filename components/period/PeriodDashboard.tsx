@@ -12,7 +12,7 @@ import CycleStatistics from "./CycleStatistics";
 import InsightsPanel from "./InsightsPanel";
 import StartPeriodModal from "./StartPeriodModal";
 import EndPeriodModal from "./EndPeriodModal";
-import { Calendar, BarChart3, Clock, Sparkles } from "lucide-react";
+import { Calendar, BarChart3, Clock, Sparkles, Moon, CalendarCheck } from "lucide-react";
 
 type Cycle = {
   id: string;
@@ -124,19 +124,19 @@ export default function PeriodDashboard({
       />
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 p-1.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800">
+      <div className="flex gap-1 sm:gap-2 p-1 sm:p-1.5 bg-white dark:bg-zinc-900 rounded-xl sm:rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeTab === tab.id
                 ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md"
                 : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
             }`}
           >
-            {tab.icon}
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="[&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4">{tab.icon}</span>
+            <span className="hidden xs:inline sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -172,23 +172,37 @@ export default function PeriodDashboard({
       </div>
 
       {/* Quick Actions Footer */}
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-medium">
             {locale === "zh" ? "快速操作" : "Quick Actions"}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleDayClick(new Date(), todayLog)}
-              className="px-4 py-2 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-xl text-sm font-medium hover:bg-violet-200 dark:hover:bg-violet-900/50 transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-xl text-xs sm:text-sm font-medium hover:bg-violet-200 dark:hover:bg-violet-900/50 transition-colors"
             >
+              <Calendar className="w-3.5 h-3.5" />
               {locale === "zh" ? "记录今天" : "Log Today"}
             </button>
+            
+            {/* Show End Period in Quick Actions when cycle needs end date */}
+            {currentCycle && !currentCycle.endDate && (
+              <button
+                onClick={() => setShowEndPeriod(true)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl text-xs sm:text-sm font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+              >
+                <CalendarCheck className="w-3.5 h-3.5" />
+                {locale === "zh" ? "标记结束" : "Mark End"}
+              </button>
+            )}
+            
             {!currentCycle && (
               <button
                 onClick={() => setShowStartPeriod(true)}
-                className="px-4 py-2 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded-xl text-sm font-medium hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded-xl text-xs sm:text-sm font-medium hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
               >
+                <Moon className="w-3.5 h-3.5" />
                 {locale === "zh" ? "开始经期" : "Start Period"}
               </button>
             )}
